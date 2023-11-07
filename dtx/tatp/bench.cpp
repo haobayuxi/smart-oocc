@@ -433,32 +433,32 @@ void RunTx(DTXContext *context) {
 #else
     switch (tx_type) {
       case TATPTxType::kGetSubsciberData:
-        tx_committed = TxGetSubsciberData(iter, dtx);
         SDS_INFO("get sub");
+        tx_committed = TxGetSubsciberData(iter, dtx);
         break;
       case TATPTxType::kGetNewDestination:
-        tx_committed = TxGetNewDestination(iter, dtx);
         SDS_INFO("get new dest");
+        tx_committed = TxGetNewDestination(iter, dtx);
         break;
       case TATPTxType::kGetAccessData:
-        tx_committed = TxGetAccessData(iter, dtx);
         SDS_INFO("get get access");
+        tx_committed = TxGetAccessData(iter, dtx);
         break;
       case TATPTxType::kUpdateSubscriberData:
-        tx_committed = TxUpdateSubscriberData(iter, dtx);
         SDS_INFO("update sub");
+        tx_committed = TxUpdateSubscriberData(iter, dtx);
         break;
       case TATPTxType::kUpdateLocation:
-        tx_committed = TxUpdateLocation(iter, dtx);
         SDS_INFO("update location");
+        tx_committed = TxUpdateLocation(iter, dtx);
         break;
       case TATPTxType::kInsertCallForwarding:
-        tx_committed = TxInsertCallForwarding(iter, dtx);
         SDS_INFO("insert sub");
+        tx_committed = TxInsertCallForwarding(iter, dtx);
         break;
       case TATPTxType::kDeleteCallForwarding:
-        tx_committed = TxDeleteCallForwarding(iter, dtx);
         SDS_INFO("delete sub");
+        tx_committed = TxDeleteCallForwarding(iter, dtx);
         break;
       default:
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
