@@ -141,7 +141,7 @@ class DTX {
       // context->EndTask();
       return true;
     }
-    SYS_INFO("try validate");
+    SDS_INFO("try validate");
     if (!Validate()) {
       goto ABORT;
     }
