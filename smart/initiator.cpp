@@ -46,9 +46,13 @@ Initiator::Initiator() : tuner_running_(false), cache_offset_(0) {
   for (auto &tl : tl_data_) {
     tl.qp_state.post_req.resize(config.max_nodes, 0);
     tl.qp_state.ack_req.resize(config.max_nodes, 0);
+    tl.qp_state.per_coro_waiting.resize(config.max_nodes, 0);
     tl.credit = config.initial_credit;
     tl.ack_req_estimation = 0;
     tl.task_lock = false;
+    for (int i = 0; i < kMaxTasksPerThread; i++) {
+      tl.post_req_snapshot[i].resize(config.max_nodes, 0);
+    }
   }
 
   if (config.throttler && config.throttler_auto_tuning) {
@@ -294,6 +298,7 @@ int Initiator::add_request(ibv_wr_opcode opcode, const void *local,
   if (idx > 0) {
     req_buf.wr_list[idx - 1].next = &wr;
   }
+  //   SDS_INFO("add request success");
   return 0;
 }
 
@@ -319,8 +324,9 @@ static inline int TASK_ID(uint64_t wr_id) {
 static inline int WR_SIZE(uint64_t wr_id) { return (int)(wr_id & UINT32_MAX); }
 
 int Initiator::post_request() {
+  auto task_id = GetTaskID();
   auto &tl = tl_data_[GetThreadID()];
-  auto &req_buf = tl.req_buf[GetTaskID()];
+  auto &req_buf = tl.req_buf[task_id];
   auto &state = tl.qp_state;
   if (!req_buf.size) {
     return 0;
@@ -331,12 +337,14 @@ int Initiator::post_request() {
   }
   req_buf.wr_list[req_buf.size - 1].wr_id =
       MAKE_WR_ID(req_buf.mem_node_id, wr_size);
+  //   SDS_INFO("thread id = %d, task id = %d", GetThreadID(), GetTaskID());
   req_buf.wr_list[req_buf.size - 1].send_flags |= IBV_SEND_SIGNALED;
   int qp_idx = GetThreadID() % manager_.get_qp_size(req_buf.mem_node_id);
   if (manager_.post_send(req_buf.mem_node_id, qp_idx, req_buf.wr_list)) {
     return -1;
   }
   req_buf.size = 0;
+  state.per_coro_waiting[task_id] += 1;
   state.post_req[req_buf.mem_node_id] += wr_size;
   state.inflight_ack += wr_size;
   return 0;
@@ -392,25 +400,31 @@ int Initiator::sync() {
   if (post_request()) {
     return -1;
   }
-
+  // auto &post_req = tl.post_req_snapshot[GetTaskID()];
+  //   //   post_req.resize(state.post_req.size());
+  //   auto size = state.post_req.size();
+  //   for (int id = 0; id < size; ++id) {
+  //     post_req[id] = state.post_req[id];
+  //   }
+  //   for (int id = 0; id < size; ++id) {
+  //
   if (TaskPool::IsEnabled()) {
     WaitTask();
   } else {
     auto &tl = tl_data_[GetThreadID()];
     auto &state = tl.qp_state;
-    auto &post_req = tl.post_req_snapshot[GetTaskID()];
-    post_req.resize(state.post_req.size());
-    for (int id = 0; id < post_req.size(); ++id) {
-      post_req[id] = state.post_req[id];
-    }
-    for (int id = 0; id < post_req.size(); ++id) {
-      while (state.ack_req[id] < post_req[id]) {
-        if (poll_once(id) < 0) {
-          return -1;
-        }
+
+    auto req = state.post_req[0];
+
+    while (state.ack_req[0] < req) {
+      if (poll_once(0) < 0) {
+        return -1;
       }
     }
   }
+
+  //     }
+  //   }
   return 0;
 }
 
@@ -457,6 +471,10 @@ int Initiator::poll_once(node_t mem_node_id, bool notify) {
         if (state.per_coro_waiting[task_id] == 0) {
           NotifyTask(task_id);
         }
+        // if (!post_req.empty() && state.ack_req[node_id] >= post_req[node_id])
+        // {
+
+        // }
       }
     }
     if (total_ack && manager_.config().throttler) {
