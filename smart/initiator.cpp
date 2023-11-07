@@ -332,9 +332,9 @@ int Initiator::post_request() {
     return 0;
   }
   int wr_size = req_buf.size;
-  if (!manager_.config().qp_sharing && manager_.config().throttler) {
-    decrease_credit(req_buf.size);
-  }
+  //   if (!manager_.config().qp_sharing && manager_.config().throttler) {
+  //     decrease_credit(req_buf.size);
+  //   }
   req_buf.wr_list[req_buf.size - 1].wr_id =
       MAKE_WR_ID(req_buf.mem_node_id, wr_size);
   //   SDS_INFO("thread id = %d, task id = %d", GetThreadID(), GetTaskID());
