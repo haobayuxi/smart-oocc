@@ -149,6 +149,7 @@ class DTX {
       return true;
     }
     if (!Validate()) {
+      SDS_INFO("validate");
       goto ABORT;
     }
     if (!is_ro_tx) {
