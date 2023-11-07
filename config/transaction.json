@@ -3,10 +3,6 @@
     {
       "hostname": "optane06",
       "port": 12345
-    },
-    {
-      "hostname": "optane07",
-      "port": 12345
     }
   ],
   "tpcc": {
