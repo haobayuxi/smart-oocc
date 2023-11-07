@@ -615,13 +615,7 @@ void report(double elapsed_time, JsonConfig &config) {
 int main(int argc, char **argv) {
   BindCore(1);
   const char *path = ROOT_DIR "/config/transaction.json";
-  lease = config.get("lease").get_uint64();
-  txn_sys = config.get("txn_sys").get_uint64();
-  if (txn_sys == DTX_SYS::OOCC) {
-    SDS_INFO("running OOCC");
-  } else if (txn_sys == DTX_SYS::OCC) {
-    SDS_INFO("running OCC");
-  }
+
   if (getenv("APP_CONFIG_PATH")) {
     path = getenv("APP_CONFIG_PATH");
   }
@@ -630,6 +624,13 @@ int main(int argc, char **argv) {
   }
   JsonConfig config = JsonConfig::load_file(path);
   kMaxTransactions = config.get("nr_transactions").get_uint64();
+  lease = config.get("lease").get_uint64();
+  txn_sys = config.get("txn_sys").get_uint64();
+  if (txn_sys == DTX_SYS::OOCC) {
+    SDS_INFO("running OOCC");
+  } else if (txn_sys == DTX_SYS::OCC) {
+    SDS_INFO("running OCC");
+  }
   srand48(time(nullptr));
   threads = argc < 2 ? 1 : atoi(argv[1]);
   coroutines = argc < 3 ? 1 : atoi(argv[2]);
