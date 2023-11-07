@@ -344,7 +344,9 @@ int Initiator::post_request() {
     return -1;
   }
   req_buf.size = 0;
-  state.per_coro_waiting[task_id] += 1;
+  if (TaskPool::IsEnabled()) {
+    state.per_coro_waiting[task_id] += 1;
+  }
   state.post_req[req_buf.mem_node_id] += wr_size;
   state.inflight_ack += wr_size;
   return 0;
