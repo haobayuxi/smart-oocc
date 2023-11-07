@@ -5,6 +5,7 @@
 #define SDS_DTX_MANAGER_H
 
 #include "addr_cache.h"
+#include "memstore.h"
 #include "smart/initiator.h"
 #include "smart/task_throttler.h"
 #include "util/json_config.h"
