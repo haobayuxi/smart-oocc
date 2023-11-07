@@ -105,10 +105,11 @@ bool DTX::Validate() {
 }
 
 bool DTX::CoalescentCommit() {
+  //   SDS_INFO("coalescent commit");
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
   *(lock_t *)cas_buf = STATE_LOCKED | STATE_INVISIBLE;
   std::vector<CommitWrite> pending_commit_write;
-  context->Sync();
+  //   context->Sync();
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
   context->Sync();
   *((lock_t *)cas_buf) = 0;
@@ -281,7 +282,6 @@ bool DTX::IssueValidate(std::vector<ValidateRead> &pending_validate) {
                   GlobalAddress(node_id, it->GetRemoteVersionAddr()),
                   sizeof(version_t));
     context->PostRequest();
-    SDS_INFO("validate key=%ld", it->key);
   }
   return true;
 }
