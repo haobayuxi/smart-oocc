@@ -144,9 +144,8 @@ class DTXContext {
         rc = node_.read(hash_meta, GlobalAddress(node_id, offset),
                         sizeof(HashMeta), Initiator::Option::Sync);
         assert(!rc);
-        // SDS_INFO("%ld: %lx %ld %ld", hash_meta->table_id,
-        // hash_meta->base_off,
-        //          hash_meta->bucket_num, hash_meta->node_size);
+        SDS_INFO("%ld: %lx %ld %ld", hash_meta->table_id, hash_meta->base_off,
+                 hash_meta->bucket_num, hash_meta->node_size);
         if (node_id == table_id % remote_nodes_) {
           primary_hash_metas[table_id] = *hash_meta;
           primary_table_nodes[table_id] = node_id;
