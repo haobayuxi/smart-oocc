@@ -27,6 +27,13 @@
 using namespace sds;
 using HashNode = HashStore::HashNode;
 
+enum DTX_SYS : int {
+  OOCC = 0,
+  DrTMH = 1,
+  DSLR = 2,
+  OCC = 3,
+};
+
 struct DataSetItem {
   DataItemPtr item_ptr;
   bool is_fetched;
