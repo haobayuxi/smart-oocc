@@ -18,6 +18,15 @@
   "tatp": {
     "num_subscriber": 100000
   },
+  "ycsb": {
+    "data_item_size": 1,
+    "write_ratio": 0,
+    "theta": 0.99,
+    "is_skewed": false
+  },
   "nr_transactions": 60000000,
-  "dump_file_path": "dtx.csv"
+  "dump_file_path": "dtx.csv",
+  "lease": 100,
+  "txn_sys": 0,
+  "comment": "0 for oocc, 1 for DrTM, 2 for DSLR, 3 for OCC"
 }

@@ -12,6 +12,9 @@ DTX::DTX(DTXContext *context)
 bool DTX::ExeRO() {
   std::vector<DirectRead> pending_direct_ro;
   std::vector<HashRead> pending_hash_ro;
+  if (start_time == 0) {
+    start_time = get_clock_sys_time_us();
+  }
   IssueReadOnly(pending_direct_ro, pending_hash_ro);
   context->Sync();
   std::list<InvisibleRead> pending_invisible_ro;
