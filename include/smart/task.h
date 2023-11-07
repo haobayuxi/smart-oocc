@@ -211,10 +211,10 @@ class TaskPool {
  private:
   void schedule(bool reuse) {
     // nr_schedule++;
-    if (__glibc_unlikely(nr_schedule > kForceUnblockInterval)) {
-      nr_schedule = 0;
-      notify_all();
-    }
+    // if (__glibc_unlikely(nr_schedule > kForceUnblockInterval)) {
+    //   nr_schedule = 0;
+    //   notify_all();
+    // }
     auto task = dequeue(&running);
     auto prev = active;
     if (__glibc_unlikely(prev == task)) {
