@@ -5,7 +5,7 @@
 
 DTX::DTX(DTXContext *context)
     : context(context), tx_id(0), addr_cache(nullptr) {
-  addr_cache = context->GetAddrCache();
+  addr_cache = &context->addr_cache;
   t_id = GetThreadID();
 }
 
