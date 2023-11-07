@@ -23,6 +23,9 @@ std::atomic<uint64_t> commits(0);
 double *timer;
 std::atomic<uint64_t> tx_id_generator(0);
 
+int lease;
+int txn_sys;
+
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
 thread_local TATP *tatp_client;
@@ -328,7 +331,7 @@ bool TxDeleteCallForwarding(tx_id_t tx_id, DTX *dtx) {
 thread_local int running_tasks;
 
 void WarmUp(DTXContext *context) {
-  DTX *dtx = new DTX(context);
+  DTX *dtx = new DTX(context, txn_sys, lease);
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
     TATPTxType tx_type = workgen_arr[FastRand(&seed) % 100];
@@ -377,7 +380,7 @@ static void IdleExecution() {
 }
 
 void RunTx(DTXContext *context) {
-  DTX *dtx = new DTX(context);
+  DTX *dtx = new DTX(context, txn_sys, lease);
   struct timespec tx_start_time, tx_end_time;
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
@@ -612,6 +615,13 @@ void report(double elapsed_time, JsonConfig &config) {
 int main(int argc, char **argv) {
   BindCore(1);
   const char *path = ROOT_DIR "/config/transaction.json";
+  lease = config.get("lease").get_uint64();
+  txn_sys = config.get("txn_sys").get_uint64();
+  if (txn_sys == DTX_SYS::OOCC) {
+    SDS_INFO("running OOCC");
+  } else if (txn_sys == DTX_SYS::OCC) {
+    SDS_INFO("running OCC");
+  }
   if (getenv("APP_CONFIG_PATH")) {
     path = getenv("APP_CONFIG_PATH");
   }
