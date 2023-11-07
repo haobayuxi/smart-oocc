@@ -472,6 +472,7 @@ int Initiator::poll_once(node_t mem_node_id, bool notify) {
                  state.per_coro_waiting[task_id]);
         state.per_coro_waiting[task_id] -= 1;
         if (state.per_coro_waiting[task_id] == 0) {
+          SDS_INFO("notify %d", task_id);
           NotifyTask(task_id);
         }
         // if (!post_req.empty() && state.ack_req[node_id] >= post_req[node_id])
