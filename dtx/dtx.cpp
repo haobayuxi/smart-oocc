@@ -4,32 +4,31 @@
 #include "dtx.h"
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease)
-    : context(context), tx_id(0), addr_cache(nullptr), txn_sys(_txn_sys) {
-  addr_cache = context->GetAddrCache();
-  t_id = GetThreadID();
-  lease = _lease;
+    : context(context), tx_id(0), addr_cache(nullptr) {
   addr_cache = &context->addr_cache;
+  t_id = GetThreadID();
+  txn_sys = _txn_sys;
+  lease = _lease;
 }
 
 bool DTX::ExeRO() {
   std::vector<DirectRead> pending_direct_ro;
   std::vector<HashRead> pending_hash_ro;
-  if (start_time == 0) {
-    start_time = get_clock_sys_time_us();
-  }
   IssueReadOnly(pending_direct_ro, pending_hash_ro);
   context->Sync();
-  // sleep(2);
+  std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
-  if (!CheckDirectRO(pending_direct_ro, pending_next_hash_ro)) return false;
-  if (!CheckHashRO(pending_hash_ro, pending_next_hash_ro)) return false;
-  while (!pending_next_hash_ro.empty()) {
+  if (!CheckDirectRO(pending_direct_ro, pending_invisible_ro,
+                     pending_next_hash_ro))
+    return false;
+  if (!CheckHashRO(pending_hash_ro, pending_invisible_ro, pending_next_hash_ro))
+    return false;
+  while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty()) {
     context->Sync();
-    if (!CheckNextHashRO(pending_next_hash_ro)) return false;
+    if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+    if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+      return false;
   }
-  auto end_time = get_clock_sys_time_us();
-  // SDS_INFO("read time = %ld, lease = %ld", end_time - start_time, lease);
-
   return true;
 }
 
@@ -40,25 +39,35 @@ bool DTX::ExeRW() {
   std::vector<CasRead> pending_cas_rw;
   std::vector<HashRead> pending_hash_rw;
   std::vector<InsertOffRead> pending_insert_off_rw;
+  std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
   std::list<HashRead> pending_next_hash_rw;
   std::list<InsertOffRead> pending_next_off_rw;
   IssueReadOnly(pending_direct_ro, pending_hash_ro);
   IssueReadLock(pending_cas_rw, pending_hash_rw, pending_insert_off_rw);
   context->Sync();
-  if (!CheckDirectRO(pending_direct_ro, pending_next_hash_ro)) return false;
-  if (!CheckHashRO(pending_hash_ro, pending_next_hash_ro)) return false;
-  if (!CheckHashRW(pending_hash_rw, pending_next_hash_rw)) return false;
-  if (!CheckInsertOffRW(pending_insert_off_rw, pending_next_off_rw))
+  if (!CheckDirectRO(pending_direct_ro, pending_invisible_ro,
+                     pending_next_hash_ro))
+    return false;
+  if (!CheckHashRO(pending_hash_ro, pending_invisible_ro, pending_next_hash_ro))
+    return false;
+  if (!CheckHashRW(pending_hash_rw, pending_invisible_ro, pending_next_hash_rw))
+    return false;
+  if (!CheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
+                        pending_next_off_rw))
     return false;
   if (!CheckCasRW(pending_cas_rw, pending_next_hash_rw, pending_next_off_rw))
     return false;
-  while (!pending_next_hash_ro.empty() || !pending_next_hash_rw.empty() ||
-         !pending_next_off_rw.empty()) {
+  while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty() ||
+         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
     context->Sync();
-    if (!CheckNextHashRO(pending_next_hash_ro)) return false;
-    if (!CheckNextHashRW(pending_next_hash_rw)) return false;
-    if (!CheckNextOffRW(pending_next_off_rw)) return false;
+    if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+    if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+      return false;
+    if (!CheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
+      return false;
+    if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
+      return false;
   }
   ParallelUndoLog();
   return true;
@@ -71,11 +80,8 @@ bool DTX::Validate() {
   context->Sync();
   for (auto &re : pending_validate) {
     auto it = re.item->item_ptr;
-
-    // SDS_INFO("not clean %ld", *((lock_t *)re.cas_buf));
     if (re.has_lock_in_validate) {
       if (*((lock_t *)re.cas_buf) != STATE_CLEAN) {
-        SDS_INFO("not clean %ld", *((lock_t *)re.cas_buf));
         return false;
       }
       version_t my_version = it->version;
@@ -92,8 +98,6 @@ bool DTX::Validate() {
         return false;
       }
     } else {
-      //   SDS_INFO("validate my version = %ld, read version= %ld", it->version,
-      //            *((version_t *)re.version_buf));
       if (it->version != *((version_t *)re.version_buf)) {
         return false;
       }
@@ -104,7 +108,7 @@ bool DTX::Validate() {
 
 bool DTX::CoalescentCommit() {
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-  *(lock_t *)cas_buf = STATE_LOCKED;
+  *(lock_t *)cas_buf = STATE_LOCKED | STATE_INVISIBLE;
   std::vector<CommitWrite> pending_commit_write;
   //   context->Sync();
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
@@ -170,8 +174,6 @@ bool DTX::IssueReadOnly(std::vector<DirectRead> &pending_direct_ro,
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     item.read_which_node = node_id;
     auto offset = addr_cache->Search(node_id, it->table_id, it->key);
-    // SDS_INFO("search key = %ld,offset = %ld, tid = %ld", it->key, offset,
-    //          tx_id);
     if (offset != NOT_FOUND) {
       it->remote_offset = offset;
       char *buf = AllocLocalBuffer(DataItemSize);
@@ -183,10 +185,6 @@ bool DTX::IssueReadOnly(std::vector<DirectRead> &pending_direct_ro,
       HashMeta meta = GetPrimaryHashMetaWithTableID(it->table_id);
       uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
       offset_t node_off = idx * meta.node_size + meta.base_off;
-      // SDS_INFO("txnid = %ld,key = %ld, idx = %ld, tid=%d", tx_id, it->key,
-      // idx,
-      //          GetThreadID());
-
       char *buf = AllocLocalBuffer(sizeof(HashNode));
       pending_hash_ro.emplace_back(HashRead{
           .node_id = node_id, .item = &item, .buf = buf, .meta = meta});
@@ -270,8 +268,6 @@ bool DTX::IssueValidate(std::vector<ValidateRead> &pending_validate) {
   }
   for (auto &set_it : read_only_set) {
     auto it = set_it.item_ptr;
-
-    // SDS_INFO("validate key = %ld", it->key);
     node_id_t node_id = set_it.read_which_node;
     char *version_buf = AllocLocalBuffer(sizeof(version_t));
     pending_validate.push_back(ValidateRead{.node_id = node_id,
@@ -297,7 +293,7 @@ bool DTX::IssueCommitAllSelectFlush(
       it->version++;
     }
 
-    it->lock = STATE_LOCKED;
+    it->lock = STATE_LOCKED | STATE_INVISIBLE;
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     pending_commit_write.push_back(
@@ -311,26 +307,83 @@ bool DTX::IssueCommitAllSelectFlush(
 
     const HashMeta &primary_hash_meta =
         GetPrimaryHashMetaWithTableID(it->table_id);
+    auto offset_in_backup_hash_store =
+        it->remote_offset - primary_hash_meta.base_off;
+    auto *backup_node_ids = GetBackupNodeID(it->table_id);
+    if (!backup_node_ids) continue;
 
+    const std::vector<HashMeta> *backup_hash_metas =
+        GetBackupHashMetasWithTableID(it->table_id);
+    for (size_t i = 0; i < backup_node_ids->size(); i++) {
+      auto remote_item_off =
+          offset_in_backup_hash_store + (*backup_hash_metas)[i].base_off;
+      auto remote_lock_off = it->GetRemoteLockAddr(remote_item_off);
+      node_id_t backup_node_id = backup_node_ids->at(i);
+      pending_commit_write.push_back(
+          CommitWrite{.node_id = backup_node_id, .lock_off = remote_lock_off});
+      char *data_buf = AllocLocalBuffer(DataItemSize);
+      it->lock = STATE_INVISIBLE;
+      it->remote_offset = remote_item_off;
+      memcpy(data_buf, (char *)it.get(), DataItemSize);
+      context->Write(cas_buf, GlobalAddress(backup_node_id, remote_lock_off),
+                     sizeof(lock_t));
+      context->Write(data_buf, GlobalAddress(backup_node_id, remote_item_off),
+                     DataItemSize);
+      if (current_i == read_write_set.size() - 1) {
+        char *flush_buf = AllocLocalBuffer(RFlushReadSize);
+        context->read(flush_buf,
+                      GlobalAddress(backup_node_id, it->remote_offset),
+                      RFlushReadSize);
+      }
+      context->PostRequest();
+    }
     current_i++;
   }
   return true;
 }
-ALWAYS_INLINE
+
 bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
+                        std::list<InvisibleRead> &pending_invisible_ro,
                         std::list<HashRead> &pending_next_hash_ro) {
   for (auto &res : pending_direct_ro) {
     auto *it = res.item->item_ptr.get();
     auto *fetched_item = (DataItem *)res.buf;
-    // SDS_INFO("check direct ro key=%ld", fetched_item->key);
-    if (fetched_item->lock > STATE_READ_LOCKED) {
-      return false;
+    if (likely(fetched_item->key == it->key &&
+               fetched_item->table_id == it->table_id)) {
+      if (likely(fetched_item->valid)) {
+        *it = *fetched_item;
+        res.item->is_fetched = true;
+        if (unlikely((it->lock & STATE_INVISIBLE))) {
+          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
+          pending_invisible_ro.emplace_back(InvisibleRead{
+              .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
+          context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
+                        sizeof(lock_t));
+        }
+      } else {
+        addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
+        return false;
+      }
+    } else {
+      node_id_t remote_node_id = GetPrimaryNodeID(it->table_id);
+      const HashMeta &meta = GetPrimaryHashMetaWithTableID(it->table_id);
+      uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
+      offset_t node_off = idx * meta.node_size + meta.base_off;
+      auto *local_hash_node = (HashNode *)AllocLocalBuffer(sizeof(HashNode));
+      pending_next_hash_ro.emplace_back(HashRead{.node_id = remote_node_id,
+                                                 .item = res.item,
+                                                 .buf = (char *)local_hash_node,
+                                                 .meta = meta});
+      context->read((char *)local_hash_node,
+                    GlobalAddress(remote_node_id, node_off), sizeof(HashNode));
     }
   }
   return true;
 }
 
 bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
+                      std::list<InvisibleRead> &pending_invisible_ro,
                       std::list<HashRead> &pending_next_hash_ro) {
   for (auto &res : pending_hash_ro) {
     auto *local_hash_node = (HashNode *)res.buf;
@@ -338,11 +391,7 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     bool find = false;
 
     for (auto &item : local_hash_node->data_items) {
-      //   SDS_INFO("read =%ld,key=%ld, tableid =%d, tid=%ld", it->key,
-      //   item.key,
-      //            item.table_id, tx_id);
-      //   assert(item.table_id == 1);
-      if (item.key == it->key && item.table_id == it->table_id) {
+      if (item.valid && item.key == it->key && item.table_id == it->table_id) {
         *it = item;
         addr_cache->Insert(res.node_id, it->table_id, it->key,
                            it->remote_offset);
@@ -350,24 +399,21 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
         find = true;
         break;
       }
-      if (!item.valid) {
-        break;
-      }
     }
 
     if (likely(find)) {
-      if (it->lock > STATE_READ_LOCKED) {
-        return false;
+      if (unlikely((it->lock & STATE_INVISIBLE))) {
+        char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+        uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
+        pending_invisible_ro.emplace_back(InvisibleRead{
+            .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
+        context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
+                      sizeof(lock_t));
       }
     } else {
-      //   assert(false);
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
                       res.meta.base_off;
-
-      //   if (node_off <= 0) {
-      //     return false;
-      //   }
       pending_next_hash_ro.emplace_back(HashRead{.node_id = res.node_id,
                                                  .item = res.item,
                                                  .buf = res.buf,
@@ -379,7 +425,24 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
   return true;
 }
 
-bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
+bool DTX::CheckInvisibleRO(std::list<InvisibleRead> &pending_invisible_ro) {
+  for (auto iter = pending_invisible_ro.begin();
+       iter != pending_invisible_ro.end();) {
+    auto res = *iter;
+    auto lock_value = *((lock_t *)res.buf);
+    if (lock_value & STATE_INVISIBLE) {
+      context->read(res.buf, GlobalAddress(res.node_id, res.off),
+                    sizeof(lock_t));
+      iter++;
+    } else {
+      iter = pending_invisible_ro.erase(iter);
+    }
+  }
+  return true;
+}
+
+bool DTX::CheckNextHashRO(std::list<InvisibleRead> &pending_invisible_ro,
+                          std::list<HashRead> &pending_next_hash_ro) {
   for (auto iter = pending_next_hash_ro.begin();
        iter != pending_next_hash_ro.end();) {
     auto res = *iter;
@@ -399,8 +462,13 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
     }
 
     if (likely(find)) {
-      if (it->lock > STATE_READ_LOCKED) {
-        return false;
+      if (unlikely((it->lock & STATE_INVISIBLE))) {
+        char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+        uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
+        pending_invisible_ro.emplace_back(InvisibleRead{
+            .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
+        context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
+                      sizeof(lock_t));
       }
       iter = pending_next_hash_ro.erase(iter);
     } else {
@@ -473,7 +541,8 @@ bool DTX::CheckCasRW(std::vector<CasRead> &pending_cas_rw,
   return true;
 }
 
-int DTX::FindMatchSlot(HashRead &res) {
+int DTX::FindMatchSlot(HashRead &res,
+                       std::list<InvisibleRead> &pending_invisible_ro) {
   auto *local_hash_node = (HashNode *)res.buf;
   auto *it = res.item->item_ptr.get();
   bool find = false;
@@ -487,8 +556,13 @@ int DTX::FindMatchSlot(HashRead &res) {
     }
   }
   if (likely(find)) {
-    if (it->lock > STATE_READ_LOCKED) {
-      return false;
+    if (unlikely((it->lock & STATE_INVISIBLE))) {
+      char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+      uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
+      pending_invisible_ro.emplace_back(InvisibleRead{
+          .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
+      context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
+                    sizeof(lock_t));
     }
     return SLOT_FOUND;
   }
@@ -496,9 +570,10 @@ int DTX::FindMatchSlot(HashRead &res) {
 }
 
 bool DTX::CheckHashRW(std::vector<HashRead> &pending_hash_rw,
+                      std::list<InvisibleRead> &pending_invisible_ro,
                       std::list<HashRead> &pending_next_hash_rw) {
   for (auto &res : pending_hash_rw) {
-    auto rc = FindMatchSlot(res);
+    auto rc = FindMatchSlot(res, pending_invisible_ro);
     if (rc == SLOT_NOT_FOUND) {
       auto *local_hash_node = (HashNode *)res.buf;
       if (local_hash_node->next == nullptr) return false;
@@ -515,11 +590,12 @@ bool DTX::CheckHashRW(std::vector<HashRead> &pending_hash_rw,
   return true;
 }
 
-bool DTX::CheckNextHashRW(std::list<HashRead> &pending_next_hash_rw) {
+bool DTX::CheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
+                          std::list<HashRead> &pending_next_hash_rw) {
   for (auto iter = pending_next_hash_rw.begin();
        iter != pending_next_hash_rw.end();) {
     auto res = *iter;
-    auto rc = FindMatchSlot(res);
+    auto rc = FindMatchSlot(res, pending_invisible_ro);
     if (rc == SLOT_FOUND)
       iter = pending_next_hash_rw.erase(iter);
     else if (rc == SLOT_NOT_FOUND) {
@@ -535,7 +611,8 @@ bool DTX::CheckNextHashRW(std::list<HashRead> &pending_next_hash_rw) {
   return true;
 }
 
-int DTX::FindInsertOff(InsertOffRead &res) {
+int DTX::FindInsertOff(InsertOffRead &res,
+                       std::list<InvisibleRead> &pending_invisible_ro) {
   offset_t possible_insert_position = OFFSET_NOT_FOUND;
   version_t old_version;
   auto *local_hash_node = (HashNode *)res.buf;
@@ -570,7 +647,14 @@ int DTX::FindInsertOff(InsertOffRead &res) {
                        possible_insert_position);
     old_version_for_insert.push_back(OldVersionForInsert{
         .table_id = it->table_id, .key = it->key, .version = old_version});
-
+    if (unlikely((it->lock & STATE_INVISIBLE))) {
+      char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+      uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
+      pending_invisible_ro.emplace_back(InvisibleRead{
+          .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
+      context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
+                    sizeof(lock_t));
+    }
     res.item->is_fetched = true;
     return OFFSET_FOUND;
   }
@@ -578,9 +662,10 @@ int DTX::FindInsertOff(InsertOffRead &res) {
 }
 
 bool DTX::CheckInsertOffRW(std::vector<InsertOffRead> &pending_insert_off_rw,
+                           std::list<InvisibleRead> &pending_invisible_ro,
                            std::list<InsertOffRead> &pending_next_off_rw) {
   for (auto &res : pending_insert_off_rw) {
-    auto rc = FindInsertOff(res);
+    auto rc = FindInsertOff(res, pending_invisible_ro);
     if (rc == VERSION_TOO_OLD)
       return false;
     else if (rc == OFFSET_NOT_FOUND) {
@@ -600,11 +685,12 @@ bool DTX::CheckInsertOffRW(std::vector<InsertOffRead> &pending_insert_off_rw,
   return true;
 }
 
-bool DTX::CheckNextOffRW(std::list<InsertOffRead> &pending_next_off_rw) {
+bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
+                         std::list<InsertOffRead> &pending_next_off_rw) {
   for (auto iter = pending_next_off_rw.begin();
        iter != pending_next_off_rw.end();) {
     auto &res = *iter;
-    auto rc = FindInsertOff(res);
+    auto rc = FindInsertOff(res, pending_invisible_ro);
     if (rc == VERSION_TOO_OLD)
       return false;
     else if (rc == OFFSET_FOUND)

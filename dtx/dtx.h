@@ -27,18 +27,11 @@
 using namespace sds;
 using HashNode = HashStore::HashNode;
 
-enum DTX_SYS : int {
-  OOCC = 0,
-  DrTMH = 1,
-  DSLR = 2,
-  OCC = 3,
-};
 struct DataSetItem {
   DataItemPtr item_ptr;
   bool is_fetched;
   bool is_logged;
   node_id_t read_which_node;
-  uint64_t lease;
 };
 
 struct OldVersionForInsert {
@@ -58,6 +51,12 @@ struct HashRead {
   DataSetItem *item;
   char *buf;
   const HashMeta meta;
+};
+
+struct InvisibleRead {
+  node_id_t node_id;
+  char *buf;
+  uint64_t off;
 };
 
 struct CasRead {
@@ -91,13 +90,10 @@ struct CommitWrite {
 class DTX {
  public:
   void TxBegin(tx_id_t txid) {
-    // context->BeginTask();
+    context->BeginTask();
     Clean();
     is_ro_tx = true;
     tx_id = txid;
-    DrTM_lease = 0;
-    start_time = 0;
-    last_write_lock_time = 0;
   }
 
   void AddToReadOnlySet(DataItemPtr item) {
@@ -116,69 +112,47 @@ class DTX {
     read_write_set.emplace_back(data_set_item);
   }
 
-  bool TxExe() {
+  bool TxExe(bool fail_abort = true) {
     if (read_write_set.empty() && read_only_set.empty()) {
       return true;
     }
-    if (txn_sys == DTX_SYS::OOCC || txn_sys == DTX_SYS::OCC) {
-      if (read_write_set.empty()) {
-        if (ExeRO()) {
-          return true;
-        } else {
-          goto ABORT;
-        }
-      } else {
-        if (ExeRW()) {
-          return true;
-        } else {
-          goto ABORT;
-        }
-      }
-    } else if (txn_sys == DTX_SYS::DrTMH) {
-    } else {
-    }
 
+    if (read_write_set.empty()) {
+      if (ExeRO()) {
+        return true;
+      } else {
+        goto ABORT;
+      }
+    } else {
+      if (ExeRW()) {
+        return true;
+      } else {
+        goto ABORT;
+      }
+    }
     return true;
   ABORT:
-    Abort();
+    if (fail_abort) Abort();
     return false;
   }
 
   bool TxCommit() {
-    if (txn_sys == DTX_SYS::OOCC) {
-      auto end_time = get_clock_sys_time_us();
-      // SDS_INFO("commit time = %ld, lease = %ld", end_time - start_time,
-      // lease);
-
-      // sleep(1);
-      // if ((end_time - start_time) > lease) {
-      //   if (!Validate()) {
-      //     goto ABORT;
-      //   }
-      // }
-      if (read_write_set.size() != 0) {
-        if (CoalescentCommit()) {
-          // context->EndTask();
-          return true;
-        } else {
-          goto ABORT;
-        }
-      }
-    } else if (txn_sys == DTX_SYS::OCC) {
-      if (!Validate()) {
+    if (is_ro_tx && read_only_set.size() == 1) {
+      context->EndTask();
+      return true;
+    }
+    if (!Validate()) {
+      goto ABORT;
+    }
+    if (!is_ro_tx) {
+      if (CoalescentCommit()) {
+        context->EndTask();
+        return true;
+      } else {
         goto ABORT;
       }
-      if (read_write_set.size() != 0) {
-        if (CoalescentCommit()) {
-          // context->EndTask();
-          return true;
-        } else {
-          goto ABORT;
-        }
-      }
     }
-
-    // context->EndTask();
+    context->EndTask();
     return true;
   ABORT:
     Abort();
@@ -189,8 +163,8 @@ class DTX {
   void TxAbortReadOnly() {
     assert(read_write_set.empty());
     read_only_set.clear();
-    // context->RetryTask();
-    // context->EndTask();
+    context->RetryTask();
+    context->EndTask();
   }
 
   void TxAbortReadWrite() { Abort(); }
@@ -198,7 +172,7 @@ class DTX {
   void RemoveLastROItem() { read_only_set.pop_back(); }
 
  public:
-  DTX(DTXContext *context, int _txn_sys, int _lease);
+  DTX(DTXContext *context);
 
   ~DTX() { Clean(); }
 
@@ -239,30 +213,41 @@ class DTX {
 
  private:
   bool CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
+                     std::list<InvisibleRead> &pending_invisible_ro,
                      std::list<HashRead> &pending_next_hash_ro);
 
+  bool CheckInvisibleRO(std::list<InvisibleRead> &pending_invisible_ro);
+
   bool CheckHashRO(std::vector<HashRead> &pending_hash_ro,
+                   std::list<InvisibleRead> &pending_invisible_ro,
                    std::list<HashRead> &pending_next_hash_ro);
 
-  bool CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro);
+  bool CheckNextHashRO(std::list<InvisibleRead> &pending_invisible_ro,
+                       std::list<HashRead> &pending_next_hash_ro);
 
   bool CheckCasRW(std::vector<CasRead> &pending_cas_rw,
                   std::list<HashRead> &pending_next_hash_rw,
                   std::list<InsertOffRead> &pending_next_off_rw);
 
-  int FindMatchSlot(HashRead &res);
+  int FindMatchSlot(HashRead &res,
+                    std::list<InvisibleRead> &pending_invisible_ro);
 
   bool CheckHashRW(std::vector<HashRead> &pending_hash_rw,
+                   std::list<InvisibleRead> &pending_invisible_ro,
                    std::list<HashRead> &pending_next_hash_rw);
 
-  bool CheckNextHashRW(std::list<HashRead> &pending_next_hash_rw);
+  bool CheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
+                       std::list<HashRead> &pending_next_hash_rw);
 
-  int FindInsertOff(InsertOffRead &res);
+  int FindInsertOff(InsertOffRead &res,
+                    std::list<InvisibleRead> &pending_invisible_ro);
 
   bool CheckInsertOffRW(std::vector<InsertOffRead> &pending_insert_off_rw,
+                        std::list<InvisibleRead> &pending_invisible_ro,
                         std::list<InsertOffRead> &pending_next_off_rw);
 
-  bool CheckNextOffRW(std::list<InsertOffRead> &pending_next_off_rw);
+  bool CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
+                      std::list<InsertOffRead> &pending_next_off_rw);
 
  private:
   char *AllocLocalBuffer(size_t size) { return context->Alloc(size); }
@@ -288,19 +273,15 @@ class DTX {
   }
 
  public:
-  tx_id_t tx_id;
-
-  AddrCache *addr_cache;
+  int lease;
+  int txn_sys;
 
  private:
+  tx_id_t tx_id;
   t_id_t t_id;
-  int txn_sys;
-  int lease;
-  long long start_time;
-  long long last_write_lock_time;
-  uint64_t DrTM_lease;
 
   DTXContext *context;
+  AddrCache *addr_cache;
 
   bool is_ro_tx;
   std::vector<DataSetItem> read_only_set;
