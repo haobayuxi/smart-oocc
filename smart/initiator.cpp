@@ -468,7 +468,8 @@ int Initiator::poll_once(node_t mem_node_id, bool notify) {
       if (notify) {
         // auto &post_req = tl.post_req_snapshot[TASK_ID(wr_id)];
         auto task_id = TASK_ID(wr_id);
-        // SDS_INFO("task id = %d, task_id");
+        SDS_INFO("task id = %d, waiting= %d", task_id,
+                 state.per_coro_waiting[task_id]);
         state.per_coro_waiting[task_id] -= 1;
         if (state.per_coro_waiting[task_id] == 0) {
           NotifyTask(task_id);
