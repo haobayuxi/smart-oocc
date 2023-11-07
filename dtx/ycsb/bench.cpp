@@ -39,17 +39,18 @@ std::atomic<uint64_t> rdma_cnt_sum(0);
 bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
   dtx->TxBegin(tx_id);
   bool read_only = true;
-  auto write = FastRand(&seed) % 1000;
-  if (write < write_ratio) {
-    read_only = false;
-  }
+  // auto write = FastRand(&seed) % 1000;
+  // if (write < write_ratio) {
+  //   read_only = false;
+  // }
   for (int i = 0; i < data_item_size; i++) {
     micro_key_t micro_key;
     if (is_skewed) {
       micro_key.item_key = ycsb_client->next();
     } else {
-      micro_key.item_key = (itemkey_t)(FastRand(&seed) % (TOTAL_KEYS_NUM - 1));
-      // micro_key.item_key = tx_id % (TOTAL_KEYS_NUM - 1);
+      // micro_key.item_key = (itemkey_t)(FastRand(&seed) % (TOTAL_KEYS_NUM -
+      // 1));
+      micro_key.item_key = tx_id % (TOTAL_KEYS_NUM - 1);
       // micro_key.item_key = 100;
     }
 
