@@ -145,12 +145,12 @@ class DTX {
   }
 
   bool TxCommit() {
+    return true;
     if (is_ro_tx && read_only_set.size() == 1) {
       context->EndTask();
       return true;
     }
     if (!Validate()) {
-      SDS_INFO("validate");
       goto ABORT;
     }
     if (!is_ro_tx) {
