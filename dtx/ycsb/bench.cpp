@@ -50,8 +50,8 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
     } else {
       // micro_key.item_key = (itemkey_t)(FastRand(&seed) % (TOTAL_KEYS_NUM -
       // 1));
-      micro_key.item_key = tx_id % (TOTAL_KEYS_NUM - 1);
-      // micro_key.item_key = 100;
+      // micro_key.item_key = tx_id % (TOTAL_KEYS_NUM - 1);
+      micro_key.item_key = 100;
     }
 
     DataItemPtr micro_obj =
