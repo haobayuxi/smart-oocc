@@ -172,7 +172,7 @@ class DTX {
   void RemoveLastROItem() { read_only_set.pop_back(); }
 
  public:
-  DTX(DTXContext *context);
+  DTX(DTXContext *context, int _txn_sys, int _lease);
 
   ~DTX() { Clean(); }
 
