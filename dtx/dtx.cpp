@@ -219,7 +219,7 @@ bool DTX::IssueReadLock(std::vector<CasRead> &pending_cas_rw,
           STATE_CLEAN, STATE_LOCKED);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
-      SDS_INFO("rw key=%ld", it->key);
+      //   SDS_INFO("rw key=%ld", it->key);
     } else {
       not_eager_locked_rw_set.emplace_back(i);
       const HashMeta &meta = GetPrimaryHashMetaWithTableID(it->table_id);
@@ -242,7 +242,7 @@ bool DTX::IssueReadLock(std::vector<CasRead> &pending_cas_rw,
       context->read(local_hash_node, GlobalAddress(node_id, node_off),
                     sizeof(HashNode));
       context->PostRequest();
-      SDS_INFO("rw hash key=%ld", it->key);
+      //   SDS_INFO("rw hash key=%ld", it->key);
     }
   }
   return true;
