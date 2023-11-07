@@ -434,24 +434,31 @@ void RunTx(DTXContext *context) {
     switch (tx_type) {
       case TATPTxType::kGetSubsciberData:
         tx_committed = TxGetSubsciberData(iter, dtx);
+        SDS_INFO("get sub");
         break;
       case TATPTxType::kGetNewDestination:
         tx_committed = TxGetNewDestination(iter, dtx);
+        SDS_INFO("get new dest");
         break;
       case TATPTxType::kGetAccessData:
         tx_committed = TxGetAccessData(iter, dtx);
+        SDS_INFO("get get access");
         break;
       case TATPTxType::kUpdateSubscriberData:
         tx_committed = TxUpdateSubscriberData(iter, dtx);
+        SDS_INFO("update sub");
         break;
       case TATPTxType::kUpdateLocation:
         tx_committed = TxUpdateLocation(iter, dtx);
+        SDS_INFO("update location");
         break;
       case TATPTxType::kInsertCallForwarding:
         tx_committed = TxInsertCallForwarding(iter, dtx);
+        SDS_INFO("insert sub");
         break;
       case TATPTxType::kDeleteCallForwarding:
         tx_committed = TxDeleteCallForwarding(iter, dtx);
+        SDS_INFO("delete sub");
         break;
       default:
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
