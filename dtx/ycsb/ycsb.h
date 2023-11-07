@@ -14,7 +14,7 @@ static inline unsigned long GetCPUCycle() {
   return ((unsigned long)a) | (((unsigned long)d) << 32);
 }
 
-#define TOTAL_KEYS_NUM 50000
+#define TOTAL_KEYS_NUM 500000
 
 const int MICRO_TABLE_ID = 1;
 
@@ -57,8 +57,7 @@ class YCSB {
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
-    micro_table =
-        new HashStore(MICRO_TABLE_ID, TOTAL_KEYS_NUM, mem_store_alloc_param);
+    micro_table = new HashStore(MICRO_TABLE_ID, 200000, mem_store_alloc_param);
     PopulateTable(mem_store_reserve_param);
     table_ptrs.push_back(micro_table);
   }

@@ -101,6 +101,7 @@ class DTX {
     Clean();
     is_ro_tx = true;
     tx_id = txid;
+    start_time = 0;
   }
 
   void AddToReadOnlySet(DataItemPtr item) {
