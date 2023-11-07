@@ -281,6 +281,7 @@ bool DTX::IssueValidate(std::vector<ValidateRead> &pending_validate) {
                   GlobalAddress(node_id, it->GetRemoteVersionAddr()),
                   sizeof(version_t));
     context->PostRequest();
+    SDS_INFO("validate key=%ld", it->key);
   }
   return true;
 }
