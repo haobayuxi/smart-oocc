@@ -170,8 +170,8 @@ bool DTX::IssueReadOnly(std::vector<DirectRead> &pending_direct_ro,
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     item.read_which_node = node_id;
     auto offset = addr_cache->Search(node_id, it->table_id, it->key);
-    SDS_INFO("search key = %ld,offset = %ld, tid = %ld", it->key, offset,
-             tx_id);
+    // SDS_INFO("search key = %ld,offset = %ld, tid = %ld", it->key, offset,
+    //          tx_id);
     if (offset != NOT_FOUND) {
       it->remote_offset = offset;
       char *buf = AllocLocalBuffer(DataItemSize);
@@ -338,9 +338,10 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     bool find = false;
 
     for (auto &item : local_hash_node->data_items) {
-      SDS_INFO("read =%ld,key=%ld, tableid =%d, tid=%ld", it->key, item.key,
-               item.table_id, tx_id);
-      assert(item.table_id == 1);
+      //   SDS_INFO("read =%ld,key=%ld, tableid =%d, tid=%ld", it->key,
+      //   item.key,
+      //            item.table_id, tx_id);
+      //   assert(item.table_id == 1);
       if (item.key == it->key && item.table_id == it->table_id) {
         *it = item;
         addr_cache->Insert(res.node_id, it->table_id, it->key,
