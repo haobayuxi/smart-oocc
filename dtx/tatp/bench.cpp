@@ -433,31 +433,31 @@ void RunTx(DTXContext *context) {
 #else
     switch (tx_type) {
       case TATPTxType::kGetSubsciberData:
-        SDS_INFO("get sub");
+        // SDS_INFO("get sub");
         tx_committed = TxGetSubsciberData(iter, dtx);
         break;
       case TATPTxType::kGetNewDestination:
-        SDS_INFO("get new dest");
+        // SDS_INFO("get new dest");
         tx_committed = TxGetNewDestination(iter, dtx);
         break;
       case TATPTxType::kGetAccessData:
-        SDS_INFO("get get access");
+        // SDS_INFO("get get access");
         tx_committed = TxGetAccessData(iter, dtx);
         break;
       case TATPTxType::kUpdateSubscriberData:
-        SDS_INFO("update sub");
+        // SDS_INFO("update sub");
         tx_committed = TxUpdateSubscriberData(iter, dtx);
         break;
       case TATPTxType::kUpdateLocation:
-        SDS_INFO("update location");
+        // SDS_INFO("update location");
         tx_committed = TxUpdateLocation(iter, dtx);
         break;
       case TATPTxType::kInsertCallForwarding:
-        SDS_INFO("insert sub");
+        // SDS_INFO("insert sub");
         tx_committed = TxInsertCallForwarding(iter, dtx);
         break;
       case TATPTxType::kDeleteCallForwarding:
-        SDS_INFO("delete sub");
+        // SDS_INFO("delete sub");
         tx_committed = TxDeleteCallForwarding(iter, dtx);
         break;
       default:
