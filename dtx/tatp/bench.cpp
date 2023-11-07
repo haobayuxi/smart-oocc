@@ -507,7 +507,7 @@ void execute_thread(int id, DTXContext *context) {
          id;
   tatp_client = new TATP();
   workgen_arr = tatp_client->CreateWorkgenArray();
-  WarmUp(context);
+  //   WarmUp(context);
   SDS_INFO("warm up done");
   TaskPool::Enable();
   auto &task_pool = TaskPool::Get();
