@@ -477,9 +477,9 @@ int Initiator::poll_once(node_t mem_node_id, bool notify) {
         // }
       }
     }
-    if (total_ack && manager_.config().throttler) {
-      increase_credit(total_ack);
-    }
+    // if (total_ack && manager_.config().throttler) {
+    //   increase_credit(total_ack);
+    // }
   }
   return total_ack;
 }
