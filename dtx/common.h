@@ -37,6 +37,7 @@ const size_t MAX_ITEM_SIZE = 8;
 #define STATE_LOCKED \
   1  // Data cannot be written. Used for serializing transactions
 #define STATE_CLEAN 0
+#define STATE_READ_LOCKED 1
 
 // Alias
 #define Aligned8 __attribute__((aligned(8)))
