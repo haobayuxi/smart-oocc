@@ -288,6 +288,7 @@ class DTX {
  private:
   tx_id_t tx_id;
   t_id_t t_id;
+  long long start_time;
 
   DTXContext *context;
   AddrCache *addr_cache;
