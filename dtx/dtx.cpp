@@ -357,8 +357,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
       if (unlikely((it->lock > STATE_READ_LOCKED))) {
         return false;
       } else {
-        addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
-        return false;
+        return true;
       }
     } else {
       node_id_t remote_node_id = GetPrimaryNodeID(it->table_id);
