@@ -116,11 +116,13 @@ void RunTx(DTXContext *context) {
       double tx_usec =
           (tx_end_time.tv_sec - tx_start_time.tv_sec) * 1000000 +
           (double)(tx_end_time.tv_nsec - tx_start_time.tv_nsec) / 1000;
-      SDS_INFO("tx_usec=%d", tx_usec);
+      SDS_INFO("tx_usec=%lf", tx_usec);
       timer[timer_idx] = tx_usec;
       timer_idx += threads * coroutines;
       commit_tx++;
       // IdleExecution();
+    } else {
+      SDS_INFO("fail");
     }
     // Stat after a million of transactions finish
     if (attempt_tx == ATTEMPTED_NUM) {
