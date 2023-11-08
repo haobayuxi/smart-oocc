@@ -172,6 +172,7 @@ class DTX {
         }
       }
       // free read write locks
+      DrTMCommit();
     } else if (txn_sys == DTX_SYS::OOCC) {
       // check lease
       if ((end_time - start_time) > lease) {

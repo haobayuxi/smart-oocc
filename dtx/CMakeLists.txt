@@ -2,11 +2,11 @@
 # target_compile_definitions(dtx_smallbank PUBLIC CONFIG_ITEM_SIZE=8)
 # target_link_libraries(dtx_smallbank PUBLIC smart)
 
-add_library(dtx_tatp dtx.cpp)
+add_library(dtx_tatp dtx.cpp drtm.cpp)
 target_compile_definitions(dtx_tatp PUBLIC CONFIG_ITEM_SIZE=40)
 target_link_libraries(dtx_tatp PUBLIC smart)
 
-add_library(dtx_ycsb dtx.cpp)
+add_library(dtx_ycsb dtx.cpp drtm.cpp)
 target_compile_definitions(dtx_ycsb PUBLIC CONFIG_ITEM_SIZE=8)
 target_link_libraries(dtx_ycsb PUBLIC smart)
 
