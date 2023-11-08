@@ -35,7 +35,8 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                             std::list<InvisibleRead> &pending_invisible_ro,
                             std::list<HashRead> &pending_next_hash_ro) {
   for (auto &res : pending_cas_ro) {
-    auto *fetched_item = res.item->item_ptr.get();
+    auto *it = res.item->item_ptr.get();
+    auto *fetched_item = (DataItem *)res->data_buf;
     if (likely(fetched_item->key == it->key &&
                fetched_item->table_id == it->table_id)) {
       if (likely(fetched_item->valid)) {
@@ -173,7 +174,7 @@ bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
       char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
       char *data_buf = AllocLocalBuffer(DataItemSize);
       pending_cas_ro.emplace_back(CasRead{
-          .item = &read_write_set[i],
+          .item = &item,
           .cas_buf = cas_buf,
           .data_buf = data_buf,
           .node_id = node_id,
