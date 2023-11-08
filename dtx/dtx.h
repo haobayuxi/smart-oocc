@@ -266,6 +266,7 @@ class DTX {
  private:
   char *AllocLocalBuffer(size_t size) { return context->Alloc(size); }
 
+  ALWAYS_INLINE
   node_id_t GetPrimaryNodeID(table_id_t table_id) {
     return context->GetPrimaryNodeID(table_id);
   }
@@ -273,7 +274,7 @@ class DTX {
   std::vector<node_id_t> *GetBackupNodeID(table_id_t table_id) {
     return context->GetBackupNodeID(table_id);
   }
-
+  ALWAYS_INLINE
   HashMeta &GetPrimaryHashMetaWithTableID(table_id_t table_id) {
     return context->GetPrimaryHashMetaWithTableID(table_id);
   }

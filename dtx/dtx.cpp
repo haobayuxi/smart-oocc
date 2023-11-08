@@ -354,12 +354,8 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
     auto *fetched_item = (DataItem *)res.buf;
     if (likely(fetched_item->key == it->key &&
                fetched_item->table_id == it->table_id)) {
-      if (likely(fetched_item->valid)) {
-        *it = *fetched_item;
-        res.item->is_fetched = true;
-        if (unlikely((it->lock > STATE_READ_LOCKED))) {
-          return false;
-        }
+      if (unlikely((it->lock > STATE_READ_LOCKED))) {
+        return false;
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
         return false;

@@ -91,7 +91,7 @@ class DTXContext {
   void RunTasks() { return node_.run_tasks(); }
 
   AddrCache *GetAddrCache() { return &tl_data_[GetThreadID()].addr_cache; }
-
+  ALWAYS_INLINE
   node_id_t GetPrimaryNodeID(table_id_t table_id) {
     auto search = primary_table_nodes.find(table_id);
     assert(search != primary_table_nodes.end());
@@ -107,6 +107,7 @@ class DTXContext {
     return &(search->second);
   }
 
+  ALWAYS_INLINE
   HashMeta &GetPrimaryHashMetaWithTableID(table_id_t table_id) {
     auto search = primary_hash_metas.find(table_id);
     assert(search != primary_hash_metas.end());
