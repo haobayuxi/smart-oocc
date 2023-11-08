@@ -29,7 +29,7 @@ bool DTX::DrTMExeRO() {
   return true;
 }
 
-bool DrTMExeRW() { return true; }
+bool DTX::DrTMExeRW() { return true; }
 
 bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                             std::list<InvisibleRead> &pending_invisible_ro,
