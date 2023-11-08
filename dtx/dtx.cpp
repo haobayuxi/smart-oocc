@@ -3,20 +3,15 @@
 
 #include "dtx.h"
 
-DTX::DTX(DTXContext *context, int _txn_sys, int _lease)
+DTX::DTX(DTXContext *context)
     : context(context), tx_id(0), addr_cache(nullptr) {
-  addr_cache = &context->addr_cache;
+  addr_cache = context->GetAddrCache();
   t_id = GetThreadID();
-  txn_sys = _txn_sys;
-  lease = _lease;
 }
 
 bool DTX::ExeRO() {
   std::vector<DirectRead> pending_direct_ro;
   std::vector<HashRead> pending_hash_ro;
-  if (start_time == 0) {
-    start_time = get_clock_sys_time_us();
-  }
   IssueReadOnly(pending_direct_ro, pending_hash_ro);
   context->Sync();
   std::list<InvisibleRead> pending_invisible_ro;
@@ -77,7 +72,6 @@ bool DTX::ExeRW() {
 }
 
 bool DTX::Validate() {
-  //   SDS_INFO("validate ");
   if (not_eager_locked_rw_set.empty() && read_only_set.empty()) return true;
   std::vector<ValidateRead> pending_validate;
   IssueValidate(pending_validate);
@@ -114,7 +108,7 @@ bool DTX::CoalescentCommit() {
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
   *(lock_t *)cas_buf = STATE_LOCKED | STATE_INVISIBLE;
   std::vector<CommitWrite> pending_commit_write;
-  //   context->Sync();
+  context->Sync();
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
   context->Sync();
   *((lock_t *)cas_buf) = 0;
@@ -354,10 +348,20 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
     auto *fetched_item = (DataItem *)res.buf;
     if (likely(fetched_item->key == it->key &&
                fetched_item->table_id == it->table_id)) {
-      if (unlikely((it->lock > STATE_READ_LOCKED))) {
-        return false;
+      if (likely(fetched_item->valid)) {
+        *it = *fetched_item;
+        res.item->is_fetched = true;
+        if (unlikely((it->lock & STATE_INVISIBLE))) {
+          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
+          pending_invisible_ro.emplace_back(InvisibleRead{
+              .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
+          context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
+                        sizeof(lock_t));
+        }
       } else {
-        return true;
+        addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
+        return false;
       }
     } else {
       node_id_t remote_node_id = GetPrimaryNodeID(it->table_id);
@@ -391,9 +395,6 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
                            it->remote_offset);
         res.item->is_fetched = true;
         find = true;
-        break;
-      }
-      if (!item.valid) {
         break;
       }
     }
