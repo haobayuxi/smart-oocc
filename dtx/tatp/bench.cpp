@@ -336,7 +336,8 @@ void WarmUp(DTXContext *context) {
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
     TATPTxType tx_type = workgen_arr[FastRand(&seed) % 100];
-    uint64_t iter = ++tx_id_generator;  // Global atomic transaction id
+    uint64_t iter = ++tx_id_local;
+    // Global atomic transaction id
     switch (tx_type) {
       case TATPTxType::kGetSubsciberData:
         tx_committed = TxGetSubsciberData(iter, dtx);
@@ -386,11 +387,13 @@ void RunTx(DTXContext *context) {
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
   uint64_t commit_tx = 0;
+  tx_id_local = GetThreadID() << 50;
+
   int timer_idx = GetThreadID() * coroutines + GetTaskID();
   // Running transactions
   while (true) {
     TATPTxType tx_type = workgen_arr[FastRand(&seed) % 100];
-    uint64_t iter = ++tx_id_generator;  // Global atomic transaction id
+    uint64_t iter = ++tx_id_local;  // Global atomic transaction id
     attempt_tx++;
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
 #ifdef ABORT_DISCARD
