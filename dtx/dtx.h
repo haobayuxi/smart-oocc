@@ -145,16 +145,17 @@ class DTX {
   }
 
   bool TxCommit() {
+    auto end_time = 0;
     if (is_ro_tx && read_only_set.size() == 1) {
       //   context->EndTask();
-      auto end_time = get_clock_sys_time_us();
+      end_time = get_clock_sys_time_us();
       SDS_INFO("commit time=%lld", end_time - start_time);
       return true;
     }
     if (!Validate()) {
       goto ABORT;
     }
-    auto end_time = get_clock_sys_time_us();
+    end_time = get_clock_sys_time_us();
     SDS_INFO("validate commit time=%lld", end_time - start_time);
     if (!is_ro_tx) {
       if (CoalescentCommit()) {
