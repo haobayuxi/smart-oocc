@@ -39,6 +39,7 @@ struct DataSetItem {
   bool is_fetched;
   bool is_logged;
   node_id_t read_which_node;
+  uint64_t DrTM_lease;
 };
 
 struct OldVersionForInsert {
