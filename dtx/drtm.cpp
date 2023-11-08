@@ -35,8 +35,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                             std::list<InvisibleRead> &pending_invisible_ro,
                             std::list<HashRead> &pending_next_hash_ro) {
   for (auto &res : pending_cas_ro) {
-    auto *it = res.item->item_ptr.get();
-    auto *fetched_item = (DataItem *)res.buf;
+    auto *fetched_item = res.item->item_ptr.get();
     if (likely(fetched_item->key == it->key &&
                fetched_item->table_id == it->table_id)) {
       if (likely(fetched_item->valid)) {
@@ -46,7 +45,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
           // write locked
           return false;
         } else {
-          auto lease = ite->lock >> 1;
+          auto lease = it->lock >> 1;
           if (lease_expired(lease)) {
             return false;
           }
@@ -97,7 +96,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
         // write locked
         return false;
       } else {
-        auto lease = ite->lock >> 1;
+        auto lease = it->lock >> 1;
         if (lease_expired(lease)) {
           return false;
         }
@@ -179,9 +178,9 @@ bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
           .data_buf = data_buf,
           .node_id = node_id,
       });
-      context->CompareAndSwap(cas_buf,
-                              GlobalAddress(node_id, GetRemoteLockAddr(offset)),
-                              0, read_lease);
+      context->CompareAndSwap(
+          cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)), 0,
+          read_lease);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
