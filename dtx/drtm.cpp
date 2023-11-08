@@ -14,23 +14,24 @@ bool DTX::DrTMExeRO() {
   context->Sync();
   std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
-  if (!CheckDirectRO(pending_cas_ro, pending_invisible_ro,
-                     pending_next_hash_ro))
+  if (!DrTMCheckDirectRO(pending_cas_ro, pending_invisible_ro,
+                         pending_next_hash_ro))
     return false;
-  if (!CheckHashRO(pending_hash_ro, pending_invisible_ro, pending_next_hash_ro))
+  if (!DrTMCheckHashRO(pending_hash_ro, pending_invisible_ro,
+                       pending_next_hash_ro))
     return false;
   while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty()) {
     context->Sync();
-    if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+    // if (!CheckInvisibleRO(pending_invisible_ro)) return false;
     if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
       return false;
   }
   return true;
 }
 
-bool DTX::CheckDirectRO(std::vector<CasRead> &pending_cas_ro,
-                        std::list<InvisibleRead> &pending_invisible_ro,
-                        std::list<HashRead> &pending_next_hash_ro) {
+bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
+                            std::list<InvisibleRead> &pending_invisible_ro,
+                            std::list<HashRead> &pending_next_hash_ro) {
   for (auto &res : pending_cas_ro) {
     auto *it = res.item->item_ptr.get();
     auto *fetched_item = (DataItem *)res.buf;
@@ -113,6 +114,49 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
   }
   return true;
 }
+
+// bool DTX::CheckNextHashRO(std::list<InvisibleRead> &pending_invisible_ro,
+//                           std::list<HashRead> &pending_next_hash_ro) {
+//   for (auto iter = pending_next_hash_ro.begin();
+//        iter != pending_next_hash_ro.end();) {
+//     auto res = *iter;
+//     auto *local_hash_node = (HashNode *)res.buf;
+//     auto *it = res.item->item_ptr.get();
+//     bool find = false;
+
+//     for (auto &item : local_hash_node->data_items) {
+//       if (item.valid && item.key == it->key && item.table_id == it->table_id)
+//       {
+//         *it = item;
+//         addr_cache->Insert(res.node_id, it->table_id, it->key,
+//                            it->remote_offset);
+//         res.item->is_fetched = true;
+//         find = true;
+//         break;
+//       }
+//     }
+
+//     if (likely(find)) {
+//       if (unlikely((it->lock & STATE_INVISIBLE))) {
+//         char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+//         uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
+//         pending_invisible_ro.emplace_back(InvisibleRead{
+//             .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
+//         context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
+//                       sizeof(lock_t));
+//       }
+//       iter = pending_next_hash_ro.erase(iter);
+//     } else {
+//       if (local_hash_node->next == nullptr) return false;
+//       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
+//                       res.meta.base_off;
+//       context->read(res.buf, GlobalAddress(res.node_id, node_off),
+//                     sizeof(HashNode));
+//       iter++;
+//     }
+//   }
+//   return true;
+// }
 
 bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
                             std::vector<HashRead> &pending_hash_ro) {

@@ -287,6 +287,19 @@ class DTX {
   bool CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
                       std::list<InsertOffRead> &pending_next_off_rw);
 
+  // DrTM
+  bool lease_expired(uint64_t lease);
+  bool DrTMExeRO();
+  bool DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
+                         std::list<InvisibleRead> &pending_invisible_ro,
+                         std::list<HashRead> &pending_next_hash_ro);
+  bool DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
+                       std::list<InvisibleRead> &pending_invisible_ro,
+                       std::list<HashRead> &pending_next_hash_ro);
+  bool DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
+                         std::vector<HashRead> &pending_hash_ro);
+  bool DrTMCommit();
+
  private:
   char *AllocLocalBuffer(size_t size) { return context->Alloc(size); }
 
