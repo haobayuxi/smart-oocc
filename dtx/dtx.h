@@ -307,6 +307,7 @@ class DTX {
   // DrTM
   bool lease_expired(uint64_t lease);
   bool DrTMExeRO();
+  bool DrTMExeRW();
   bool DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                          std::list<InvisibleRead> &pending_invisible_ro,
                          std::list<HashRead> &pending_next_hash_ro);
