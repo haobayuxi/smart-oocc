@@ -110,7 +110,7 @@ bool DTX::CoalescentCommit() {
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
   *(lock_t *)cas_buf = STATE_LOCKED | STATE_INVISIBLE;
   std::vector<CommitWrite> pending_commit_write;
-  context->Sync();
+  //   context->Sync();
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
   context->Sync();
   *((lock_t *)cas_buf) = 0;
