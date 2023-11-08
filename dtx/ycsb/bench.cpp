@@ -121,8 +121,6 @@ void RunTx(DTXContext *context) {
       timer_idx += threads * coroutines;
       commit_tx++;
       // IdleExecution();
-    } else {
-      SDS_INFO("fail");
     }
     // Stat after a million of transactions finish
     if (attempt_tx == ATTEMPTED_NUM) {
@@ -144,7 +142,7 @@ void execute_thread(int id, DTXContext *context, double theta) {
              kMaxThreads +
          id;
   ycsb_client = new YCSB(theta, id);
-  WarmUp(context);
+  // WarmUp(context);
   // SDS_INFO("warm done");
   TaskPool::Enable();
   auto &task_pool = TaskPool::Get();
