@@ -3,10 +3,12 @@
 
 #include "dtx.h"
 
-DTX::DTX(DTXContext *context)
+DTX::DTX(DTXContext *context, int _txn_sys, int _lease)
     : context(context), tx_id(0), addr_cache(nullptr) {
-  addr_cache = context->GetAddrCache();
+  addr_cache = &context->addr_cache;
   t_id = GetThreadID();
+  txn_sys = _txn_sys;
+  lease = _lease;
 }
 
 bool DTX::ExeRO() {
