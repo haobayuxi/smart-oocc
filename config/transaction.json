@@ -19,7 +19,7 @@
     "num_subscriber": 100000
   },
   "ycsb": {
-    "data_item_size": 2,
+    "data_item_size": 1,
     "write_ratio": 0,
     "theta": 0.99,
     "is_skewed": false
