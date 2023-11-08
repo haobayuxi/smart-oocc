@@ -353,13 +353,14 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        if (unlikely((it->lock & STATE_INVISIBLE))) {
-          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-          uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
-          pending_invisible_ro.emplace_back(InvisibleRead{
-              .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
-          context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
-                        sizeof(lock_t));
+        if (unlikely((it->lock > STATE_READ_LOCKED))) {
+          //   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          //   uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
+          //   pending_invisible_ro.emplace_back(InvisibleRead{
+          //       .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
+          //   context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
+          //                 sizeof(lock_t));
+          return false;
         }
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
