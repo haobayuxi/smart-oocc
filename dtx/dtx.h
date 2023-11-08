@@ -125,20 +125,37 @@ class DTX {
     if (read_write_set.empty() && read_only_set.empty()) {
       return true;
     }
-
-    if (read_write_set.empty()) {
-      if (ExeRO()) {
-        return true;
+    if (txn_sys == DTX_SYS::OOCC || txn_sys == DTX_SYS::OCC) {
+      if (read_write_set.empty()) {
+        if (ExeRO()) {
+          return true;
+        } else {
+          goto ABORT;
+        }
       } else {
-        goto ABORT;
+        if (ExeRW()) {
+          return true;
+        } else {
+          goto ABORT;
+        }
+      }
+    } else if (txn_sys == DTX_SYS::DrTMH) {
+      if (read_write_set.empty()) {
+        if (DrTMExeRO()) {
+          return true;
+        } else {
+          goto ABORT;
+        }
+      } else {
+        if (DrTMExeRW()) {
+          return true;
+        } else {
+          goto ABORT;
+        }
       }
     } else {
-      if (ExeRW()) {
-        return true;
-      } else {
-        goto ABORT;
-      }
     }
+
     return true;
   ABORT:
     if (fail_abort) Abort();
