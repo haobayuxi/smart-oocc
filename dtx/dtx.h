@@ -154,6 +154,8 @@ class DTX {
     if (!Validate()) {
       goto ABORT;
     }
+    auto end_time = get_clock_sys_time_us();
+    SDS_INFO("validate commit time=%lld", end_time - start_time);
     if (!is_ro_tx) {
       if (CoalescentCommit()) {
         // context->EndTask();
