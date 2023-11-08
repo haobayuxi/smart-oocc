@@ -60,11 +60,11 @@ struct HashRead {
   const HashMeta meta;
 };
 
-struct InvisibleRead {
-  node_id_t node_id;
-  char *buf;
-  uint64_t off;
-};
+// struct InvisibleRead {
+//   node_id_t node_id;
+//   char *buf;
+//   uint64_t off;
+// };
 
 struct CasRead {
   node_id_t node_id;
@@ -150,7 +150,7 @@ class DTX {
     if (is_ro_tx && read_only_set.size() == 1) {
       //   context->EndTask();
       end_time = get_clock_sys_time_us();
-      SDS_INFO("commit time=%lld", end_time - start_time);
+      //   SDS_INFO("commit time=%lld", end_time - start_time);
       return true;
     }
     if (!Validate()) {
@@ -227,41 +227,30 @@ class DTX {
 
  private:
   bool CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
-                     std::list<InvisibleRead> &pending_invisible_ro,
                      std::list<HashRead> &pending_next_hash_ro);
 
-  bool CheckInvisibleRO(std::list<InvisibleRead> &pending_invisible_ro);
-
   bool CheckHashRO(std::vector<HashRead> &pending_hash_ro,
-                   std::list<InvisibleRead> &pending_invisible_ro,
                    std::list<HashRead> &pending_next_hash_ro);
 
-  bool CheckNextHashRO(std::list<InvisibleRead> &pending_invisible_ro,
-                       std::list<HashRead> &pending_next_hash_ro);
+  bool CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro);
 
   bool CheckCasRW(std::vector<CasRead> &pending_cas_rw,
                   std::list<HashRead> &pending_next_hash_rw,
                   std::list<InsertOffRead> &pending_next_off_rw);
 
-  int FindMatchSlot(HashRead &res,
-                    std::list<InvisibleRead> &pending_invisible_ro);
+  int FindMatchSlot(HashRead &res);
 
   bool CheckHashRW(std::vector<HashRead> &pending_hash_rw,
-                   std::list<InvisibleRead> &pending_invisible_ro,
                    std::list<HashRead> &pending_next_hash_rw);
 
-  bool CheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
-                       std::list<HashRead> &pending_next_hash_rw);
+  bool CheckNextHashRW(std::list<HashRead> &pending_next_hash_rw);
 
-  int FindInsertOff(InsertOffRead &res,
-                    std::list<InvisibleRead> &pending_invisible_ro);
+  int FindInsertOff(InsertOffRead &res);
 
   bool CheckInsertOffRW(std::vector<InsertOffRead> &pending_insert_off_rw,
-                        std::list<InvisibleRead> &pending_invisible_ro,
                         std::list<InsertOffRead> &pending_next_off_rw);
 
-  bool CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
-                      std::list<InsertOffRead> &pending_next_off_rw);
+  bool CheckNextOffRW(std::list<InsertOffRead> &pending_next_off_rw);
 
  private:
   char *AllocLocalBuffer(size_t size) { return context->Alloc(size); }
