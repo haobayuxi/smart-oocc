@@ -310,19 +310,19 @@ static inline int GetTaskID() {
 }
 
 static inline void YieldTask() {
-  sfence();
+  // sfence();
   if (tl_task_pool_enabled) {
     TaskPool::Get().yield();
   }
-  sfence();
+  // sfence();
 }
 
 static inline void WaitTask() {
-  sfence();
+  // sfence();
   if (tl_task_pool_enabled) {
     TaskPool::Get().wait();
   }
-  sfence();
+  // sfence();
 }
 
 static inline void NotifyTask() {
