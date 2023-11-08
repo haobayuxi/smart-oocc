@@ -150,7 +150,7 @@ class DTX {
     if (is_ro_tx && read_only_set.size() == 1) {
       //   context->EndTask();
       end_time = get_clock_sys_time_us();
-      //   SDS_INFO("commit time=%lld", end_time - start_time);
+      SDS_INFO("commit time=%lld", end_time - start_time);
       return true;
     }
     if (!Validate()) {
