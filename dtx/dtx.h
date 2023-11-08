@@ -101,7 +101,8 @@ class DTX {
     Clean();
     is_ro_tx = true;
     tx_id = txid;
-    start_time = 0;
+    // start_time = 0;
+    start_time = get_clock_sys_time_us();
   }
 
   void AddToReadOnlySet(DataItemPtr item) {
