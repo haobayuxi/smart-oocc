@@ -29,6 +29,7 @@ int txn_sys;
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
 thread_local TATP *tatp_client;
+thread_local uint64_t tx_id_local;
 thread_local TATPTxType *workgen_arr;
 
 thread_local uint64_t rdma_cnt;

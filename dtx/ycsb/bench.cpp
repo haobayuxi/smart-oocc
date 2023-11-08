@@ -22,7 +22,7 @@ int write_ratio;
 bool is_skewed;
 int lease;
 int txn_sys;
-
+thread_local uint64_t tx_id_local;
 std::atomic<uint64_t> attempts(0);
 std::atomic<uint64_t> commits(0);
 double *timer;
@@ -75,7 +75,7 @@ void WarmUp(DTXContext *context) {
   DTX *dtx = new DTX(context, txn_sys, lease);
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
-    uint64_t iter = ++tx_id_generator;
+    uint64_t iter = ++tx_id_local;
     TxYCSB(iter, dtx);
   }
   delete dtx;
@@ -99,10 +99,11 @@ void RunTx(DTXContext *context) {
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
   uint64_t commit_tx = 0;
+  tx_id_local = GetThreadID() << 50;
   int timer_idx = GetThreadID() * coroutines + GetTaskID();
   // Running transactions
   while (true) {
-    uint64_t iter = ++tx_id_generator;  // Global atomic transaction id
+    uint64_t iter = ++tx_id_local;  // Global atomic transaction id
     attempt_tx++;
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
 #ifdef ABORT_DISCARD
