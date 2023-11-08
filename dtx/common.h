@@ -104,6 +104,6 @@ long long get_clock_sys_time_us() {
   struct timespec tp;
 
   clock_gettime(CLOCK_MONOTONIC, &tp);
-  // return (long long)(tp.tv_sec * 1000000 + tp.tv_nsec / 1000);
-  return (long long)(tp.tv_nsec / 1000);
+  return (long long)(tp.tv_sec * 1000000 + tp.tv_nsec / 1000);
+  //   return (long long)(tp.tv_nsec / 1000);
 }

@@ -39,7 +39,6 @@ struct DataSetItem {
   bool is_fetched;
   bool is_logged;
   node_id_t read_which_node;
-  uint64_t DrTM_lease;
 };
 
 struct OldVersionForInsert {
@@ -147,26 +146,50 @@ class DTX {
   }
 
   bool TxCommit() {
-    auto end_time = 0;
-    if (is_ro_tx && read_only_set.size() == 1) {
-      context->EndTask();
-      //   end_time = get_clock_sys_time_us();
-      //   SDS_INFO("commit time=%lld", end_time - start_time);
-      return true;
-    }
-    if (!Validate()) {
-      goto ABORT;
-    }
-    end_time = get_clock_sys_time_us();
-    // SDS_INFO("validate commit time=%lld", end_time - start_time);
-    if (!is_ro_tx) {
-      if (CoalescentCommit()) {
+    auto end_time = get_clock_sys_time_us();
+    if (txn_sys == DTX_SYS::DrTMH) {
+      for (auto &item : read_only_set) {
+        auto read_lease = item.item_ptr.get()->lock >> 1;
+        if (read_lease < end_time) {
+          goto ABORT;
+        }
+      }
+      // free read write locks
+    } else if (txn_sys == DTX_SYS::OOCC) {
+      // check lease
+      if ((end_time - start_time) > lease) {
+        if (!Validate()) {
+          goto ABORT;
+        }
+      }
+
+      if (!is_ro_tx) {
+        if (CoalescentCommit()) {
+          context->EndTask();
+          return true;
+        } else {
+          goto ABORT;
+        }
+      }
+    } else if (txn_sys == DTX_SYS::OCC) {
+      if (is_ro_tx && read_only_set.size() == 1) {
         context->EndTask();
         return true;
-      } else {
+      }
+      if (!Validate()) {
         goto ABORT;
       }
+      if (!is_ro_tx) {
+        if (CoalescentCommit()) {
+          context->EndTask();
+          return true;
+        } else {
+          goto ABORT;
+        }
+      }
+    } else {
     }
+
     context->EndTask();
     return true;
   ABORT:
@@ -296,6 +319,7 @@ class DTX {
   tx_id_t tx_id;
   t_id_t t_id;
   long long start_time;
+  long long DrTM_lease;
 
   DTXContext *context;
   AddrCache *addr_cache;

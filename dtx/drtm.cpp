@@ -1,5 +1,12 @@
 #include "dtx.h"
 
+bool DTX::lease_expired(uint64_t lease) {
+  if (lease > get_clock_sys_time_us()) {
+    return false;
+  }
+  return true;
+}
+
 bool DTX::DrTMExeRO() {
   std::vector<CasRead> pending_cas_ro;
   std::vector<HashRead> pending_hash_ro;
@@ -32,15 +39,16 @@ bool DTX::CheckDirectRO(std::vector<CasRead> &pending_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        if (unlikely((it->lock > STATE_READ_LOCKED))) {
-          //   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-          //   uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
-          //   pending_invisible_ro.emplace_back(InvisibleRead{
-          //       .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
-          //   context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
-          //                 sizeof(lock_t));
+        if (it->lock % 2 == 1) {
+          // write locked
           return false;
+        } else {
+          auto lease = ite->lock >> 1;
+          if (lease_expired(lease)) {
+            return false;
+          }
         }
+
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
         return false;
@@ -82,13 +90,14 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock & STATE_INVISIBLE))) {
-        char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-        uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
-        pending_invisible_ro.emplace_back(InvisibleRead{
-            .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
-        context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
-                      sizeof(lock_t));
+      if (it->lock % 2 == 1) {
+        // write locked
+        return false;
+      } else {
+        auto lease = ite->lock >> 1;
+        if (lease_expired(lease)) {
+          return false;
+        }
       }
     } else {
       if (local_hash_node->next == nullptr) return false;
@@ -107,6 +116,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
 
 bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
                             std::vector<HashRead> &pending_hash_ro) {
+  uint64_t read_lease = (start_time + 1000) << 1;
   for (auto &item : read_only_set) {
     if (item.is_fetched) continue;
     auto it = item.item_ptr;
@@ -117,13 +127,16 @@ bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
       it->remote_offset = offset;
       char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
       char *data_buf = AllocLocalBuffer(DataItemSize);
-      pending_cas_rw.emplace_back(CasRead{
+      pending_cas_ro.emplace_back(CasRead{
           .item = &read_write_set[i],
           .cas_buf = cas_buf,
           .data_buf = data_buf,
-          .node_id = remote_node_id,
+          .node_id = node_id,
       });
-      context->read(buf, GlobalAddress(node_id, offset), DataItemSize);
+      context->CompareAndSwap(cas_buf,
+                              GlobalAddress(node_id, GetRemoteLockAddr(offset)),
+                              0, read_lease);
+      context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
       HashMeta meta = GetPrimaryHashMetaWithTableID(it->table_id);
@@ -135,6 +148,16 @@ bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
       context->read(buf, GlobalAddress(node_id, node_off), sizeof(HashNode));
       context->PostRequest();
     }
+  }
+  return true;
+}
+
+bool DTX::DrTMCommit() {
+  // free read locks
+  for (auto &item : read_only_set) {
+  }
+  // free write locks
+  for (auto &rw : read_write_set) {
   }
   return true;
 }
