@@ -77,7 +77,7 @@ bool DTX::ExeRW() {
 }
 
 bool DTX::Validate() {
-  SDS_INFO("validate ");
+  //   SDS_INFO("validate ");
   if (not_eager_locked_rw_set.empty() && read_only_set.empty()) return true;
   std::vector<ValidateRead> pending_validate;
   IssueValidate(pending_validate);
