@@ -97,7 +97,7 @@ struct CommitWrite {
 class DTX {
  public:
   void TxBegin(tx_id_t txid) {
-    // context->BeginTask();
+    context->BeginTask();
     Clean();
     is_ro_tx = true;
     tx_id = txid;
@@ -148,7 +148,7 @@ class DTX {
   bool TxCommit() {
     auto end_time = 0;
     if (is_ro_tx && read_only_set.size() == 1) {
-      //   context->EndTask();
+      context->EndTask();
       //   end_time = get_clock_sys_time_us();
       //   SDS_INFO("commit time=%lld", end_time - start_time);
       return true;
@@ -160,13 +160,13 @@ class DTX {
     // SDS_INFO("validate commit time=%lld", end_time - start_time);
     if (!is_ro_tx) {
       if (CoalescentCommit()) {
-        // context->EndTask();
+        context->EndTask();
         return true;
       } else {
         goto ABORT;
       }
     }
-    // context->EndTask();
+    context->EndTask();
     return true;
   ABORT:
     Abort();
@@ -177,8 +177,8 @@ class DTX {
   void TxAbortReadOnly() {
     assert(read_write_set.empty());
     read_only_set.clear();
-    // context->RetryTask();
-    // context->EndTask();
+    context->RetryTask();
+    context->EndTask();
   }
 
   void TxAbortReadWrite() { Abort(); }
