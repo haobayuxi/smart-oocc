@@ -145,6 +145,8 @@ class DTX {
   }
 
   bool TxCommit() {
+    auto end_time = get_clock_sys_time_us();
+    SDS_INFO("commit time=%lld", end_time - start_time);
     if (is_ro_tx && read_only_set.size() == 1) {
       context->EndTask();
       return true;
