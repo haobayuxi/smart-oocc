@@ -145,10 +145,10 @@ class DTX {
   }
 
   bool TxCommit() {
-    if (is_ro_tx && read_only_set.size() == 1) {
-      context->EndTask();
-      return true;
-    }
+    // if (is_ro_tx && read_only_set.size() == 1) {
+    //   context->EndTask();
+    //   return true;
+    // }
     if (!Validate()) {
       goto ABORT;
     }
