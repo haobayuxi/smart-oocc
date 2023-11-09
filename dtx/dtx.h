@@ -164,6 +164,7 @@ class DTX {
 
   bool TxCommit() {
     auto end_time = get_clock_sys_time_us();
+    sleep(5);
     if (txn_sys == DTX_SYS::DrTMH) {
       end_time = end_time << 1;
       for (auto &item : read_only_set) {
