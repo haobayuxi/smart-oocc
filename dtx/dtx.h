@@ -175,7 +175,6 @@ class DTX {
           goto ABORT;
         }
       }
-      //   SDS_INFO("commit %ld", tx_id);
       if (!is_ro_tx) {
         if (CoalescentCommit()) {
           context->EndTask();
@@ -184,6 +183,8 @@ class DTX {
           goto ABORT;
         }
       }
+
+      SDS_INFO("commit %ld", tx_id);
     } else if (txn_sys == DTX_SYS::OOCC) {
       // check lease
       if ((end_time - start_time) > lease) {
