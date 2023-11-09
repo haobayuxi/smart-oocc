@@ -104,6 +104,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
         res.item->is_fetched = true;
         if (it->lock % 2 == 1) {
           // write locked
+          SDS_INFO("write locked");
           return false;
         } else {
           if (lease_expired(it->lock)) {
