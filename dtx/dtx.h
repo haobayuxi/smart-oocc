@@ -184,7 +184,7 @@ class DTX {
         }
       }
 
-      SDS_INFO("commit %ld", tx_id);
+      //   SDS_INFO("commit %ld", tx_id);
     } else if (txn_sys == DTX_SYS::OOCC) {
       // check lease
       if ((end_time - start_time) > lease) {
