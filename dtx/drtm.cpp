@@ -5,7 +5,7 @@ uint64_t next_lease() { return (get_clock_sys_time_us() + 1000) << 1; }
 bool DTX::lease_expired(uint64_t lock) {
   auto now = (get_clock_sys_time_us() << 1);
   if (lock > now) {
-    SDS_INFO("not expired %ld, %ld", lock, now);
+    SDS_INFO("not expired %ld, %ld, %ld", lock, now, tx_id);
     return true;
   }
   return false;
@@ -29,6 +29,7 @@ bool DTX::DrTMExeRO() {
     if (!pending_invisible_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
       context->Sync();
+      SDS_INFO("next not suppose");
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
       if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
@@ -81,7 +82,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
             context->PostRequest();
           }
 
-          //   SDS_INFO("lease not expired %ld", tx_id);
+          SDS_INFO("lease not expired %ld", tx_id);
         }
         iter = pending_next_cas_ro.erase(iter);
       } else {
@@ -134,7 +135,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
             context->PostRequest();
           }
         }
-
+        SDS_INFO("lease not expired %ld", tx_id);
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
         return false;
@@ -199,6 +200,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
           context->PostRequest();
         }
       }
+      //   SDS_INFO("hash found");
     } else {
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
