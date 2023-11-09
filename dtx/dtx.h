@@ -176,7 +176,7 @@ class DTX {
         }
       }
       SDS_INFO("commit %ld", tx_id);
-      usleep(2000);
+      //   usleep(2000);
       // free read write locks
       DrTMCommit();
     } else if (txn_sys == DTX_SYS::OOCC) {
