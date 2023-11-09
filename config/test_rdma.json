@@ -6,5 +6,5 @@
   "block_size": 8,
   "qp_num": -1,
   "dump_file_path": "test_rdma.csv",
-  "type": "read"
+  "type": "atomic"
 }
