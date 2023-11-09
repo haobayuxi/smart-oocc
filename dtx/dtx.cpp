@@ -44,7 +44,7 @@ bool DTX::ExeRW() {
   std::list<HashRead> pending_next_hash_rw;
   std::list<InsertOffRead> pending_next_off_rw;
   IssueReadOnly(pending_direct_ro, pending_hash_ro);
-  IssueReadLock(pending_cas_rw, pending_hash_rw, pending_insert_off_rw);
+  IssueReadWrite(pending_cas_rw, pending_hash_rw, pending_insert_off_rw);
   context->Sync();
   if (!CheckDirectRO(pending_direct_ro, pending_invisible_ro,
                      pending_next_hash_ro))
