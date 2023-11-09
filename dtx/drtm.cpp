@@ -12,6 +12,7 @@ bool DTX::DrTMExeRO() {
   std::vector<HashRead> pending_hash_ro;
   DrTMIssueReadOnly(pending_cas_ro, pending_hash_ro);
   context->Sync();
+  std::list<CasRead> pending_next_cas_ro;
   std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
   if (!DrTMCheckDirectRO(pending_cas_ro, pending_invisible_ro,
@@ -20,19 +21,72 @@ bool DTX::DrTMExeRO() {
   if (!DrTMCheckHashRO(pending_hash_ro, pending_invisible_ro,
                        pending_next_hash_ro))
     return false;
-  while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty()) {
-    context->Sync();
-    // if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-    if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
-      return false;
+  for (int i = 0; i < 5000; i++) {
+    if (!pending_invisible_ro.empty() || !pending_next_cas_ro.emtpry() ||
+        !pending_next_hash_ro.empty()) {
+      context->Sync();
+      if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+      if (!Check)
+        if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+          return false;
+    } else {
+      break;
+    }
   }
+  //   while (!pending_invisible_ro.empty() || !pending_next_cas_ro.emtpry() ||
+  //          !pending_next_hash_ro.empty()) {
+  //     context->Sync();
+  //     if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+  //     if (!Check)
+  //       if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+  //         return false;
+  //   }
   return true;
 }
 
 bool DTX::DrTMExeRW() { return true; }
 
+bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
+  for (auto &res : pending_next_cas_ro) {
+    auto *it = res.item->item_ptr.get();
+    auto *fetched_item = (DataItem *)res.data_buf;
+    if (likely(fetched_item->key == it->key &&
+               fetched_item->table_id == it->table_id)) {
+      if (likely(fetched_item->valid)) {
+        *it = *fetched_item;
+        res.item->is_fetched = true;
+        if (it->lock % 2 == 1) {
+          // write locked
+          return false;
+        } else {
+          auto lease = it->lock >> 1;
+          if (lease_expired(lease)) {
+            // retry
+            context->CompareAndSwap(
+                res.cas_buf,
+                GlobalAddress(res.node_id, it->GetRemoteLockAddr(
+                                               fetched_item->remote_offset)),
+                it->lock, get_clock_sys_time_us() + 1000);
+            context->read(
+                res.data_buf,
+                GlobalAddress(res.node_id, fetched_item->remote_offset),
+                DataItemSize);
+            context->PostRequest();
+          }
+        }
+        pending_next_cas_ro.erase(res);
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
-                            std::list<InvisibleRead> &pending_invisible_ro,
+                            std::list<CasRead> &pending_next_cas_ro,
                             std::list<HashRead> &pending_next_hash_ro) {
   for (auto &res : pending_cas_ro) {
     auto *it = res.item->item_ptr.get();
@@ -48,7 +102,23 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
         } else {
           auto lease = it->lock >> 1;
           if (lease_expired(lease)) {
-            return false;
+            // retry
+            pending_cas_ro.emplace_back(CasRead{
+                .node_id = res.node_id,
+                .item = res.item,
+                .cas_buf = res.cas_buf,
+                .data_buf = res.data_buf,
+            });
+            context->CompareAndSwap(
+                res.cas_buf,
+                GlobalAddress(res.node_id, it->GetRemoteLockAddr(
+                                               fetched_item->remote_offset)),
+                it->lock, get_clock_sys_time_us() + 1000);
+            context->read(
+                res.data_buf,
+                GlobalAddress(res.node_id, fetched_item->remote_offset),
+                DataItemSize);
+            context->PostRequest();
           }
         }
 
@@ -99,7 +169,21 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
       } else {
         auto lease = it->lock >> 1;
         if (lease_expired(lease)) {
-          return false;
+          pending_cas_ro.emplace_back(CasRead{
+              .node_id = res.node_id,
+              .item = res.item,
+              .cas_buf = res.cas_buf,
+              .data_buf = res.data_buf,
+          });
+          context->CompareAndSwap(
+              res.cas_buf,
+              GlobalAddress(res.node_id,
+                            it->GetRemoteLockAddr(fetched_item->remote_offset)),
+              it->lock, get_clock_sys_time_us() + 1000);
+          context->read(res.data_buf,
+                        GlobalAddress(res.node_id, fetched_item->remote_offset),
+                        DataItemSize);
+          context->PostRequest();
         }
       }
     } else {

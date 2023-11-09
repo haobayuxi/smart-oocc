@@ -351,7 +351,6 @@ class DTX {
   tx_id_t tx_id;
   t_id_t t_id;
   long long start_time;
-  long long DrTM_lease;
 
   DTXContext *context;
   AddrCache *addr_cache;
