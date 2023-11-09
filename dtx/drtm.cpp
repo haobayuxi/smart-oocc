@@ -65,8 +65,8 @@ bool DTX::DrTMExeRW() {
   if (!DrTMCheckHashRW(pending_hash_rw, pending_invisible_ro,
                        pending_next_hash_rw))
     return false;
-  if (!DrTMCheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
-                            pending_next_off_rw))
+  if (!CheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
+                        pending_next_off_rw))
     return false;
   if (!DrTMCheckCasRW(pending_cas_rw, pending_next_hash_rw,
                       pending_next_off_rw))
@@ -75,7 +75,7 @@ bool DTX::DrTMExeRW() {
          !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
     context->Sync();
     if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-    if (!DrTMCheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+    if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
       return false;
     if (!DrTMCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
       return false;
@@ -372,6 +372,64 @@ bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
       pending_hash_ro.emplace_back(HashRead{
           .node_id = node_id, .item = &item, .buf = buf, .meta = meta});
       context->read(buf, GlobalAddress(node_id, node_off), sizeof(HashNode));
+      context->PostRequest();
+    }
+  }
+  return true;
+}
+
+bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
+                         std::list<HashRead> &pending_next_hash_rw,
+                         std::list<InsertOffRead> &pending_next_off_rw) {
+  for (auto &re : pending_cas_rw) {
+    if (*((lock_t *)re.cas_buf) != STATE_CLEAN) {
+      return false;
+    }
+    auto it = re.item->item_ptr;
+    auto *fetched_item = (DataItem *)(re.data_buf);
+    if (likely(fetched_item->key == it->key &&
+               fetched_item->table_id == it->table_id)) {
+      if (it->user_insert) {
+        if (it->version < fetched_item->version) return false;
+        old_version_for_insert.push_back(
+            OldVersionForInsert{.table_id = it->table_id,
+                                .key = it->key,
+                                .version = fetched_item->version});
+      } else {
+        if (likely(fetched_item->valid)) {
+          assert(fetched_item->remote_offset == it->remote_offset);
+          *it = *fetched_item;
+        } else {
+          addr_cache->Insert(re.node_id, it->table_id, it->key, NOT_FOUND);
+          return false;
+        }
+      }
+      re.item->is_fetched = true;
+    } else {
+      *((lock_t *)re.cas_buf) = STATE_CLEAN;
+      context->Write(re.cas_buf,
+                     GlobalAddress(re.node_id, it->GetRemoteLockAddr()),
+                     sizeof(lock_t));
+      const HashMeta &meta = GetPrimaryHashMetaWithTableID(it->table_id);
+      uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
+      offset_t node_off = idx * meta.node_size + meta.base_off;
+      auto *local_hash_node = (HashNode *)AllocLocalBuffer(sizeof(HashNode));
+      if (it->user_insert) {
+        pending_next_off_rw.emplace_back(
+            InsertOffRead{.node_id = re.node_id,
+                          .item = re.item,
+                          .buf = (char *)local_hash_node,
+                          .meta = meta,
+                          .node_off = node_off});
+      } else {
+        pending_next_hash_rw.emplace_back(
+            HashRead{.node_id = re.node_id,
+                     .item = re.item,
+                     .buf = (char *)local_hash_node,
+                     .meta = meta});
+      }
+      context->read(local_hash_node, GlobalAddress(re.node_id, node_off),
+                    sizeof(HashNode));
       context->PostRequest();
     }
   }

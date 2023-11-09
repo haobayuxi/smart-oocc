@@ -333,6 +333,9 @@ class DTX {
                        std::list<HashRead> &pending_next_hash_rw);
   bool DrTMCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
                            std::list<HashRead> &pending_next_hash_rw);
+  bool DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
+                      std::list<HashRead> &pending_next_hash_rw,
+                      std::list<InsertOffRead> &pending_next_off_rw);
 
  private:
   char *AllocLocalBuffer(size_t size) { return context->Alloc(size); }
