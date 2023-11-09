@@ -67,27 +67,21 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
         } else {
           if (!lease_expired(it->lock)) {
             // retry
-            char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-            char *data_buf = AllocLocalBuffer(DataItemSize);
-            pending_next_cas_ro.emplace_back(CasRead{
-                .node_id = res.node_id,
-                .item = res.item,
-                .cas_buf = cas_buf,
-                .data_buf = data_buf,
-            });
+
             context->CompareAndSwap(
-                cas_buf,
+                res.cas_buf,
                 GlobalAddress(res.node_id, it->GetRemoteLockAddr(
                                                fetched_item->remote_offset)),
                 it->lock, next_lease());
             context->read(
-                data_buf,
+                res.data_buf,
                 GlobalAddress(res.node_id, fetched_item->remote_offset),
                 DataItemSize);
             context->PostRequest();
+          } else {
+            iter = pending_next_cas_ro.erase(iter);
           }
         }
-        iter = pending_next_cas_ro.erase(iter);
       } else {
         return false;
       }
