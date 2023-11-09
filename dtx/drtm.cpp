@@ -67,7 +67,6 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
         } else {
           if (!lease_expired(it->lock)) {
             // retry
-
             context->CompareAndSwap(
                 res.cas_buf,
                 GlobalAddress(res.node_id, it->GetRemoteLockAddr(
