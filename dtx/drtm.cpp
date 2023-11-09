@@ -63,7 +63,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
           // write locked
           return false;
         } else {
-          if (lease_expired(it->lock)) {
+          if (!lease_expired(it->lock)) {
             // retry
             context->CompareAndSwap(
                 res.cas_buf,
@@ -107,7 +107,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
           SDS_INFO("write locked");
           return false;
         } else {
-          if (lease_expired(it->lock)) {
+          if (!lease_expired(it->lock)) {
             // SDS_INFO("lease expired %ld", tx_id);
             // retry
             pending_cas_ro.emplace_back(CasRead{
@@ -174,7 +174,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
         // write locked
         return false;
       } else {
-        if (lease_expired(it->lock)) {
+        if (!lease_expired(it->lock)) {
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_cas_ro.emplace_back(CasRead{
