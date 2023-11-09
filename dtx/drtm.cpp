@@ -51,7 +51,6 @@ bool DTX::DrTMExeRO() {
 bool DTX::DrTMExeRW() { return true; }
 
 bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
-  SDS_INFO("next cas size = %d", pending_next_cas_ro.size());
   for (auto iter = pending_next_cas_ro.begin();
        iter != pending_next_cas_ro.end(); iter++) {
     auto res = *iter;
