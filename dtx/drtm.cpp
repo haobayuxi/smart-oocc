@@ -2,8 +2,8 @@
 
 uint64_t next_lease() { return (get_clock_sys_time_us() + 1000) << 1; }
 
-bool DTX::lease_expired(uint64_t lease) {
-  if (lease > ((get_clock_sys_time_us() << 1) >> 1)) {
+bool DTX::lease_expired(uint64_t lock) {
+  if (lock > (get_clock_sys_time_us() << 1)) {
     return true;
   }
   return false;
@@ -63,8 +63,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
           // write locked
           return false;
         } else {
-          auto lease = it->lock >> 1;
-          if (lease_expired(lease)) {
+          if (lease_expired(it->lock)) {
             // retry
             context->CompareAndSwap(
                 res.cas_buf,
@@ -107,8 +106,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
           // write locked
           return false;
         } else {
-          uint64_t lease = it->lock >> 1;
-          if (lease_expired(lease)) {
+          if (lease_expired(it->lock)) {
             // SDS_INFO("lease expired %ld", tx_id);
             // retry
             pending_cas_ro.emplace_back(CasRead{
@@ -175,8 +173,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
         // write locked
         return false;
       } else {
-        auto lease = it->lock >> 1;
-        if (lease_expired(lease)) {
+        if (lease_expired(it->lock)) {
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_cas_ro.emplace_back(CasRead{

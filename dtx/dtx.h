@@ -163,10 +163,11 @@ class DTX {
   }
 
   bool TxCommit() {
-    auto end_time = (get_clock_sys_time_us() << 1) >> 1;
+    auto end_time = get_clock_sys_time_us();
     if (txn_sys == DTX_SYS::DrTMH) {
+      end_time = end_time << 1;
       for (auto &item : read_only_set) {
-        uint64_t read_lease = item.item_ptr.get()->lock >> 1;
+        uint64_t read_lease = item.item_ptr.get()->lock;
         if (read_lease < end_time) {
           //   SDS_INFO("commit lease expired, %ld %ld", read_lease, end_time);
           goto ABORT;
