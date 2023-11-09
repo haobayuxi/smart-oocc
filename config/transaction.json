@@ -24,7 +24,7 @@
     "theta": 0.99,
     "is_skewed": false
   },
-  "nr_transactions": 6000000,
+  "nr_transactions": 60000000,
   "dump_file_path": "dtx.csv",
   "lease": 100,
   "txn_sys": 0,
