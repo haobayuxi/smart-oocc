@@ -106,7 +106,8 @@ bool DTX::DrTMIssueReadWrite(
                                           .cas_buf = cas_buf,
                                           .data_buf = data_buf});
       context->CompareAndSwap(
-          cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)), 0, 1);
+          cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
+          STATE_CLEAN, 1);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
@@ -191,7 +192,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
         res.item->is_fetched = true;
         if (it->lock % 2 == 1) {
           // write locked
-          SDS_INFO("write locked");
+          //   SDS_INFO("write locked");
           return false;
         } else {
           if (!lease_expired(it->lock)) {
