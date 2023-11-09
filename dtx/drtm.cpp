@@ -26,9 +26,9 @@ bool DTX::DrTMExeRO() {
         !pending_next_hash_ro.empty()) {
       context->Sync();
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-      if (!Check)
-        if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
-          return false;
+      if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
+      if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+        return false;
     } else {
       break;
     }
@@ -144,7 +144,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
 }
 
 bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
-                          std::list<InvisibleRead> &pending_invisible_ro,
+                          std::list<CasRead> &pending_next_cas_ro,
                           std::list<HashRead> &pending_next_hash_ro) {
   for (auto &res : pending_hash_ro) {
     auto *local_hash_node = (HashNode *)res.buf;
@@ -169,19 +169,21 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
       } else {
         auto lease = it->lock >> 1;
         if (lease_expired(lease)) {
-          pending_cas_ro.emplace_back(CasRead{
+          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          char *data_buf = AllocLocalBuffer(DataItemSize);
+          pending_next_cas_ro.emplace_back(CasRead{
               .node_id = res.node_id,
               .item = res.item,
-              .cas_buf = res.cas_buf,
-              .data_buf = res.data_buf,
+              .cas_buf = cas_buf,
+              .data_buf = data_buf,
           });
           context->CompareAndSwap(
               res.cas_buf,
               GlobalAddress(res.node_id,
-                            it->GetRemoteLockAddr(fetched_item->remote_offset)),
+                            it->GetRemoteLockAddr(it->remote_offset)),
               it->lock, get_clock_sys_time_us() + 1000);
           context->read(res.data_buf,
-                        GlobalAddress(res.node_id, fetched_item->remote_offset),
+                        GlobalAddress(res.node_id, it->remote_offset),
                         DataItemSize);
           context->PostRequest();
         }

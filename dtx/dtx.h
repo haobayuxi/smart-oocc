@@ -310,10 +310,11 @@ class DTX {
   bool DrTMExeRO();
   bool DrTMExeRW();
   bool DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
-                         std::list<InvisibleRead> &pending_invisible_ro,
+                         std::list<CasRead> &pending_next_cas_ro,
                          std::list<HashRead> &pending_next_hash_ro);
+  bool DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro);
   bool DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
-                       std::list<InvisibleRead> &pending_invisible_ro,
+                       std::list<CasRead> &pending_next_cas_ro,
                        std::list<HashRead> &pending_next_hash_ro);
   bool DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
                          std::vector<HashRead> &pending_hash_ro);
