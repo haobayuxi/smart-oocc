@@ -106,8 +106,7 @@ bool DTX::DrTMIssueReadWrite(
                                           .cas_buf = cas_buf,
                                           .data_buf = data_buf});
       context->CompareAndSwap(
-          cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, STATE_LOCKED);
+          cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)), 0, 1);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {

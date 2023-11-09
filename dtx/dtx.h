@@ -176,9 +176,14 @@ class DTX {
         }
       }
       //   SDS_INFO("commit %ld", tx_id);
-
-      // free read write locks
-      DrTMCommit();
+      if (!is_ro_tx) {
+        if (CoalescentCommit()) {
+          context->EndTask();
+          return true;
+        } else {
+          goto ABORT;
+        }
+      }
     } else if (txn_sys == DTX_SYS::OOCC) {
       // check lease
       if ((end_time - start_time) > lease) {
