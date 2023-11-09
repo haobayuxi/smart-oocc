@@ -27,6 +27,6 @@
   "nr_transactions": 6000000,
   "dump_file_path": "dtx.csv",
   "lease": 100,
-  "txn_sys": 1,
+  "txn_sys": 0,
   "comment": "0 for oocc, 1 for DrTM, 2 for DSLR, 3 for OCC"
 }

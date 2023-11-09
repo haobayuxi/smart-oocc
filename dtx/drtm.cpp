@@ -74,17 +74,32 @@ bool DTX::DrTMExeRW() {
   if (!DrTMCheckCasRW(pending_cas_rw, pending_next_hash_rw,
                       pending_next_off_rw))
     return false;
-  while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty() ||
-         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
-    context->Sync();
-    if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-    if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
-      return false;
-    if (!DrTMCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
-      return false;
-    if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
-      return false;
+  for (int i = 0; i < 100; i++) {
+    if (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty() ||
+        !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
+      context->Sync();
+      if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+      if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+        return false;
+      if (!DrTMCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
+        return false;
+      if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
+        return false;
+    } else {
+      break;
+    }
   }
+  //   while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty() ||
+  //          !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
+  //     context->Sync();
+  //     if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+  //     if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+  //       return false;
+  //     if (!DrTMCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
+  //       return false;
+  //     if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
+  //       return false;
+  //   }
   ParallelUndoLog();
   return true;
 }
