@@ -12,7 +12,7 @@
 
 using namespace std::placeholders;
 
-size_t kMaxTransactions = 1000000;
+size_t kMaxTransactions = 10000;
 pthread_barrier_t barrier;
 uint64_t threads;
 uint64_t coroutines;
