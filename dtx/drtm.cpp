@@ -3,7 +3,7 @@
 uint64_t next_lease() { return (get_clock_sys_time_us() + 1000) << 1; }
 
 bool DTX::lease_expired(uint64_t lease) {
-  if (lease > (get_clock_sys_time_us() >> 1)) {
+  if (lease > ((get_clock_sys_time_us() << 1) >> 1)) {
     return true;
   }
   return false;
