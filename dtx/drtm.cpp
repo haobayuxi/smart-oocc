@@ -25,7 +25,7 @@ bool DTX::DrTMExeRO() {
   if (!DrTMCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
-  for (int i = 0; i < 5000; i++) {
+  for (int i = 0; i < 50; i++) {
     if (!pending_invisible_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
       context->Sync();
