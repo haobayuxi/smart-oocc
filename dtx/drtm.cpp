@@ -29,6 +29,9 @@ bool DTX::DrTMExeRO() {
     if (!pending_invisible_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
       context->Sync();
+      if (i > 5) {
+        SDS_INFO("retry too many times");
+      }
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
       if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
@@ -107,7 +110,7 @@ bool DTX::DrTMIssueReadWrite(
                                           .data_buf = data_buf});
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, 1);
+          STATE_CLEAN, STATE_LOCKED);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
