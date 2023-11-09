@@ -373,8 +373,8 @@ bool DTX::DrTMCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
     iter = pending_next_hash_rw.erase(iter);
     iter++;
   }
-}
-return true;
+
+  return true;
 }
 
 bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
