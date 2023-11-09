@@ -163,7 +163,7 @@ class DTX {
   }
 
   bool TxCommit() {
-    auto end_time = get_clock_sys_time_us() >> 1;
+    auto end_time = (get_clock_sys_time_us() << 1) >> 1;
     if (txn_sys == DTX_SYS::DrTMH) {
       for (auto &item : read_only_set) {
         uint64_t read_lease = item.item_ptr.get()->lock >> 1;
