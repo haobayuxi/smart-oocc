@@ -140,9 +140,6 @@ void execute_thread(int id, DTXContext *context, double theta) {
   BindCore(id);
 
   ATTEMPTED_NUM = kMaxTransactions / threads / coroutines;
-  SDS_INFO("att%ld, max%ld, th%d,coro%d ", ATTEMPTED_NUM, kMaxTransactions,
-           threads, coroutines);
-  sleep(5);
   auto hostname = GetHostName();
   seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51) *
              kMaxThreads +
