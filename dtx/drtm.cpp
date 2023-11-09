@@ -3,8 +3,9 @@
 uint64_t next_lease() { return (get_clock_sys_time_us() + 1000) << 1; }
 
 bool DTX::lease_expired(uint64_t lock) {
-  if (lock > (get_clock_sys_time_us() << 1)) {
-    SDS_INFO("not expired %ld", lock);
+  auto now = (get_clock_sys_time_us() << 1);
+  if (lock > now) {
+    SDS_INFO("not expired %ld, %ld", lock, now);
     return true;
   }
   return false;
