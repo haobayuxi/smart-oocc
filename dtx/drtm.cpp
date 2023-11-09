@@ -15,14 +15,14 @@ bool DTX::DrTMExeRO() {
   std::list<CasRead> pending_next_cas_ro;
   std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
-  if (!DrTMCheckDirectRO(pending_cas_ro, pending_invisible_ro,
+  if (!DrTMCheckDirectRO(pending_cas_ro, pending_next_cas_ro,
                          pending_next_hash_ro))
     return false;
-  if (!DrTMCheckHashRO(pending_hash_ro, pending_invisible_ro,
+  if (!DrTMCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
   for (int i = 0; i < 5000; i++) {
-    if (!pending_invisible_ro.empty() || !pending_next_cas_ro.emtpry() ||
+    if (!pending_invisible_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
       context->Sync();
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
@@ -33,7 +33,7 @@ bool DTX::DrTMExeRO() {
       break;
     }
   }
-  //   while (!pending_invisible_ro.empty() || !pending_next_cas_ro.emtpry() ||
+  //   while (!pending_invisible_ro.empty() || !pending_next_cas_ro.empty() ||
   //          !pending_next_hash_ro.empty()) {
   //     context->Sync();
   //     if (!CheckInvisibleRO(pending_invisible_ro)) return false;
@@ -178,12 +178,11 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
               .data_buf = data_buf,
           });
           context->CompareAndSwap(
-              res.cas_buf,
+              cas_buf,
               GlobalAddress(res.node_id,
                             it->GetRemoteLockAddr(it->remote_offset)),
               it->lock, get_clock_sys_time_us() + 1000);
-          context->read(res.data_buf,
-                        GlobalAddress(res.node_id, it->remote_offset),
+          context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                         DataItemSize);
           context->PostRequest();
         }
