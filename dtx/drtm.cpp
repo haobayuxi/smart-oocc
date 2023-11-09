@@ -490,11 +490,3 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
   }
   return true;
 }
-
-bool DTX::DrTMCommit() {
-  //   do not need to free the read lock
-  // free write locks
-  for (auto &rw : read_write_set) {
-  }
-  return true;
-}

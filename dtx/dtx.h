@@ -330,7 +330,6 @@ class DTX {
                        std::list<HashRead> &pending_next_hash_ro);
   bool DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
                          std::vector<HashRead> &pending_hash_ro);
-  bool DrTMCommit();
   bool DrTMIssueReadWrite(std::vector<CasRead> &pending_cas_rw,
                           std::vector<HashRead> &pending_hash_rw,
                           std::vector<InsertOffRead> &pending_insert_off_rw);
@@ -340,6 +339,30 @@ class DTX {
   bool DrTMCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
                            std::list<HashRead> &pending_next_hash_rw);
   bool DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
+                      std::list<HashRead> &pending_next_hash_rw,
+                      std::list<InsertOffRead> &pending_next_off_rw);
+
+  //   DSLR
+  bool DSLRExeRO();
+  bool DSLRExeRW();
+  bool DSLRCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
+                         std::list<CasRead> &pending_next_cas_ro,
+                         std::list<HashRead> &pending_next_hash_ro);
+  bool DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro);
+  bool DSLRCheckHashRO(std::vector<HashRead> &pending_hash_ro,
+                       std::list<CasRead> &pending_next_cas_ro,
+                       std::list<HashRead> &pending_next_hash_ro);
+  bool DSLRIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
+                         std::vector<HashRead> &pending_hash_ro);
+  bool DSLRIssueReadWrite(std::vector<CasRead> &pending_cas_rw,
+                          std::vector<HashRead> &pending_hash_rw,
+                          std::vector<InsertOffRead> &pending_insert_off_rw);
+  bool DSLRCheckHashRW(std::vector<HashRead> &pending_hash_rw,
+                       std::list<InvisibleRead> &pending_invisible_ro,
+                       std::list<HashRead> &pending_next_hash_rw);
+  bool DSLRCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
+                           std::list<HashRead> &pending_next_hash_rw);
+  bool DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                       std::list<HashRead> &pending_next_hash_rw,
                       std::list<InsertOffRead> &pending_next_off_rw);
 
