@@ -410,12 +410,13 @@ int Initiator::sync() {
   //   }
   //   for (int id = 0; id < size; ++id) {
   //
+  auto &tl = tl_data_[GetThreadID()];
+  auto &state = tl.qp_state;
   if (TaskPool::IsEnabled()) {
-    WaitTask();
+    if (state.per_coro_waiting[GetTaskID()] > 0) {
+      WaitTask();
+    }
   } else {
-    auto &tl = tl_data_[GetThreadID()];
-    auto &state = tl.qp_state;
-
     auto req = state.post_req[0];
 
     while (state.ack_req[0] < req) {
