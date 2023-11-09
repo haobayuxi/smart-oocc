@@ -47,8 +47,8 @@ bool DTX::DrTMExeRO() {
 bool DTX::DrTMExeRW() { return true; }
 
 bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
-  for (auto iter = pending_next_hash_ro.begin();
-       iter != pending_next_hash_ro.end(); iter++) {
+  for (auto iter = pending_next_cas_ro.begin();
+       iter != pending_next_cas_ro.end(); iter++) {
     auto res = *iter;
     auto *it = res.item->item_ptr.get();
     auto *fetched_item = (DataItem *)res.data_buf;
@@ -76,7 +76,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
             context->PostRequest();
           }
         }
-        iter = pending_next_hash_ro.erase(iter);
+        iter = pending_next_cas_ro.erase(iter);
       } else {
         return false;
       }
