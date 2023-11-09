@@ -199,9 +199,7 @@ bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
 }
 
 bool DTX::DrTMCommit() {
-  // free read locks
-  for (auto &item : read_only_set) {
-  }
+  //   do not need to free the read lock
   // free write locks
   for (auto &rw : read_write_set) {
   }
