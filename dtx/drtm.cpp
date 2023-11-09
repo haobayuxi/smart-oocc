@@ -47,7 +47,9 @@ bool DTX::DrTMExeRO() {
 bool DTX::DrTMExeRW() { return true; }
 
 bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
-  for (auto &res : pending_next_cas_ro) {
+  for (auto iter = pending_next_hash_ro.begin();
+       iter != pending_next_hash_ro.end(); iter++) {
+    auto res = *iter;
     auto *it = res.item->item_ptr.get();
     auto *fetched_item = (DataItem *)res.data_buf;
     if (likely(fetched_item->key == it->key &&
@@ -74,7 +76,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
             context->PostRequest();
           }
         }
-        pending_next_cas_ro.erase(res);
+        iter = pending_next_hash_ro.erase(iter);
       } else {
         return false;
       }
@@ -82,6 +84,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
       return false;
     }
   }
+
   return true;
 }
 
