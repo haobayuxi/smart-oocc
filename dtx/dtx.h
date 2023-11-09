@@ -176,6 +176,9 @@ class DTX {
         }
       }
       SDS_INFO("commit %ld", tx_id);
+      if (tx_id > 1000000) {
+        sleep(10);
+      }
       //   usleep(2000);
       // free read write locks
       DrTMCommit();
