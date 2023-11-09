@@ -175,7 +175,7 @@ class DTX {
           goto ABORT;
         }
       }
-      SDS_INFO("commit %ld", tx_id);
+      //   SDS_INFO("commit %ld", tx_id);
 
       //   usleep(2000);
       // free read write locks

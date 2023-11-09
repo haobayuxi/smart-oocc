@@ -29,7 +29,10 @@ bool DTX::DrTMExeRO() {
     if (!pending_invisible_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
       context->Sync();
-      SDS_INFO("for not empty %ld", tx_id);
+
+      if (i > 1000) {
+        SDS_INFO("for not empty %ld", tx_id);
+      }
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
       if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
