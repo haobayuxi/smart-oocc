@@ -168,7 +168,7 @@ class DTX {
       for (auto &item : read_only_set) {
         auto read_lease = item.item_ptr.get()->lock >> 1;
         if (read_lease < end_time) {
-          SDS_INFO("commit lease expired, %ld %ld", read_lease, end_time);
+          SDS_INFO("commit lease expired, %lld %lld", read_lease, end_time);
           goto ABORT;
         }
       }
