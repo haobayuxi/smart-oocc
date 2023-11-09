@@ -1,10 +1,12 @@
 #include "dtx.h"
 
+uint64_t next_lease() { return (get_clock_sys_time_us() + 1000) << 1; }
+
 bool DTX::lease_expired(uint64_t lease) {
   if (lease > (get_clock_sys_time_us() >> 1)) {
-    return false;
+    return true;
   }
-  return true;
+  return false;
 }
 
 bool DTX::DrTMExeRO() {
@@ -68,7 +70,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
                 res.cas_buf,
                 GlobalAddress(res.node_id, it->GetRemoteLockAddr(
                                                fetched_item->remote_offset)),
-                it->lock, (get_clock_sys_time_us() + 1000) << 1);
+                it->lock, next_lease());
             context->read(
                 res.data_buf,
                 GlobalAddress(res.node_id, fetched_item->remote_offset),
@@ -105,7 +107,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
           // write locked
           return false;
         } else {
-          auto lease = it->lock >> 1;
+          uint64_t lease = it->lock >> 1;
           if (lease_expired(lease)) {
             // SDS_INFO("lease expired %ld", tx_id);
             // retry
@@ -119,7 +121,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                 res.cas_buf,
                 GlobalAddress(res.node_id, it->GetRemoteLockAddr(
                                                fetched_item->remote_offset)),
-                it->lock, (get_clock_sys_time_us() + 1000) << 1);
+                it->lock, next_lease());
             context->read(
                 res.data_buf,
                 GlobalAddress(res.node_id, fetched_item->remote_offset),
@@ -187,7 +189,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
               cas_buf,
               GlobalAddress(res.node_id,
                             it->GetRemoteLockAddr(it->remote_offset)),
-              it->lock, (get_clock_sys_time_us() + 1000) << 1);
+              it->lock, next_lease());
           context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                         DataItemSize);
           context->PostRequest();
