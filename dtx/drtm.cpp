@@ -1,7 +1,7 @@
 #include "dtx.h"
 
 bool DTX::lease_expired(uint64_t lease) {
-  if (lease > get_clock_sys_time_us()) {
+  if (lease > (get_clock_sys_time_us() >> 1)) {
     return false;
   }
   return true;
