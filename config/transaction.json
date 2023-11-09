@@ -1,7 +1,7 @@
 {
   "memory_servers": [
     {
-      "hostname": "optane06",
+      "hostname": "optane01",
       "port": 12345
     }
   ],
