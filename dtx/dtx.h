@@ -163,7 +163,7 @@ class DTX {
   }
 
   bool TxCommit() {
-    auto end_time = get_clock_sys_time_us();
+    auto end_time = (uint64_t)get_clock_sys_time_us();
     if (txn_sys == DTX_SYS::DrTMH) {
       for (auto &item : read_only_set) {
         uint64_t read_lease = item.item_ptr.get()->lock >> 1;
@@ -352,7 +352,7 @@ class DTX {
  private:
   tx_id_t tx_id;
   t_id_t t_id;
-  long long start_time;
+  uint64_t start_time;
 
   DTXContext *context;
   AddrCache *addr_cache;
