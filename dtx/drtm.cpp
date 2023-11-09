@@ -79,7 +79,7 @@ bool DTX::DrTMExeRW() {
       return false;
     if (!DrTMCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
       return false;
-    if (!DrTMCheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
+    if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
       return false;
   }
   ParallelUndoLog();
