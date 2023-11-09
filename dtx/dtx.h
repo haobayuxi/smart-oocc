@@ -101,6 +101,7 @@ class DTX {
     Clean();
     is_ro_tx = true;
     tx_id = txid;
+    SDS_INFO("txid begin =%ld ", tx_id);
     // start_time = 0;
     start_time = get_clock_sys_time_us();
   }

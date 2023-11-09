@@ -105,6 +105,8 @@ void RunTx(DTXContext *context) {
   while (true) {
     uint64_t iter = ++tx_id_local;  // Global atomic transaction id
     attempt_tx++;
+    SDS_INFO("tid = %ld", iter);
+
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
 #ifdef ABORT_DISCARD
 
