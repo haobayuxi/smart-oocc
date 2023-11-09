@@ -86,8 +86,6 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
                 DataItemSize);
             context->PostRequest();
           }
-
-          SDS_INFO("lease not expired %ld", tx_id);
         }
         iter = pending_next_cas_ro.erase(iter);
       } else {
