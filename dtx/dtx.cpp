@@ -195,9 +195,9 @@ bool DTX::IssueReadOnly(std::vector<DirectRead> &pending_direct_ro,
   return true;
 }
 
-bool DTX::IssueReadLock(std::vector<CasRead> &pending_cas_rw,
-                        std::vector<HashRead> &pending_hash_rw,
-                        std::vector<InsertOffRead> &pending_insert_off_rw) {
+bool DTX::IssueReadWrite(std::vector<CasRead> &pending_cas_rw,
+                         std::vector<HashRead> &pending_hash_rw,
+                         std::vector<InsertOffRead> &pending_insert_off_rw) {
   for (size_t i = 0; i < read_write_set.size(); i++) {
     if (read_write_set[i].is_fetched) continue;
     auto it = read_write_set[i].item_ptr;
@@ -305,39 +305,41 @@ bool DTX::IssueCommitAllSelectFlush(
                    DataItemSize);
     context->PostRequest();
 
-    const HashMeta &primary_hash_meta =
-        GetPrimaryHashMetaWithTableID(it->table_id);
-    auto offset_in_backup_hash_store =
-        it->remote_offset - primary_hash_meta.base_off;
-    auto *backup_node_ids = GetBackupNodeID(it->table_id);
-    if (!backup_node_ids) continue;
+    // const HashMeta &primary_hash_meta =
+    //     GetPrimaryHashMetaWithTableID(it->table_id);
+    // auto offset_in_backup_hash_store =
+    //     it->remote_offset - primary_hash_meta.base_off;
+    // auto *backup_node_ids = GetBackupNodeID(it->table_id);
+    // if (!backup_node_ids) continue;
 
-    const std::vector<HashMeta> *backup_hash_metas =
-        GetBackupHashMetasWithTableID(it->table_id);
-    for (size_t i = 0; i < backup_node_ids->size(); i++) {
-      auto remote_item_off =
-          offset_in_backup_hash_store + (*backup_hash_metas)[i].base_off;
-      auto remote_lock_off = it->GetRemoteLockAddr(remote_item_off);
-      node_id_t backup_node_id = backup_node_ids->at(i);
-      pending_commit_write.push_back(
-          CommitWrite{.node_id = backup_node_id, .lock_off = remote_lock_off});
-      char *data_buf = AllocLocalBuffer(DataItemSize);
-      it->lock = STATE_INVISIBLE;
-      it->remote_offset = remote_item_off;
-      memcpy(data_buf, (char *)it.get(), DataItemSize);
-      context->Write(cas_buf, GlobalAddress(backup_node_id, remote_lock_off),
-                     sizeof(lock_t));
-      context->Write(data_buf, GlobalAddress(backup_node_id, remote_item_off),
-                     DataItemSize);
-      if (current_i == read_write_set.size() - 1) {
-        char *flush_buf = AllocLocalBuffer(RFlushReadSize);
-        context->read(flush_buf,
-                      GlobalAddress(backup_node_id, it->remote_offset),
-                      RFlushReadSize);
-      }
-      context->PostRequest();
-    }
-    current_i++;
+    // const std::vector<HashMeta> *backup_hash_metas =
+    //     GetBackupHashMetasWithTableID(it->table_id);
+    // for (size_t i = 0; i < backup_node_ids->size(); i++) {
+    //   auto remote_item_off =
+    //       offset_in_backup_hash_store + (*backup_hash_metas)[i].base_off;
+    //   auto remote_lock_off = it->GetRemoteLockAddr(remote_item_off);
+    //   node_id_t backup_node_id = backup_node_ids->at(i);
+    //   pending_commit_write.push_back(
+    //       CommitWrite{.node_id = backup_node_id, .lock_off =
+    //       remote_lock_off});
+    //   char *data_buf = AllocLocalBuffer(DataItemSize);
+    //   it->lock = STATE_INVISIBLE;
+    //   it->remote_offset = remote_item_off;
+    //   memcpy(data_buf, (char *)it.get(), DataItemSize);
+    //   context->Write(cas_buf, GlobalAddress(backup_node_id, remote_lock_off),
+    //                  sizeof(lock_t));
+    //   context->Write(data_buf, GlobalAddress(backup_node_id,
+    //   remote_item_off),
+    //                  DataItemSize);
+    //   if (current_i == read_write_set.size() - 1) {
+    //     char *flush_buf = AllocLocalBuffer(RFlushReadSize);
+    //     context->read(flush_buf,
+    //                   GlobalAddress(backup_node_id, it->remote_offset),
+    //                   RFlushReadSize);
+    //   }
+    //   context->PostRequest();
+    // }
+    // current_i++;
   }
   return true;
 }

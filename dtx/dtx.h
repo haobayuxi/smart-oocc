@@ -264,9 +264,9 @@ class DTX {
   bool IssueReadOnly(std::vector<DirectRead> &pending_direct_ro,
                      std::vector<HashRead> &pending_hash_ro);
 
-  bool IssueReadLock(std::vector<CasRead> &pending_cas_rw,
-                     std::vector<HashRead> &pending_hash_rw,
-                     std::vector<InsertOffRead> &pending_insert_off_rw);
+  bool IssueReadWrite(std::vector<CasRead> &pending_cas_rw,
+                      std::vector<HashRead> &pending_hash_rw,
+                      std::vector<InsertOffRead> &pending_insert_off_rw);
 
   bool IssueValidate(std::vector<ValidateRead> &pending_validate);
 
