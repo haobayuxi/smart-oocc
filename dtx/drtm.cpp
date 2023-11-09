@@ -302,8 +302,24 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
                           std::list<InvisibleRead> &pending_invisible_ro,
                           std::list<HashRead> &pending_next_hash_rw) {
   for (auto &res : pending_hash_rw) {
-    auto rc = FindMatchSlot(res, pending_invisible_ro);
-    if (rc == SLOT_NOT_FOUND) {
+    auto *local_hash_node = (HashNode *)res.buf;
+    auto *it = res.item->item_ptr.get();
+    bool find = false;
+    for (auto &item : local_hash_node->data_items) {
+      if (item.valid && item.key == it->key && item.table_id == it->table_id) {
+        *it = item;
+        addr_cache->Insert(res.node_id, it->table_id, it->key,
+                           it->remote_offset);
+        res.item->is_fetched = true;
+        find = true;
+        break;
+      }
+    }
+    if (likely(find)) {
+      if (unlikely((it->lock))) {
+        return false;
+      }
+    } else {
       auto *local_hash_node = (HashNode *)res.buf;
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
@@ -324,20 +340,41 @@ bool DTX::DrTMCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
   for (auto iter = pending_next_hash_rw.begin();
        iter != pending_next_hash_rw.end();) {
     auto res = *iter;
-    auto rc = FindMatchSlot(res, pending_invisible_ro);
-    if (rc == SLOT_FOUND)
-      iter = pending_next_hash_rw.erase(iter);
-    else if (rc == SLOT_NOT_FOUND) {
+    auto *local_hash_node = (HashNode *)res.buf;
+    auto *it = res.item->item_ptr.get();
+    bool find = false;
+    for (auto &item : local_hash_node->data_items) {
+      if (item.valid && item.key == it->key && item.table_id == it->table_id) {
+        *it = item;
+        addr_cache->Insert(res.node_id, it->table_id, it->key,
+                           it->remote_offset);
+        res.item->is_fetched = true;
+        find = true;
+        break;
+      }
+    }
+    if (likely(find)) {
+      if (unlikely((it->lock))) {
+        return false;
+      }
+    } else {
       auto *local_hash_node = (HashNode *)res.buf;
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
                       res.meta.base_off;
+      pending_next_hash_rw.emplace_back(HashRead{.node_id = res.node_id,
+                                                 .item = res.item,
+                                                 .buf = res.buf,
+                                                 .meta = res.meta});
       context->read(res.buf, GlobalAddress(res.node_id, node_off),
                     sizeof(HashNode));
-      iter++;
     }
+
+    iter = pending_next_hash_rw.erase(iter);
+    iter++;
   }
-  return true;
+}
+return true;
 }
 
 bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
