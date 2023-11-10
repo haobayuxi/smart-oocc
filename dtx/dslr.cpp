@@ -7,7 +7,7 @@
 bool DTX::DSLRExeRO() {
   std::vector<CasRead> pending_cas_ro;
   std::vector<HashRead> pending_hash_ro;
-  DrTMIssueReadOnly(pending_cas_ro, pending_hash_ro);
+  DSLRIssueReadOnly(pending_cas_ro, pending_hash_ro);
   context->Sync();
   std::list<CasRead> pending_next_cas_ro;
   std::list<InvisibleRead> pending_invisible_ro;
