@@ -3,35 +3,47 @@
 
 #define COUNT_MAX 32768
 
+//    | max x| max s| n x| n s|  lock representation
+
 #define nx_mask 0xF000
 #define ns_mask 0x0F00
 #define max_x_mask 0x00F0
 #define max_s_mask 0x000F
 
-#define acquire_read_lock 0x0001
-#define acquire_write_lock 0x0010
-#define release_read_lock 0x0100
-#define realese_write_lock 0x1000
+#define acquire_read_lock 0x0100
+#define acquire_write_lock 0x1000
+#define release_read_lock 0x0001
+#define realese_write_lock 0x0010
 
-uint64_t get_nx(uint64_t lock) {
+#define max_s_minus1 0xFF00
+#define max_x_minus1 0xF000
+
+uint64_t get_max_x(uint64_t lock) {
   auto nx = lock | nx_mask;
   return nx >> 48;
 }
 
-uint64_t get_ns(uint64_t lock) {
+uint64_t get_max_s(uint64_t lock) {
   auto ns = lock | ns_mask;
   return ns >> 32;
 }
 
-uint64_t get_max_x(uint64_t lock) {
+uint64_t get_nx(uint64_t lock) {
   auto max_x = lock | max_x_mask;
   return max_x >> 16;
 }
 
-uint64_t get_max_s(uint64_t lock) { return lock | max_s_mask; }
+uint64_t get_ns(uint64_t lock) { return lock | max_s_mask; }
+
+bool check_write_lock(uint64_t lock) {
+  if (get_ns(lock) == get_max_s(lock)) {
+    return true;
+  }
+  return false;
+}
 
 bool check_read_lock(uint64_t lock) {
-  if (get_ns(lock) == get_max_s(lock)) {
+  if (get_nx(lock) == get_max_x(lock)) {
     return true;
   }
   return false;
@@ -43,23 +55,21 @@ bool DTX::DSLRExeRO() {
   DSLRIssueReadOnly(pending_cas_ro, pending_hash_ro);
   context->Sync();
   std::list<CasRead> pending_next_cas_ro;
+  std::list<DirectRead> pending_next_direct_ro;
   std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
-  if (!DrTMCheckDirectRO(pending_cas_ro, pending_next_cas_ro,
+  if (!DSLRCheckDirectRO(pending_cas_ro, pending_next_cas_ro,
                          pending_next_hash_ro))
     return false;
-  if (!DrTMCheckHashRO(pending_hash_ro, pending_next_cas_ro,
+  if (!DSLRCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
   for (int i = 0; i < 500; i++) {
     if (!pending_invisible_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
       context->Sync();
-      if (i > 5) {
-        SDS_INFO("retry too many times");
-      }
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-      if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
+      if (!DSLRCheckNextCasRO(pending_next_cas_ro)) return false;
       if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
         return false;
     } else {
@@ -223,9 +233,9 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
   return true;
 }
 
-bool DTX::DSLRCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
-                            std::list<CasRead> &pending_next_cas_ro,
-                            std::list<HashRead> &pending_next_hash_ro) {
+bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
+                         std::list<DirectRead> &pending_next_direct_ro,
+                         std::list<HashRead> &pending_next_hash_ro) {
   for (auto &res : pending_cas_ro) {
     auto *it = res.item->item_ptr.get();
     auto *fetched_item = (DataItem *)res.data_buf;
@@ -234,33 +244,19 @@ bool DTX::DSLRCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        if (it->lock % 2 == 1) {
+        if (!check_read_lock(it->lock)) {
           // write locked
-          //   SDS_INFO("write locked");
-          return false;
-        } else {
-          if (!lease_expired(it->lock)) {
-            // SDS_INFO("lease expired %ld", tx_id);
-            // retry
-            char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-            char *data_buf = AllocLocalBuffer(DataItemSize);
-            pending_next_cas_ro.emplace_back(CasRead{
-                .node_id = res.node_id,
-                .item = res.item,
-                .cas_buf = cas_buf,
-                .data_buf = data_buf,
-            });
-            context->CompareAndSwap(
-                cas_buf,
-                GlobalAddress(res.node_id, it->GetRemoteLockAddr(
-                                               fetched_item->remote_offset)),
-                it->lock, next_lease());
-            context->read(
-                data_buf,
-                GlobalAddress(res.node_id, fetched_item->remote_offset),
-                DataItemSize);
-            context->PostRequest();
-          }
+          char *data_buf = AllocLocalBuffer(DataItemSize);
+          pending_next_direct_ro.emplace_back(CasRead{
+              .node_id = res.node_id,
+              .item = res.item,
+              .cas_buf = cas_buf,
+              .data_buf = data_buf,
+          });
+          context->read(data_buf,
+                        GlobalAddress(res.node_id, fetched_item->remote_offset),
+                        DataItemSize);
+          context->PostRequest();
         }
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
@@ -278,6 +274,30 @@ bool DTX::DSLRCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                                                  .meta = meta});
       context->read((char *)local_hash_node,
                     GlobalAddress(remote_node_id, node_off), sizeof(HashNode));
+    }
+  }
+  return true;
+}
+
+bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
+  for (auto iter = pending_next_direct_ro.begin();
+       iter != pending_next_direct_ro.end(); iter++) {
+    auto res = *iter;
+    auto *it = res.item_per.get();
+    if (!check_read_lock(it->lock)) {
+      // write locked
+      char *data_buf = AllocLocalBuffer(DataItemSize);
+      pending_next_direct_ro.emplace_back(CasRead{
+          .node_id = res.node_id,
+          .item = res.item,
+          .cas_buf = cas_buf,
+          .data_buf = data_buf,
+      });
+      context->read(data_buf,
+                    GlobalAddress(res.node_id, fetched_item->remote_offset),
+                    DataItemSize);
+      context->PostRequest();
+      iter = pending_next_direct_ro.erase(iter);
     }
   }
   return true;
