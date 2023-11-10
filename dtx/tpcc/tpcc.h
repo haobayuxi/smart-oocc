@@ -412,6 +412,7 @@ enum class TPCCTxType {
 const std::string TPCC_TX_NAME[TPCC_TX_TYPES] = {
     "NewOrder", "Payment", "Delivery", "OrderStatus", "StockLevel"};
 
+#define TABLE_TPCC 1
 // Table id
 enum class TPCCTableType : uint64_t {
   kWarehouseTable = TABLE_TPCC,

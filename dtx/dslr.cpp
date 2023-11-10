@@ -8,27 +8,34 @@
 #define max_x_mask 0x00F0
 #define max_s_mask 0x000F
 
-uint64_t get_nx(uint64_t lock){
- auto nx = lock | nx_mask;
- return nx >> 48;
+#define acquire_read_lock 0x0001
+#define acquire_write_lock 0x0010
+#define release_read_lock 0x0100
+#define realese_write_lock 0x1000
+
+uint64_t get_nx(uint64_t lock) {
+  auto nx = lock | nx_mask;
+  return nx >> 48;
 }
 
-uint64_t get_ns(uint64_t lock){
-auto ns = lock | ns_mask;
-return nx>>32;
+uint64_t get_ns(uint64_t lock) {
+  auto ns = lock | ns_mask;
+  return ns >> 32;
 }
 
-uint64_t get_max_x(uint64_t lock){
-auto max_x = lock | max_x_mask;
-return max_x >> 16;
+uint64_t get_max_x(uint64_t lock) {
+  auto max_x = lock | max_x_mask;
+  return max_x >> 16;
 }
 
-bool check_read_lock(uint64_t lock){
-return lock | max_s_mask;
+uint64_t get_max_s(uint64_t lock) { return lock | max_s_mask; }
+
+bool check_read_lock(uint64_t lock) {
+  if (get_ns(lock) == get_max_s(lock)) {
+    return true;
+  }
+  return false;
 }
-
-
-
 
 bool DTX::DSLRExeRO() {
   std::vector<CasRead> pending_cas_ro;
@@ -432,9 +439,9 @@ bool DTX::DSLRIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
           .cas_buf = cas_buf,
           .data_buf = data_buf,
       });
-      context->CompareAndSwap(
-          cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)), 0,
-          read_lease);
+      context->FetchAndAdd(
+          faa_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
+          acquire_read_lock);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
