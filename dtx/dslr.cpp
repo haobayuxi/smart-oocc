@@ -3,6 +3,32 @@
 
 #define COUNT_MAX 32768
 
+#define nx_mask 0xF000
+#define ns_mask 0x0F00
+#define max_x_mask 0x00F0
+#define max_s_mask 0x000F
+
+uint64_t get_nx(uint64_t lock){
+ auto nx = lock | nx_mask;
+ return nx >> 48;
+}
+
+uint64_t get_ns(uint64_t lock){
+auto ns = lock | ns_mask;
+return nx>>32;
+}
+
+uint64_t get_max_x(uint64_t lock){
+auto max_x = lock | max_x_mask;
+return max_x >> 16;
+}
+
+bool check_read_lock(uint64_t lock){
+return lock | max_s_mask;
+}
+
+
+
 
 bool DTX::DSLRExeRO() {
   std::vector<CasRead> pending_cas_ro;
@@ -390,7 +416,6 @@ bool DTX::DSLRCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
 
 bool DTX::DSLRIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
                             std::vector<HashRead> &pending_hash_ro) {
-  uint64_t read_lease = (start_time + 1000) << 1;
   for (auto &item : read_only_set) {
     if (item.is_fetched) continue;
     auto it = item.item_ptr;
@@ -399,7 +424,7 @@ bool DTX::DSLRIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
     auto offset = addr_cache->Search(node_id, it->table_id, it->key);
     if (offset != NOT_FOUND) {
       it->remote_offset = offset;
-      char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+      char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
       char *data_buf = AllocLocalBuffer(DataItemSize);
       pending_cas_ro.emplace_back(CasRead{
           .node_id = node_id,
