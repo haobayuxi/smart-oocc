@@ -69,7 +69,7 @@ bool DTX::DSLRExeRO() {
         !pending_next_hash_ro.empty()) {
       context->Sync();
       if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
-      if (!DSLRCheckNextCasRO(pending_next_cas_r, pending_next_direct_ro))
+      if (!DSLRCheckNextCasRO(pending_next_cas_ro, pending_next_direct_ro))
         return false;
       if (!DSLRCheckNextHashRO(pending_next_direct_ro, pending_next_hash_ro))
         return false;
@@ -116,8 +116,8 @@ bool DTX::DSLRExeRW() {
     if (!pending_next_direct_ro.empty() || !pending_next_hash_ro.empty() ||
         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
       context->Sync();
-      if (!DLSRCheckDirectRO(pending_next_direct_ro)) return false;
-      if (!DLSRCheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+      if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
+      if (!DSLRCheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
         return false;
       if (!DSLRCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
         return false;
@@ -209,7 +209,7 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
         pending_next_direct_ro.emplace_back(DirectRead{
             .node_id = res.node_id,
             .item = res.item,
-            .data_buf = data_buf,
+            .buf = data_buf,
         });
         context->read(data_buf,
                       GlobalAddress(res.node_id, fetched_item->remote_offset),
@@ -349,7 +349,7 @@ bool DTX::DSLRCheckHashRO(std::vector<HashRead> &pending_hash_ro,
   return true;
 }
 
-bool DTX::DSLRCheckNextHashRO(std::list<DirectRead> &pending_next_direct_ro,
+bool DTX::DSLRCheckNextHashRO(std::list<CasRead> &pending_next_cas_ro,
                               std::list<HashRead> &pending_next_hash_ro) {
   for (auto iter = pending_next_hash_ro.begin();
        iter != pending_next_hash_ro.end(); iter++) {
