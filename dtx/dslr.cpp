@@ -244,7 +244,7 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
           pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
               .item = res.item,
-              .data_buf = data_buf,
+              .buf = data_buf,
           });
           context->read(data_buf,
                         GlobalAddress(res.node_id, fetched_item->remote_offset),
