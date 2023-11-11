@@ -117,7 +117,7 @@ bool DTX::DSLRExeRW() {
         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
       context->Sync();
       if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
-      if (!DSLRCheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+      if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
         return false;
       if (!DSLRCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
         return false;

@@ -354,7 +354,7 @@ class DTX {
   bool DSLRCheckHashRO(std::vector<HashRead> &pending_hash_ro,
                        std::list<CasRead> &pending_next_cas_ro,
                        std::list<HashRead> &pending_next_hash_ro);
-  bool DSLRCheckNextHashRO(std::list<DirectRead> &pending_next_direct_ro,
+  bool DSLRCheckNextHashRO(std::list<CasRead> &pending_next_cas_ro,
                            std::list<HashRead> &pending_next_hash_ro);
   bool DSLRIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
                          std::vector<HashRead> &pending_hash_ro);
