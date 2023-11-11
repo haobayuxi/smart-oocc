@@ -89,7 +89,7 @@ bool DTX::DSLRExeRW() {
   std::vector<InsertOffRead> pending_insert_off_rw;
   std::list<CasRead> pending_next_cas_ro;
   std::list<CasRead> pending_next_cas_rw;
-  std::list<Direct> pending_next_direct_ro;
+  std::list<DirectRead> pending_next_direct_ro;
   std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
   std::list<HashRead> pending_next_hash_rw;
@@ -97,7 +97,7 @@ bool DTX::DSLRExeRW() {
   DSLRIssueReadOnly(pending_cas_ro, pending_hash_ro);
   DSLRIssueReadWrite(pending_cas_rw, pending_hash_rw, pending_insert_off_rw);
   context->Sync();
-  if (!DSLRCheckCasRO(pending_cas_ro, pending_next_cas_ro,
+  if (!DSLRCheckCasRO(pending_cas_ro, pending_next_direct_ro,
                       pending_next_hash_ro))
     return false;
   if (!DSLRCheckHashRO(pending_hash_ro, pending_next_cas_ro,
@@ -113,11 +113,11 @@ bool DTX::DSLRExeRW() {
                       pending_next_off_rw))
     return false;
   for (int i = 0; i < 100; i++) {
-    if (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty() ||
+    if (!pending_next_direct_ro.empty() || !pending_next_hash_ro.empty() ||
         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
       context->Sync();
-      if (!CheckDirectRO(pending_next_direct_ro)) return false;
-      if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
+      if (!DLSRCheckDirectRO(pending_next_direct_ro)) return false;
+      if (!DLSRCheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
         return false;
       if (!DSLRCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
         return false;
@@ -283,7 +283,7 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
       pending_next_direct_ro.emplace_back(DirectRead{
           .node_id = res.node_id,
           .item = res.item,
-          .data_buf = data_buf,
+          .buf = data_buf,
       });
       context->read(data_buf,
                     GlobalAddress(res.node_id, fetched_item->remote_offset),
