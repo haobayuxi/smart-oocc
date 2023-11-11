@@ -108,7 +108,6 @@ bool DTX::Validate() {
 
 bool DTX::CoalescentCommit() {
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-  *(lock_t *)cas_buf = STATE_LOCKED | STATE_INVISIBLE;
   std::vector<CommitWrite> pending_commit_write;
   context->Sync();
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
@@ -300,47 +299,11 @@ bool DTX::IssueCommitAllSelectFlush(
     pending_commit_write.push_back(
         CommitWrite{.node_id = node_id, .lock_off = it->GetRemoteLockAddr()});
 
-    context->Write(cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr()),
-                   sizeof(lock_t));
+    // context->Write(cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr()),
+    //                sizeof(lock_t));
     context->Write(data_buf, GlobalAddress(node_id, it->remote_offset),
                    DataItemSize);
     context->PostRequest();
-
-    // const HashMeta &primary_hash_meta =
-    //     GetPrimaryHashMetaWithTableID(it->table_id);
-    // auto offset_in_backup_hash_store =
-    //     it->remote_offset - primary_hash_meta.base_off;
-    // auto *backup_node_ids = GetBackupNodeID(it->table_id);
-    // if (!backup_node_ids) continue;
-
-    // const std::vector<HashMeta> *backup_hash_metas =
-    //     GetBackupHashMetasWithTableID(it->table_id);
-    // for (size_t i = 0; i < backup_node_ids->size(); i++) {
-    //   auto remote_item_off =
-    //       offset_in_backup_hash_store + (*backup_hash_metas)[i].base_off;
-    //   auto remote_lock_off = it->GetRemoteLockAddr(remote_item_off);
-    //   node_id_t backup_node_id = backup_node_ids->at(i);
-    //   pending_commit_write.push_back(
-    //       CommitWrite{.node_id = backup_node_id, .lock_off =
-    //       remote_lock_off});
-    //   char *data_buf = AllocLocalBuffer(DataItemSize);
-    //   it->lock = STATE_INVISIBLE;
-    //   it->remote_offset = remote_item_off;
-    //   memcpy(data_buf, (char *)it.get(), DataItemSize);
-    //   context->Write(cas_buf, GlobalAddress(backup_node_id, remote_lock_off),
-    //                  sizeof(lock_t));
-    //   context->Write(data_buf, GlobalAddress(backup_node_id,
-    //   remote_item_off),
-    //                  DataItemSize);
-    //   if (current_i == read_write_set.size() - 1) {
-    //     char *flush_buf = AllocLocalBuffer(RFlushReadSize);
-    //     context->read(flush_buf,
-    //                   GlobalAddress(backup_node_id, it->remote_offset),
-    //                   RFlushReadSize);
-    //   }
-    //   context->PostRequest();
-    // }
-    // current_i++;
   }
   return true;
 }

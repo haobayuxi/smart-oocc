@@ -566,3 +566,33 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
   }
   return true;
 }
+
+bool DTX::DSLRCommit() {
+  context->Sync();
+  for (auto &item : read_only_set) {
+    char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
+    auto it = set_it.item_ptr;
+    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+
+    context->FetchAndAdd(faa_buf,
+                         GlobalAddress(node_id, it->GetRemoteLockAddr()),
+                         release_read_lock);
+    context->PostRequest();
+  }
+
+  for (auto &set_it : read_write_set) {
+    char *data_buf = AllocLocalBuffer(DataItemSize);
+    auto it = set_it.item_ptr;
+    if (!it->user_insert) {
+      it->version++;
+    }
+
+    it->lock = STATE_CLEAN;
+    memcpy(data_buf, (char *)it.get(), DataItemSize);
+    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+
+    context->Write(data_buf, GlobalAddress(node_id, it->remote_offset),
+                   DataItemSize);
+    context->PostRequest();
+  }
+}

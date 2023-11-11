@@ -154,6 +154,19 @@ class DTX {
         }
       }
     } else {
+      if (read_write_set.empty()) {
+        if (DSLRExeRO()) {
+          return true;
+        } else {
+          goto ABORT;
+        }
+      } else {
+        if (DSLRExeRW()) {
+          return true;
+        } else {
+          goto ABORT;
+        }
+      }
     }
 
     return true;
