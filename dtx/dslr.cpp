@@ -58,17 +58,17 @@ bool DTX::DSLRExeRO() {
   std::list<DirectRead> pending_next_direct_ro;
   std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
-  if (!DSLRCheckDirectRO(pending_cas_ro, pending_next_cas_ro,
-                         pending_next_hash_ro))
+  if (!DSLRCheckCasRO(pending_cas_ro, pending_next_direct_ro,
+                      pending_next_hash_ro))
     return false;
   if (!DSLRCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
   for (int i = 0; i < 500; i++) {
-    if (!pending_invisible_ro.empty() || !pending_next_cas_ro.empty() ||
+    if (!pending_next_direct_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
       context->Sync();
-      if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+      if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
       if (!DSLRCheckNextCasRO(pending_next_cas_ro)) return false;
       if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
         return false;
@@ -323,30 +323,22 @@ bool DTX::DSLRCheckHashRO(std::vector<HashRead> &pending_hash_ro,
     }
 
     if (likely(find)) {
-      if (it->lock % 2 == 1) {
-        // write locked
-        return false;
-      } else {
-        if (!lease_expired(it->lock)) {
-          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-          char *data_buf = AllocLocalBuffer(DataItemSize);
-          pending_next_cas_ro.emplace_back(CasRead{
-              .node_id = res.node_id,
-              .item = res.item,
-              .cas_buf = cas_buf,
-              .data_buf = data_buf,
-          });
-          context->CompareAndSwap(
-              cas_buf,
-              GlobalAddress(res.node_id,
-                            it->GetRemoteLockAddr(it->remote_offset)),
-              it->lock, next_lease());
-          context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
-                        DataItemSize);
-          context->PostRequest();
-        }
-      }
-      //   SDS_INFO("hash found");
+      // retry to get read lock
+      char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+      char *data_buf = AllocLocalBuffer(DataItemSize);
+      pending_next_cas_ro.emplace_back(CasRead{
+          .node_id = res.node_id,
+          .item = res.item,
+          .cas_buf = cas_buf,
+          .data_buf = data_buf,
+      });
+      context->FetchAndAdd(
+          cas_buf,
+          GlobalAddress(res.node_id, it->GetRemoteLockAddr(it->remote_offset)),
+          acquire_read_lock);
+      context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
+                    DataItemSize);
+      context->PostRequest();
     } else {
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
@@ -456,7 +448,7 @@ bool DTX::DSLRIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
       pending_cas_ro.emplace_back(CasRead{
           .node_id = node_id,
           .item = &item,
-          .cas_buf = cas_buf,
+          .cas_buf = faa_buf,
           .data_buf = data_buf,
       });
       context->FetchAndAdd(

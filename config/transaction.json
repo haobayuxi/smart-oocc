@@ -9,7 +9,8 @@
     "num_warehouse": 8,
     "num_district_per_warehouse": 10,
     "num_customer_per_district": 300,
-    "num_stock_per_warehouse": 10000
+    "num_stock_per_warehouse": 10000,
+    "num_item": 10000
   },
   "smallbank": {
     "num_accounts": 100000,
