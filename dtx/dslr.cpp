@@ -283,18 +283,16 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
   for (auto iter = pending_next_direct_ro.begin();
        iter != pending_next_direct_ro.end(); iter++) {
     auto res = *iter;
-    auto *it = res.item_per.get();
+    auto *it = res.item.get();
     if (!check_read_lock(it->lock)) {
       // write locked
       char *data_buf = AllocLocalBuffer(DataItemSize);
-      pending_next_direct_ro.emplace_back(CasRead{
+      pending_next_direct_ro.emplace_back(DirectRead{
           .node_id = res.node_id,
           .item = res.item,
-          .cas_buf = cas_buf,
           .data_buf = data_buf,
       });
-      context->read(data_buf,
-                    GlobalAddress(res.node_id, fetched_item->remote_offset),
+      context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                     DataItemSize);
       context->PostRequest();
       iter = pending_next_direct_ro.erase(iter);
