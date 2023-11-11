@@ -241,7 +241,7 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
         if (!check_read_lock(it->lock)) {
           // write locked
           char *data_buf = AllocLocalBuffer(DataItemSize);
-          pending_next_direct_ro.emplace_back(CasRead{
+          pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
               .item = res.item,
               .data_buf = data_buf,
