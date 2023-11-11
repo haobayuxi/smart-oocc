@@ -347,7 +347,7 @@ class DTX {
   bool DSLRExeRW();
   bool DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro);
   bool DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
-                      std::list<CasRead> &pending_next_cas_ro,
+                      std::list<DirectRead> &pending_next_direct_ro,
                       std::list<HashRead> &pending_next_hash_ro);
   bool DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
                           std::list<DirectRead> pending_next_direct_ro);
