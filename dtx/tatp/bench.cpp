@@ -332,7 +332,7 @@ bool TxDeleteCallForwarding(tx_id_t tx_id, DTX *dtx) {
 thread_local int running_tasks;
 
 void WarmUp(DTXContext *context) {
-  DTX *dtx = new DTX(context, txn_sys, lease);
+  DTX *dtx = new DTX(context, txn_sys, lease, false);
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
     TATPTxType tx_type = workgen_arr[FastRand(&seed) % 100];
@@ -382,7 +382,7 @@ static void IdleExecution() {
 }
 
 void RunTx(DTXContext *context) {
-  DTX *dtx = new DTX(context, txn_sys, lease);
+  DTX *dtx = new DTX(context, txn_sys, lease, false);
   struct timespec tx_start_time, tx_end_time;
   bool tx_committed = false;
   uint64_t attempt_tx = 0;

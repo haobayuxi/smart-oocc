@@ -101,7 +101,6 @@ class DTX {
     Clean();
     is_ro_tx = true;
     tx_id = txid;
-    // start_time = 0;
     start_time = get_clock_sys_time_us();
   }
 
@@ -253,7 +252,7 @@ class DTX {
   void RemoveLastROItem() { read_only_set.pop_back(); }
 
  public:
-  DTX(DTXContext *context, int _txn_sys, int _lease);
+  DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed);
 
   ~DTX() { Clean(); }
 
@@ -409,7 +408,7 @@ class DTX {
  public:
   int lease;
   int txn_sys;
-  uint64_t last_write_lock_time;
+  bool delayed_unlock : uint64_t last_write_lock_time;
 
  private:
   tx_id_t tx_id;

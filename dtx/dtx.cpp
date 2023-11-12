@@ -3,12 +3,13 @@
 
 #include "dtx.h"
 
-DTX::DTX(DTXContext *context, int _txn_sys, int _lease)
+DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
     : context(context), tx_id(0), addr_cache(nullptr) {
   addr_cache = &context->addr_cache;
   t_id = GetThreadID();
   txn_sys = _txn_sys;
   lease = _lease;
+  delayed_unlock = _delayed;
 }
 
 bool DTX::ExeRO() {
@@ -296,8 +297,11 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-
-    it->lock = STATE_LOCKED;
+    if (delayed) {
+      it->lock = STATE_READ_LOCKED;
+    } else {
+      it->lock = STATE_LOCKED;
+    }
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     pending_commit_write.push_back(
@@ -372,7 +376,7 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock))) {
+      if (unlikely((it->lock > STATE_READ_LOCKED))) {
         return false;
         // char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
         // uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);

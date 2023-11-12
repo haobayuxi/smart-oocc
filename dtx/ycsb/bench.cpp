@@ -20,6 +20,7 @@ uint64_t coroutines;
 int data_item_size;
 int write_ratio;
 bool is_skewed;
+bool delayed;
 int lease;
 int txn_sys;
 thread_local uint64_t tx_id_local;
@@ -71,7 +72,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
 thread_local int running_tasks;
 
 void WarmUp(DTXContext *context) {
-  DTX *dtx = new DTX(context, txn_sys, lease);
+  DTX *dtx = new DTX(context, txn_sys, lease, delayed);
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
     uint64_t iter = ++tx_id_local;
@@ -93,7 +94,7 @@ static void IdleExecution() {
 }
 
 void RunTx(DTXContext *context) {
-  DTX *dtx = new DTX(context, txn_sys, lease);
+  DTX *dtx = new DTX(context, txn_sys, lease, delayed);
   struct timespec tx_start_time, tx_end_time;
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
@@ -268,6 +269,7 @@ int main(int argc, char **argv) {
   data_item_size = ycsb_config.get("data_item_size").get_uint64();
   write_ratio = ycsb_config.get("write_ratio").get_uint64();
   is_skewed = ycsb_config.get("is_skewed").get_bool();
+  delayed = ycsb_config.get("delayed").get_bool();
   srand48(time(nullptr));
   threads = argc < 2 ? 1 : atoi(argv[1]);
   coroutines = argc < 3 ? 1 : atoi(argv[2]);
