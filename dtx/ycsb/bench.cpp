@@ -33,11 +33,14 @@ thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
 thread_local YCSB *ycsb_client;
 thread_local bool *workgen_arr;
+thread_local struct timespec tx_start_time;
+thread_local struct timespec tx_end_time;
 
 thread_local uint64_t rdma_cnt;
 std::atomic<uint64_t> rdma_cnt_sum(0);
 
 bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
+  clock_gettime(CLOCK_REALTIME, &tx_start_time);
   dtx->TxBegin(tx_id);
   bool read_only = true;
   auto write = FastRand(&seed) % 1000;
@@ -97,7 +100,7 @@ static void IdleExecution() {
 
 void RunTx(DTXContext *context) {
   DTX *dtx = new DTX(context, txn_sys, lease, delayed);
-  struct timespec tx_start_time, tx_end_time;
+  // struct timespec tx_start_time, tx_end_time;
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
   uint64_t commit_tx = 0;
@@ -109,11 +112,13 @@ void RunTx(DTXContext *context) {
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
 
-    clock_gettime(CLOCK_REALTIME, &tx_start_time);
+    // clock_gettime(CLOCK_REALTIME, &tx_start_time);
 #ifdef ABORT_DISCARD
 
 #else
-    tx_committed = TxYCSB(iter, dtx);
+    do {
+      tx_committed = TxYCSB(iter, dtx);
+    } while (!tx_committed);
 #endif
     // Stat after one transaction finishes
     if (tx_committed) {
