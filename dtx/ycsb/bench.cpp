@@ -48,8 +48,8 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
   for (int i = 0; i < data_item_size; i++) {
     micro_key_t micro_key;
     if (is_skewed) {
-      micro_key.item_key = ycsb_client->next();
-      // micro_key.item_key = 0;
+      // micro_key.item_key = ycsb_client->next();
+      micro_key.item_key = 0;
     } else {
       micro_key.item_key = (itemkey_t)(FastRand(&seed) % (TOTAL_KEYS_NUM - 1));
       // micro_key.item_key = tx_id % (TOTAL_KEYS_NUM - 1);
