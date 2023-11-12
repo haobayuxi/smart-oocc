@@ -110,13 +110,13 @@ bool DTX::CoalescentCommit() {
   std::vector<CommitWrite> pending_commit_write;
   context->Sync();
   auto end_time = get_clock_sys_time_us();
+  IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
+  context->Sync();
   if (txn_sys == DTX_SYS::OOCC) {
     while ((last_write_lock_time + lease) > end_time) {
       end_time = get_clock_sys_time_us();
     }
   }
-  IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
-  context->Sync();
   *((lock_t *)cas_buf) = 0;
   for (auto &re : pending_commit_write) {
     context->Write(cas_buf, GlobalAddress(re.node_id, re.lock_off),
