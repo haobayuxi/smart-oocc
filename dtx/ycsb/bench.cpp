@@ -23,11 +23,11 @@ bool is_skewed;
 bool delayed;
 int lease;
 int txn_sys;
-thread_local uint64_t tx_id_local;
+thread_local uint64_t tx_id_local = 3;
 std::atomic<uint64_t> attempts(0);
 std::atomic<uint64_t> commits(0);
 double *timer;
-std::atomic<uint64_t> tx_id_generator(3);
+std::atomic<uint64_t> tx_id_generator(0);
 
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
