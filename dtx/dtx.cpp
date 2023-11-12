@@ -66,6 +66,7 @@ bool DTX::ExeRW() {
       return false;
     if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
       return false;
+    if (!CheckNextCasRW(pending_next_cas_rw)) return false;
   }
   ParallelUndoLog();
   return true;
