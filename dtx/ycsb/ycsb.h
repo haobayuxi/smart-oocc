@@ -5,8 +5,9 @@
 #include <vector>
 
 #include "../memstore.h"
+#include "util/generator.h"
 #include "util/json_config.h"
-#include "zipf.h"
+// #include "zipf.h"
 
 static inline unsigned long GetCPUCycle() {
   unsigned a, d;
@@ -50,9 +51,7 @@ class YCSB {
   HashStore *micro_table;
   std::vector<HashStore *> table_ptrs;
   YCSB(double theta, int thread_gid) {
-    uint64_t zipf_seed = 2 * thread_gid * GetCPUCycle();
-    uint64_t zipf_seed_mask = (uint64_t(1) << 48) - 1;
-    zipf_gen = new ZipfGen(TOTAL_KEYS_NUM, theta, zipf_seed & zipf_seed_mask);
+    zipf_gen = new ZipfianGenerator(TOTAL_KEYS_NUM - 1, theta);
   }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
@@ -85,5 +84,6 @@ class YCSB {
   std::vector<HashStore *> GetHashStore() { return table_ptrs; }
 
  private:
-  ZipfGen *zipf_gen;
+  // ZipfGen *zipf_gen;
+  ZipfianGenerator *zipf_gen;
 };
