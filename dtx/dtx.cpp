@@ -20,7 +20,9 @@ bool DTX::ExeRO() {
   std::list<InvisibleRead> pending_invisible_ro;
   std::list<DirectRead> pending_next_direct_ro;
   std::list<HashRead> pending_next_hash_ro;
-  if (!CheckDirectRO(pending_direct_ro, pending_next_hash_ro)) return false;
+  if (!CheckDirectRO(pending_direct_ro, pending_next_direct_ro,
+                     pending_next_hash_ro))
+    return false;
   if (!CheckHashRO(pending_hash_ro, pending_invisible_ro, pending_next_hash_ro))
     return false;
   while (!pending_next_hash_ro.empty()) {
@@ -40,6 +42,7 @@ bool DTX::ExeRW() {
   std::vector<HashRead> pending_hash_rw;
   std::vector<InsertOffRead> pending_insert_off_rw;
   std::list<InvisibleRead> pending_invisible_ro;
+  std::list<DirectRead> pending_next_direct_ro;
   std::list<CasRead> pending_next_cas_rw;
   std::list<HashRead> pending_next_hash_ro;
   std::list<HashRead> pending_next_hash_rw;
@@ -47,7 +50,9 @@ bool DTX::ExeRW() {
   IssueReadOnly(pending_direct_ro, pending_hash_ro);
   IssueReadWrite(pending_cas_rw, pending_hash_rw, pending_insert_off_rw);
   context->Sync();
-  if (!CheckDirectRO(pending_direct_ro, pending_next_hash_ro)) return false;
+  if (!CheckDirectRO(pending_direct_ro, pending_next_direct_ro,
+                     pending_next_hash_ro))
+    return false;
   if (!CheckHashRO(pending_hash_ro, pending_invisible_ro, pending_next_hash_ro))
     return false;
   if (!CheckHashRW(pending_hash_rw, pending_next_cas_rw, pending_next_hash_rw))
@@ -330,7 +335,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         // SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
         if (unlikely((it->lock > STATE_READ_LOCKED))) {
           pending_next_direct_ro.emplace_back(DirectRead{
-              .node_id = res.node_id, .buf = res.buf, .item = res.item});
+              .node_id = res.node_id, .item = res.item, .buf = res.buf});
           context->read(res.buf, GlobalAddress(res.node_id, it->remote_offset),
                         sizeof(lock_t));
         }
@@ -417,9 +422,11 @@ bool DTX::CheckNextDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
   for (auto iter = pending_next_direct_ro.begin();
        iter != pending_next_direct_ro.end();) {
     auto res = *iter;
+    auto *it = res.item->item_ptr.get();
     auto lock_value = *((lock_t *)res.buf);
     if (lock_value > STATE_READ_LOCKED) {
-      context->read(res.buf, GlobalAddress(res.node_id, res.off),
+      context->read(res.buf,
+                    GlobalAddress(res.node_id, (DataItem *)res.buf->remote_off),
                     sizeof(lock_t));
       iter++;
     } else {
