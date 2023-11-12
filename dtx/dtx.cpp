@@ -450,7 +450,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock))) {
+      if (unlikely((it->lock > STATE_READ_LOCKED))) {
         // char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
         // uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
         // pending_invisible_ro.emplace_back(InvisibleRead{
@@ -544,7 +544,7 @@ int DTX::FindMatchSlot(HashRead &res, std::list<CasRead> &pending_next_cas_rw) {
     }
   }
   if (likely(find)) {
-    if (unlikely((it->lock))) {
+    if (unlikely((it->lock != STATE_CLEAN))) {
       return STATE_LOCKED;
     } else {
       char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
