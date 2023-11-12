@@ -68,6 +68,7 @@ bool DTX::ExeRW() {
       return false;
     if (!CheckNextCasRW(pending_next_cas_rw)) return false;
   }
+  last_write_lock_time = get_clock_sys_time_us();
   ParallelUndoLog();
   return true;
 }
@@ -109,7 +110,12 @@ bool DTX::CoalescentCommit() {
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
   std::vector<CommitWrite> pending_commit_write;
   context->Sync();
-
+  auto end_time = get_clock_sys_time_us();
+  if (txn_sys == DTX_SYS::OOCC) {
+    while ((last_write_lock_time + lease) < end_time) {
+      end_time = get_clock_sys_time_us();
+    }
+  }
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
   context->Sync();
   *((lock_t *)cas_buf) = 0;
