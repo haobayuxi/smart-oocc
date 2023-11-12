@@ -34,8 +34,7 @@ bool DTX::DrTMExeRO() {
       }
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
-      if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
-        return false;
+      if (!CheckNextHashRO(pending_next_hash_ro)) return false;
     } else {
       break;
     }
@@ -79,8 +78,7 @@ bool DTX::DrTMExeRW() {
         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
       context->Sync();
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-      if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
-        return false;
+      if (!CheckNextHashRO(pending_next_hash_ro)) return false;
       if (!DrTMCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
         return false;
       if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
