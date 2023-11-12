@@ -28,7 +28,7 @@ bool DTX::ExeRO() {
   while (!pending_next_hash_ro.empty()) {
     context->Sync();
     // if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-    if (!CheckNextDirectRO(pending_next_direct_ro)) return false;
+    // if (!CheckNextDirectRO(pending_next_direct_ro)) return false;
     if (!CheckNextHashRO(pending_next_hash_ro)) return false;
   }
   return true;
@@ -334,10 +334,12 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         res.item->is_fetched = true;
         // SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
         if (unlikely((it->lock > STATE_READ_LOCKED))) {
-          pending_next_direct_ro.emplace_back(DirectRead{
-              .node_id = res.node_id, .item = res.item, .buf = res.buf});
-          context->read(res.buf, GlobalAddress(res.node_id, it->remote_offset),
-                        sizeof(lock_t));
+          // pending_next_direct_ro.emplace_back(DirectRead{
+          //     .node_id = res.node_id, .item = res.item, .buf = res.buf});
+          // context->read(res.buf, GlobalAddress(res.node_id,
+          // it->remote_offset),
+          //               sizeof(lock_t));
+          return false;
         }
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
