@@ -21,11 +21,10 @@ bool DTX::ExeRO() {
   if (!CheckDirectRO(pending_direct_ro, pending_next_hash_ro)) return false;
   if (!CheckHashRO(pending_hash_ro, pending_invisible_ro, pending_next_hash_ro))
     return false;
-  while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty()) {
+  while (!pending_next_hash_ro.empty()) {
     context->Sync();
-    if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-    if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
-      return false;
+    // if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+    if (!CheckNextHashRO(pending_next_hash_ro)) return false;
   }
   return true;
 }
@@ -60,8 +59,7 @@ bool DTX::ExeRW() {
          !pending_next_off_rw.empty()) {
     context->Sync();
     if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-    if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
-      return false;
+    if (!CheckNextHashRO(pending_next_hash_ro)) return false;
     if (!CheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
       return false;
     if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
@@ -428,8 +426,7 @@ bool DTX::CheckInvisibleRO(std::list<InvisibleRead> &pending_invisible_ro) {
   return true;
 }
 
-bool DTX::CheckNextHashRO(std::list<InvisibleRead> &pending_invisible_ro,
-                          std::list<HashRead> &pending_next_hash_ro) {
+bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
   for (auto iter = pending_next_hash_ro.begin();
        iter != pending_next_hash_ro.end();) {
     auto res = *iter;
@@ -449,13 +446,14 @@ bool DTX::CheckNextHashRO(std::list<InvisibleRead> &pending_invisible_ro,
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock & STATE_INVISIBLE))) {
-        char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-        uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
-        pending_invisible_ro.emplace_back(InvisibleRead{
-            .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
-        context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
-                      sizeof(lock_t));
+      if (unlikely((it->lock))) {
+        // char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+        // uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
+        // pending_invisible_ro.emplace_back(InvisibleRead{
+        //     .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
+        // context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
+        //               sizeof(lock_t));
+        return false;
       }
       iter = pending_next_hash_ro.erase(iter);
     } else {
