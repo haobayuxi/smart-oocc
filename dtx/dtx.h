@@ -408,7 +408,8 @@ class DTX {
  public:
   int lease;
   int txn_sys;
-  bool delayed_unlock : uint64_t last_write_lock_time;
+  bool delayed_unlock;
+  uint64_t last_write_lock_time;
 
  private:
   tx_id_t tx_id;

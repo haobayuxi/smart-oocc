@@ -297,7 +297,7 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-    if (delayed) {
+    if (delayed_unlock) {
       it->lock = STATE_READ_LOCKED;
     } else {
       it->lock = STATE_LOCKED;
