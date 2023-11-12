@@ -294,11 +294,11 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-    if (delayed_unlock) {
-      it->lock = STATE_READ_LOCKED;
-    } else {
-      it->lock = tx_id;
-    }
+    // if (delayed_unlock) {
+    //   it->lock = STATE_READ_LOCKED;
+    // } else {
+    it->lock = tx_id;
+    // }
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     pending_commit_write.push_back(
