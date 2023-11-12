@@ -27,7 +27,7 @@ thread_local uint64_t tx_id_local;
 std::atomic<uint64_t> attempts(0);
 std::atomic<uint64_t> commits(0);
 double *timer;
-std::atomic<uint64_t> tx_id_generator(0);
+std::atomic<uint64_t> tx_id_generator(3);
 
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
@@ -105,6 +105,7 @@ void RunTx(DTXContext *context) {
   int timer_idx = GetThreadID() * coroutines + GetTaskID();
   // Running transactions
   while (true) {
+    sleep(1);
     uint64_t iter = ++tx_id_local;  // Global atomic transaction id
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);

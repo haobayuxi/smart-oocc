@@ -305,7 +305,8 @@ bool DTX::IssueCommitAllSelectFlush(
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     pending_commit_write.push_back(
         CommitWrite{.node_id = node_id, .lock_off = it->GetRemoteLockAddr()});
-    SDS_INFO("key %ld, offset = %ld", it->key, it->remote_offset);
+    SDS_INFO("commit key %ld, offset = %ld, txid=%ld", it->key,
+             it->remote_offset, tx_id);
     // context->Write(cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr()),
     //                sizeof(lock_t));
     context->Write(data_buf, GlobalAddress(node_id, it->remote_offset),
@@ -325,7 +326,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        SDS_INFO("lock state %ld", it->lock);
+        SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
         if (unlikely((it->lock > STATE_READ_LOCKED))) {
           //   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           //   uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
