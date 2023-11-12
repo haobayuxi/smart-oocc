@@ -21,13 +21,13 @@
   },
   "ycsb": {
     "data_item_size": 2,
-    "write_ratio": 0,
+    "write_ratio": 10,
     "theta": 0.99,
-    "is_skewed": false
+    "is_skewed": true
   },
   "nr_transactions": 6000000,
   "dump_file_path": "dtx.csv",
   "lease": 100,
-  "txn_sys": 0,
+  "txn_sys": 3,
   "comment": "0 for oocc, 1 for DrTM, 2 for DSLR, 3 for OCC"
 }
