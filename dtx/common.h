@@ -35,7 +35,7 @@ const size_t MAX_ITEM_SIZE = 8;
 // Data state
 #define STATE_INVISIBLE 0x8000000000000000  // Data cannot be read
 #define STATE_LOCKED \
-  1  // Data cannot be written. Used for serializing transactions
+  2  // Data cannot be written. Used for serializing transactions
 #define STATE_CLEAN 0
 #define STATE_READ_LOCKED 1
 

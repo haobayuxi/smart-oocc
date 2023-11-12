@@ -273,7 +273,7 @@ class DTX {
   void Clean() {
     read_only_set.clear();
     read_write_set.clear();
-    not_eager_locked_rw_set.clear();
+    // not_eager_locked_rw_set.clear();
     locked_rw_set.clear();
     old_version_for_insert.clear();
     inserted_pos.clear();
@@ -294,7 +294,6 @@ class DTX {
 
  private:
   bool CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
-                     std::list<InvisibleRead> &pending_invisible_ro,
                      std::list<HashRead> &pending_next_hash_ro);
 
   bool CheckInvisibleRO(std::list<InvisibleRead> &pending_invisible_ro);
@@ -305,6 +304,7 @@ class DTX {
 
   bool CheckNextHashRO(std::list<InvisibleRead> &pending_invisible_ro,
                        std::list<HashRead> &pending_next_hash_ro);
+  bool CheckNextCasRW(std::list<CasRead> &pending_next_hash_ro);
 
   bool CheckCasRW(std::vector<CasRead> &pending_cas_rw,
                   std::list<HashRead> &pending_next_hash_rw,
@@ -314,10 +314,10 @@ class DTX {
                     std::list<InvisibleRead> &pending_invisible_ro);
 
   bool CheckHashRW(std::vector<HashRead> &pending_hash_rw,
-                   std::list<InvisibleRead> &pending_invisible_ro,
+                   std::list<CasRead> &pending_next_cas_rw,
                    std::list<HashRead> &pending_next_hash_rw);
 
-  bool CheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
+  bool CheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
                        std::list<HashRead> &pending_next_hash_rw);
 
   int FindInsertOff(InsertOffRead &res,
@@ -358,6 +358,7 @@ class DTX {
   //   DSLR
   bool DSLRExeRO();
   bool DSLRExeRW();
+  bool DSLRCommit();
   bool DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro);
   bool DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
                       std::list<DirectRead> &pending_next_direct_ro,
@@ -410,6 +411,7 @@ class DTX {
  public:
   int lease;
   int txn_sys;
+  uint64_t last_write_lock_time;
 
  private:
   tx_id_t tx_id;
@@ -422,7 +424,7 @@ class DTX {
   bool is_ro_tx;
   std::vector<DataSetItem> read_only_set;
   std::vector<DataSetItem> read_write_set;
-  std::vector<size_t> not_eager_locked_rw_set;
+  // std::vector<size_t> not_eager_locked_rw_set;
   std::vector<size_t> locked_rw_set;
   std::vector<OldVersionForInsert> old_version_for_insert;
 

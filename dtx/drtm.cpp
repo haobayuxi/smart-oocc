@@ -129,7 +129,7 @@ bool DTX::DrTMIssueReadWrite(
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
-      not_eager_locked_rw_set.emplace_back(i);
+      // not_eager_locked_rw_set.emplace_back(i);
       const HashMeta &meta = GetPrimaryHashMetaWithTableID(it->table_id);
       uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
       offset_t node_off = idx * meta.node_size + meta.base_off;
