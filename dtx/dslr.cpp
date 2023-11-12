@@ -571,7 +571,7 @@ bool DTX::DSLRCommit() {
   context->Sync();
   for (auto &item : read_only_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
-    auto it = set_it.item_ptr;
+    auto *it = item.item_ptr.get();
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
 
     context->FetchAndAdd(faa_buf,

@@ -423,7 +423,7 @@ class DTX {
   bool is_ro_tx;
   std::vector<DataSetItem> read_only_set;
   std::vector<DataSetItem> read_write_set;
-  // std::vector<size_t> not_eager_locked_rw_set;
+  std::vector<size_t> not_eager_locked_rw_set;
   std::vector<size_t> locked_rw_set;
   std::vector<OldVersionForInsert> old_version_for_insert;
 
