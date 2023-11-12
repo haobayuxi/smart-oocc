@@ -325,6 +325,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
+        SDS_INFO("lock state %ld", it->lock);
         if (unlikely((it->lock > STATE_READ_LOCKED))) {
           //   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           //   uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
