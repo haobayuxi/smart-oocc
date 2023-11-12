@@ -425,13 +425,14 @@ bool DTX::CheckNextDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
     auto *it = res.item->item_ptr.get();
     auto lock_value = *((lock_t *)res.buf);
     if (lock_value > STATE_READ_LOCKED) {
-      context->read(res.buf,
-                    GlobalAddress(res.node_id, (DataItem *)res.buf->remote_off),
-                    sizeof(lock_t));
+      context->read(
+          res.buf,
+          GlobalAddress(res.node_id, (DataItem *)res.buf->remote_offset),
+          sizeof(lock_t));
       iter++;
     } else {
       auto *it = res.item->item_ptr.get();
-      *it = (DataItem *)res.buf;
+      it = (DataItem *)res.buf;
       iter = pending_next_direct_ro.erase(iter);
     }
   }
