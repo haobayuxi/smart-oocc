@@ -116,9 +116,7 @@ void RunTx(DTXContext *context) {
 #ifdef ABORT_DISCARD
 
 #else
-    do {
-      tx_committed = TxYCSB(iter, dtx);
-    } while (!tx_committed);
+    tx_committed = TxYCSB(iter, dtx);
 #endif
     // Stat after one transaction finishes
     if (tx_committed) {
