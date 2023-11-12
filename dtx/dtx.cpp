@@ -149,11 +149,9 @@ void DTX::ParallelUndoLog() {
     }
   }
 
-  for (int i = 0; i < context->GetRemoteNodes(); i++) {
-    offset_t log_offset = GetNextLogOffset(i, log_size);
-    context->Write(written_log_buf, GlobalAddress(i, log_offset), log_size);
-    context->PostRequest();
-  }
+  offset_t log_offset = GetNextLogOffset(0, log_size);
+  context->Write(written_log_buf, GlobalAddress(0, log_offset), log_size);
+  context->PostRequest();
 }
 
 void DTX::Abort() {

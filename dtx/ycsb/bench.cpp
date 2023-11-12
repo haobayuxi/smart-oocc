@@ -125,7 +125,7 @@ void RunTx(DTXContext *context) {
       timer[timer_idx] = tx_usec;
       timer_idx += threads * coroutines;
       commit_tx++;
-      IdleExecution();
+      // IdleExecution();
     }
     // Stat after a million of transactions finish
     if (attempt_tx == ATTEMPTED_NUM) {
