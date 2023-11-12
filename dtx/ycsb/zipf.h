@@ -109,9 +109,6 @@ class ZipfGen {
       uint64_t v = seq_;
       if (++seq_ >= n_) seq_ = 0;
       return v;
-    } else if (theta_ == 0.) {
-      double u = rand_.next_f64();
-      return (uint64_t)(dbl_n_ * u);
     } else if (theta_ >= 40.) {
       return 0UL;
     } else {
