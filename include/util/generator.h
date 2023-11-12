@@ -36,6 +36,8 @@
 #include "util/murmur.h"
 #include "zipf.h"
 
+using namespace sds;
+
 class ZipfianGenerator {
  public:
   static const uint64_t kMaxNumItems = (UINT64_MAX >> 24);
