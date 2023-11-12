@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstdio>
 
+#include "../common.h"
 #include "fast_random.h"
 
 class ZipfGen {
@@ -92,7 +93,7 @@ class ZipfGen {
   }
 
   void change_n(uint64_t n) { n_ = n; }
-
+  ALWAYS_INLINE
   uint64_t next() {
     if (last_n_ != n_) {
       if (theta_ > 0. && theta_ < 1.) {
