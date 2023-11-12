@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../memstore.h"
+#include "fast_random.h"
 #include "util/generator.h"
 #include "util/json_config.h"
 // #include "zipf.h"
