@@ -51,7 +51,7 @@ class YCSB {
   HashStore *micro_table;
   std::vector<HashStore *> table_ptrs;
   YCSB(double theta, int thread_gid) {
-    zipf_gen = new ZipfianGenerator(TOTAL_KEYS_NUM - 1, theta);
+    zipf_gen = new std::util::ZipfianGenerator(TOTAL_KEYS_NUM - 1, theta);
   }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
@@ -85,5 +85,5 @@ class YCSB {
 
  private:
   // ZipfGen *zipf_gen;
-  ZipfianGenerator *zipf_gen;
+  std::util::ZipfianGenerator *zipf_gen;
 };
