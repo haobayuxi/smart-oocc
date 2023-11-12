@@ -117,12 +117,12 @@ bool DTX::CoalescentCommit() {
   }
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
   context->Sync();
-  *((lock_t *)cas_buf) = 0;
-  for (auto &re : pending_commit_write) {
-    context->Write(cas_buf, GlobalAddress(re.node_id, re.lock_off),
-                   sizeof(lock_t));
-    context->PostRequest();
-  }
+  // *((lock_t *)cas_buf) = 0;
+  // for (auto &re : pending_commit_write) {
+  //   context->Write(cas_buf, GlobalAddress(re.node_id, re.lock_off),
+  //                  sizeof(lock_t));
+  //   context->PostRequest();
+  // }
   //   context->Sync();
   return true;
 }
