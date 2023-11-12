@@ -77,7 +77,6 @@ void WarmUp(DTXContext *context) {
   DTX *dtx = new DTX(context, txn_sys, lease, delayed);
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
-    sleep(5);
     uint64_t iter = ++tx_id_local;
     TxYCSB(iter, dtx);
   }
