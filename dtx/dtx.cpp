@@ -123,7 +123,7 @@ bool DTX::CoalescentCommit() {
                    sizeof(lock_t));
     context->PostRequest();
   }
-  //   context->Sync();
+  context->Sync();
   return true;
 }
 
