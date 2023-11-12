@@ -305,7 +305,7 @@ bool DTX::IssueCommitAllSelectFlush(
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     pending_commit_write.push_back(
         CommitWrite{.node_id = node_id, .lock_off = it->GetRemoteLockAddr()});
-
+    SDS_INFO("key %ld, offset = %ld", it->key, it->remote_offset);
     // context->Write(cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr()),
     //                sizeof(lock_t));
     context->Write(data_buf, GlobalAddress(node_id, it->remote_offset),
@@ -479,11 +479,12 @@ bool DTX::CheckCasRW(std::vector<CasRead> &pending_cas_rw,
                      std::list<HashRead> &pending_next_hash_rw,
                      std::list<InsertOffRead> &pending_next_off_rw) {
   for (auto &re : pending_cas_rw) {
+    auto *fetched_item = (DataItem *)(re.data_buf);
+    SDS_INFO("key = %ld, lock=%ld", fetched_item->key, fetched_item->lock);
     if (*((lock_t *)re.cas_buf) != STATE_CLEAN) {
       return false;
     }
     auto it = re.item->item_ptr;
-    auto *fetched_item = (DataItem *)(re.data_buf);
     if (likely(fetched_item->key == it->key &&
                fetched_item->table_id == it->table_id)) {
       if (it->user_insert) {
