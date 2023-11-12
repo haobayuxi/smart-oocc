@@ -447,6 +447,9 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
         find = true;
         break;
       }
+      if (!item.valid) {
+        break;
+      }
     }
 
     if (likely(find)) {
