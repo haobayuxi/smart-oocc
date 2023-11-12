@@ -541,7 +541,7 @@ int DTX::FindMatchSlot(HashRead &res, std::list<CasRead> &pending_next_cas_rw) {
       char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
       char *data_buf = AllocLocalBuffer(DataItemSize);
       pending_next_cas_rw.emplace_back(CasRead{.node_id = res.node_id,
-                                               .item = &res.item,
+                                               .item = res.item,
                                                .cas_buf = cas_buf,
                                                .data_buf = data_buf});
       context->CompareAndSwap(

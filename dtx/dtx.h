@@ -273,7 +273,7 @@ class DTX {
   void Clean() {
     read_only_set.clear();
     read_write_set.clear();
-    // not_eager_locked_rw_set.clear();
+    not_eager_locked_rw_set.clear();
     locked_rw_set.clear();
     old_version_for_insert.clear();
     inserted_pos.clear();
