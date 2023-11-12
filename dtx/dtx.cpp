@@ -158,13 +158,12 @@ void DTX::ParallelUndoLog() {
 
 void DTX::Abort() {
   char *unlock_buf = AllocLocalBuffer(sizeof(lock_t));
-  *((lock_t *)unlock_buf) = 0;
   for (auto &index : locked_rw_set) {
     auto &it = read_write_set[index].item_ptr;
     node_id_t primary_node_id = GetPrimaryNodeID(it->table_id);
-    context->Write(unlock_buf,
-                   GlobalAddress(primary_node_id, it->GetRemoteLockAddr()),
-                   sizeof(lock_t));
+    context->CompareAndSwap(
+        unlock_buf, GlobalAddress(primary_node_id, it->GetRemoteLockAddr()),
+        tx_id, 0);
     context->PostRequest();
   }
   context->RetryTask();
@@ -300,7 +299,7 @@ bool DTX::IssueCommitAllSelectFlush(
     if (delayed_unlock) {
       it->lock = STATE_READ_LOCKED;
     } else {
-      it->lock = STATE_LOCKED;
+      it->lock = tx_id;
     }
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
@@ -400,15 +399,15 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
   return true;
 }
 
-bool DTX::CheckNextCasRW(std::list<CasRead> &pending_next_hash_rw) {
-  for (auto iter = pending_next_hash_rw.begin();
-       iter != pending_next_hash_rw.end();) {
+bool DTX::CheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
+  for (auto iter = pending_next_cas_rw.begin();
+       iter != pending_next_cas_rw.end();) {
     auto res = *iter;
     auto lock_value = *((lock_t *)res.cas_buf);
-    if (lock_value == STATE_CLEAN) {
+    if (lock_value != STATE_CLEAN) {
       return false;
     } else {
-      iter = pending_next_hash_rw.erase(iter);
+      iter = pending_next_cas_rw.erase(iter);
     }
   }
   return true;

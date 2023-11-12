@@ -302,7 +302,7 @@ class DTX {
                    std::list<HashRead> &pending_next_hash_ro);
 
   bool CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro);
-  bool CheckNextCasRW(std::list<CasRead> &pending_next_hash_rw);
+  bool CheckNextCasRW(std::list<CasRead> &pending_next_cas_rw);
 
   bool CheckCasRW(std::vector<CasRead> &pending_cas_rw,
                   std::list<HashRead> &pending_next_hash_rw,
