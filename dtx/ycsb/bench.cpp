@@ -264,12 +264,13 @@ int main(int argc, char **argv) {
   } else if (txn_sys == DTX_SYS::OCC) {
     SDS_INFO("running OCC");
   }
+
+  delayed = config.get("delayed").get_bool();
   auto ycsb_config = config.get("ycsb");
   double theta = ycsb_config.get("theta").get_double();
   data_item_size = ycsb_config.get("data_item_size").get_uint64();
   write_ratio = ycsb_config.get("write_ratio").get_uint64();
   is_skewed = ycsb_config.get("is_skewed").get_bool();
-  delayed = ycsb_config.get("delayed").get_bool();
   srand48(time(nullptr));
   threads = argc < 2 ? 1 : atoi(argv[1]);
   coroutines = argc < 3 ? 1 : atoi(argv[2]);
