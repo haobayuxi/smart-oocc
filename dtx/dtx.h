@@ -304,14 +304,13 @@ class DTX {
 
   bool CheckNextHashRO(std::list<InvisibleRead> &pending_invisible_ro,
                        std::list<HashRead> &pending_next_hash_ro);
-  bool CheckNextCasRW(std::list<CasRead> &pending_next_hash_ro);
+  bool CheckNextCasRW(std::list<CasRead> &pending_next_hash_rw);
 
   bool CheckCasRW(std::vector<CasRead> &pending_cas_rw,
                   std::list<HashRead> &pending_next_hash_rw,
                   std::list<InsertOffRead> &pending_next_off_rw);
 
-  int FindMatchSlot(HashRead &res,
-                    std::list<InvisibleRead> &pending_invisible_ro);
+  int FindMatchSlot(HashRead &res, std::list<CasRead> &pending_next_hash_rw);
 
   bool CheckHashRW(std::vector<HashRead> &pending_hash_rw,
                    std::list<CasRead> &pending_next_cas_rw,

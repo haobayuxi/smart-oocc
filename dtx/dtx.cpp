@@ -18,9 +18,7 @@ bool DTX::ExeRO() {
   context->Sync();
   std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
-  if (!CheckDirectRO(pending_direct_ro, pending_invisible_ro,
-                     pending_next_hash_ro))
-    return false;
+  if (!CheckDirectRO(pending_direct_ro, pending_next_hash_ro)) return false;
   if (!CheckHashRO(pending_hash_ro, pending_invisible_ro, pending_next_hash_ro))
     return false;
   while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty()) {
@@ -47,9 +45,7 @@ bool DTX::ExeRW() {
   IssueReadOnly(pending_direct_ro, pending_hash_ro);
   IssueReadWrite(pending_cas_rw, pending_hash_rw, pending_insert_off_rw);
   context->Sync();
-  if (!CheckDirectRO(pending_direct_ro, pending_invisible_ro,
-                     pending_next_hash_ro))
-    return false;
+  if (!CheckDirectRO(pending_direct_ro, pending_next_hash_ro)) return false;
   if (!CheckHashRO(pending_hash_ro, pending_invisible_ro, pending_next_hash_ro))
     return false;
   if (!CheckHashRW(pending_hash_rw, pending_next_cas_rw, pending_next_hash_rw))
@@ -395,15 +391,15 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
   return true;
 }
 
-bool DTX::CheckNextCasRW(std::list<CasRead> &pending_next_hash_ro) {
-  for (auto iter = pending_next_hash_ro.begin();
-       iter != pending_next_hash_ro.end();) {
+bool DTX::CheckNextCasRW(std::list<CasRead> &pending_next_hash_rw) {
+  for (auto iter = pending_next_hash_rw.begin();
+       iter != pending_next_hash_rw.end();) {
     auto res = *iter;
-    auto lock_value = *((lock_t *)res.buf);
+    auto lock_value = *((lock_t *)res.cas_buf);
     if (lock_value == STATE_LOCKED) {
       return false;
     } else {
-      iter = pending_next_hash_ro.erase(iter);
+      iter = pending_next_hash_rw.erase(iter);
     }
   }
   return true;
