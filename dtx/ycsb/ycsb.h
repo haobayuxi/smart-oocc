@@ -14,7 +14,7 @@ static inline unsigned long GetCPUCycle() {
   return ((unsigned long)a) | (((unsigned long)d) << 32);
 }
 
-#define TOTAL_KEYS_NUM 500000
+#define TOTAL_KEYS_NUM 1000000
 
 const int MICRO_TABLE_ID = 1;
 
