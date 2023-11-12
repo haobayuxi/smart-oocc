@@ -321,6 +321,7 @@ bool DTX::IssueCommitAllSelectFlush(
   return true;
 }
 
+ALWAYS_INLINE
 bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
                         std::list<DirectRead> pending_next_direct_ro,
                         std::list<HashRead> &pending_next_hash_ro) {
