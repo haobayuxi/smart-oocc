@@ -111,7 +111,7 @@ bool DTX::CoalescentCommit() {
   context->Sync();
   auto end_time = get_clock_sys_time_us();
   if (txn_sys == DTX_SYS::OOCC) {
-    while ((last_write_lock_time + lease) < end_time) {
+    while ((last_write_lock_time + lease) > end_time) {
       end_time = get_clock_sys_time_us();
     }
   }
