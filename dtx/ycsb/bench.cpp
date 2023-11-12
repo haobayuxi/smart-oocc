@@ -44,7 +44,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
   if (write < write_ratio) {
     read_only = false;
   }
-  SDS_INFO("read only %d", read_only);
+  SDS_INFO("read only %d, txid%ld", read_only, tx_id);
   for (int i = 0; i < data_item_size; i++) {
     micro_key_t micro_key;
     if (is_skewed) {
