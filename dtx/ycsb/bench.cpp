@@ -40,7 +40,6 @@ thread_local uint64_t rdma_cnt;
 std::atomic<uint64_t> rdma_cnt_sum(0);
 
 bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
-  clock_gettime(CLOCK_REALTIME, &tx_start_time);
   dtx->TxBegin(tx_id);
   bool read_only = true;
   auto write = FastRand(&seed) % 1000;
@@ -112,7 +111,7 @@ void RunTx(DTXContext *context) {
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
 
-    // clock_gettime(CLOCK_REALTIME, &tx_start_time);
+    clock_gettime(CLOCK_REALTIME, &tx_start_time);
 #ifdef ABORT_DISCARD
 
 #else
@@ -128,7 +127,7 @@ void RunTx(DTXContext *context) {
       timer[timer_idx] = tx_usec;
       timer_idx += threads * coroutines;
       commit_tx++;
-      // IdleExecution();
+      IdleExecution();
     }
     // Stat after a million of transactions finish
     if (attempt_tx == ATTEMPTED_NUM) {
