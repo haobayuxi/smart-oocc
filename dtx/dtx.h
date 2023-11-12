@@ -293,8 +293,9 @@ class DTX {
 
  private:
   bool CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
+                     std::list<DirectRead> pending_next_direct_ro,
                      std::list<HashRead> &pending_next_hash_ro);
-
+  bool CheckNextDirectRO(std::list<DirectRead> &pending_next_direct_ro);
   bool CheckInvisibleRO(std::list<InvisibleRead> &pending_invisible_ro);
 
   bool CheckHashRO(std::vector<HashRead> &pending_hash_ro,
