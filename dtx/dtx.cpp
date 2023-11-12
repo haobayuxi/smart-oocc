@@ -427,7 +427,7 @@ bool DTX::CheckNextDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
     if (lock_value > STATE_READ_LOCKED) {
       context->read(
           res.buf,
-          GlobalAddress(res.node_id, (DataItem *)res.buf->remote_offset),
+          GlobalAddress(res.node_id, ((DataItem *)res.buf)->remote_offset),
           sizeof(lock_t));
       iter++;
     } else {
