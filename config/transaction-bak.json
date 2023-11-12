@@ -23,7 +23,7 @@
     "data_item_size": 2,
     "write_ratio": 0,
     "theta": 0.99,
-    "is_skewed": false
+    "is_skewed": true
   },
   "nr_transactions": 6000000,
   "dump_file_path": "dtx.csv",
