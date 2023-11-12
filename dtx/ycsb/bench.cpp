@@ -44,7 +44,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
   if (write < write_ratio) {
     read_only = false;
   }
-  SDS_INFO("read only %d, txid%ld", read_only, tx_id);
+  // SDS_INFO("read only %d, txid%ld", read_only, tx_id);
   for (int i = 0; i < data_item_size; i++) {
     micro_key_t micro_key;
     if (is_skewed) {
@@ -55,7 +55,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
       // micro_key.item_key = tx_id % (TOTAL_KEYS_NUM - 1);
     }
 
-    SDS_INFO("txn read key = %ld", micro_key.item_key);
+    // SDS_INFO("txn read key = %ld", micro_key.item_key);
     DataItemPtr micro_obj =
         std::make_shared<DataItem>(MICRO_TABLE_ID, micro_key.item_key);
     if (read_only) {
