@@ -73,7 +73,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
       if (!dtx->TxExe()) {
         dtx->Clean();
         continue;
-      };
+      }
       // Commit transaction
       if (!dtx->TxCommit()) {
         dtx->Clean();
