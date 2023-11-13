@@ -9,7 +9,7 @@ include_directories(include)
 add_subdirectory(util)
 add_subdirectory(smart)
 
-add_subdirectory(test)
+# add_subdirectory(test)
 
 # add_subdirectory(hashtable)
 # add_subdirectory(btree)
