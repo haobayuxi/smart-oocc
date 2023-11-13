@@ -115,9 +115,10 @@ bool DTX::DSLRExeRW() {
                       pending_next_direct_rw, pending_next_off_rw))
     return false;
   for (int i = 0; i < 100; i++) {
-    if (!pending_next_direct_ro.empty() || !pending_next_hash_ro.empty() ||
-        !pending_next_hash_rw.empty() || !pending_next_off_rw.empty() ||
-        !pending_next_cas_rw.empty()) {
+    if (!pending_next_direct_ro.empty() || !pending_next_direct_rw.empty() ||
+        !pending_next_hash_ro.empty() || !pending_next_hash_rw.empty() ||
+        !pending_next_off_rw.empty() || !pending_next_cas_rw.empty() ||
+        !pending_next_cas_ro.empty()) {
       context->Sync();
       if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
         return false;
