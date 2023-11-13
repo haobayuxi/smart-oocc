@@ -219,7 +219,7 @@ int ResourceManager::post_send(node_t node_id, int qp_idx,
   auto &node = node_list_[node_id];
   assert(qp_idx >= 0 && qp_idx < node.qp_size);
   auto ret = ibv_post_send(node.qp_list[qp_idx]->qp, wr_list, &bad_wr);
-  if (ret) {
+  if (ret == -1) {
     SDS_INFO("ret = %d", ret);
     SDS_PERROR("ibv_post_send");
     return -1;
