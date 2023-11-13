@@ -98,6 +98,9 @@ class DTX {
  public:
   void TxBegin(tx_id_t txid) {
     context->BeginTask();
+
+    read_only_set.clear();
+    read_write_set.clear();
     Clean();
     is_ro_tx = true;
     tx_id = txid;
@@ -257,8 +260,6 @@ class DTX {
   ~DTX() { Clean(); }
 
   void Clean() {
-    // read_only_set.clear();
-    // read_write_set.clear();
     not_eager_locked_rw_set.clear();
     locked_rw_set.clear();
     old_version_for_insert.clear();
