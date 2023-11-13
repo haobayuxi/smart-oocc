@@ -68,11 +68,12 @@ bool DTX::DSLRExeRO() {
     if (!pending_next_direct_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
       context->Sync();
+      if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
+        return false;
       if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
       if (!DSLRCheckNextCasRO(pending_next_cas_ro, pending_next_direct_ro))
         return false;
-      if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
-        return false;
+
     } else {
       break;
     }
@@ -118,6 +119,10 @@ bool DTX::DSLRExeRW() {
         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty() ||
         !pending_next_cas_rw.empty()) {
       context->Sync();
+      if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
+        return false;
+      if (!DSLRCheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
+        return false;
       if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
       if (!DSLRCheckDirectRW(pending_next_direct_rw)) return false;
 
@@ -125,10 +130,7 @@ bool DTX::DSLRExeRW() {
         return false;
       if (!DSLRCheckNextCasRW(pending_next_cas_rw, pending_next_direct_rw))
         return false;
-      if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
-        return false;
-      if (!DSLRCheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
-        return false;
+
       if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
         return false;
     } else {
