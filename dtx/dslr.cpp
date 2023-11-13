@@ -13,7 +13,7 @@
 #define acquire_read_lock 0x0100
 #define acquire_write_lock 0x1000
 #define release_read_lock 0x0001
-#define relese_write_lock 0x0010
+#define release_write_lock 0x0010
 
 #define max_s_minus1 0xFF00
 #define max_x_minus1 0xF000
@@ -104,7 +104,7 @@ bool DTX::DSLRExeRW() {
   if (!DSLRCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
-  if (!DSLRCheckHashRW(pending_hash_rw, pending_invisible_ro,
+  if (!DSLRCheckHashRW(pending_hash_rw, pending_next_cas_rw,
                        pending_next_hash_rw))
     return false;
   if (!CheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
@@ -122,7 +122,7 @@ bool DTX::DSLRExeRW() {
       if (!DSLRCheckDirectRW(pending_next_direct_rw)) return false;
       if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
         return false;
-      if (!DSLRCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
+      if (!DSLRCheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
         return false;
       if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
         return false;
@@ -280,6 +280,9 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
        iter != pending_next_direct_ro.end(); iter++) {
     auto res = *iter;
     auto *fetched_item = (DataItem *)res.buf;
+
+    auto *it = res.item->item_ptr.get();
+    *it = *fetched_item;
     if (!check_read_lock(fetched_item->lock)) {
       // write locked
       char *data_buf = AllocLocalBuffer(DataItemSize);
@@ -292,11 +295,9 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
                     GlobalAddress(res.node_id, fetched_item->remote_offset),
                     DataItemSize);
       context->PostRequest();
-    } else {
-      auto *it = res.item->item_ptr.get();
-      *it = *fetched_item;
-      iter = pending_next_direct_ro.erase(iter);
     }
+
+    iter = pending_next_direct_ro.erase(iter);
   }
   return true;
 }
@@ -306,10 +307,12 @@ bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
        iter != pending_next_direct_ro.end(); iter++) {
     auto res = *iter;
     auto *fetched_item = (DataItem *)res.buf;
+    auto *it = res.item->item_ptr.get();
+    *it = *fetched_item;
     if (!check_write_lock(fetched_item->lock)) {
       // read locked
       char *data_buf = AllocLocalBuffer(DataItemSize);
-      pending_next_direct_ro.emplace_back(DirectRead{
+      pending_next_direct_rw.emplace_back(DirectRead{
           .node_id = res.node_id,
           .item = res.item,
           .buf = data_buf,
@@ -318,11 +321,8 @@ bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
                     GlobalAddress(res.node_id, fetched_item->remote_offset),
                     DataItemSize);
       context->PostRequest();
-    } else {
-      auto *it = res.item->item_ptr.get();
-      *it = *fetched_item;
-      iter = pending_next_direct_ro.erase(iter);
     }
+    iter = pending_next_direct_ro.erase(iter);
   }
   return true;
 }
@@ -593,7 +593,8 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                 .item = re.item,
                 .buf = data_buf,
             });
-            context->read(data_buf, GlobalAddress(node_id, it->remote_offset),
+            context->read(data_buf,
+                          GlobalAddress(re.node_id, it->remote_offset),
                           DataItemSize);
             context->PostRequest();
           }
