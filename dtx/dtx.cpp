@@ -171,8 +171,8 @@ void DTX::Abort() {
         tx_id, 0);
     context->PostRequest();
   }
-  // context->RetryTask();
-  // context->EndTask();
+  context->RetryTask();
+  context->EndTask();
 }
 
 bool DTX::IssueReadOnly(std::vector<DirectRead> &pending_direct_ro,
