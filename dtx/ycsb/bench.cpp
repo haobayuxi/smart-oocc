@@ -69,11 +69,20 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
   }
   bool commit_status = true;
   if (RetryUntilSuccess) {
-    do {
-      if (!dtx->TxExe()) return false;
+    while (true) {
+      if (!dtx->TxExe()) {
+        dtx->clean();
+        continue;
+      };
       // Commit transaction
-      commit_status = dtx->TxCommit();
-    } while (!commit_status);
+      if (!dtx->TxCommit()) {
+        dtx->clean();
+
+      } else {
+        return true;
+      }
+    }
+
   } else {
     if (!dtx->TxExe()) return false;
     // Commit transaction

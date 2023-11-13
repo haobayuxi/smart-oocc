@@ -256,6 +256,15 @@ class DTX {
 
   ~DTX() { Clean(); }
 
+  void Clean() {
+    // read_only_set.clear();
+    // read_write_set.clear();
+    not_eager_locked_rw_set.clear();
+    locked_rw_set.clear();
+    old_version_for_insert.clear();
+    inserted_pos.clear();
+  }
+
  private:
   bool ExeRO();
 
@@ -269,16 +278,7 @@ class DTX {
 
   void ParallelUndoLog();
 
-  void Clean() {
-    read_only_set.clear();
-    read_write_set.clear();
-    not_eager_locked_rw_set.clear();
-    locked_rw_set.clear();
-    old_version_for_insert.clear();
-    inserted_pos.clear();
-  }
-
- private:
+  private:
   bool IssueReadOnly(std::vector<DirectRead> &pending_direct_ro,
                      std::vector<HashRead> &pending_hash_ro);
 
