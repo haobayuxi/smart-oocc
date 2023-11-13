@@ -49,7 +49,7 @@ bool check_write_lock(uint64_t lock) {
   return false;
 }
 
-int check_write_lock_1(uint64_t) {
+int check_write_lock_1(uint64_t lock) {
   if (get_ns(lock) == get_max_s(lock)) {
     return DSLR_CHECK_LOCK::SUCCESS;
   }
