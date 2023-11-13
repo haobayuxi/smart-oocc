@@ -360,6 +360,7 @@ class DTX {
   bool DSLRExeRW();
   bool DSLRCommit();
   bool DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro);
+  bool DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw);
   bool DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
                       std::list<DirectRead> &pending_next_direct_ro,
                       std::list<HashRead> &pending_next_hash_ro);
@@ -376,12 +377,13 @@ class DTX {
                           std::vector<HashRead> &pending_hash_rw,
                           std::vector<InsertOffRead> &pending_insert_off_rw);
   bool DSLRCheckHashRW(std::vector<HashRead> &pending_hash_rw,
-                       std::list<InvisibleRead> &pending_invisible_ro,
+                       std::list<CasRead> &pending_next_cas_rw,
                        std::list<HashRead> &pending_next_hash_rw);
-  bool DSLRCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
+  bool DSLRCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
                            std::list<HashRead> &pending_next_hash_rw);
   bool DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                       std::list<HashRead> &pending_next_hash_rw,
+                      std::list<DirectRead> &pending_next_direct_rw,
                       std::list<InsertOffRead> &pending_next_off_rw);
 
  private:

@@ -1,7 +1,9 @@
 #include "dtx.h"
 
+#define DrTMLease 1000
+
 ALWAYS_INLINE
-uint64_t next_lease() { return (get_clock_sys_time_us() + 1000) << 1; }
+uint64_t next_lease() { return (get_clock_sys_time_us() + DrTMLease) << 1; }
 ALWAYS_INLINE
 bool DTX::lease_expired(uint64_t lock) {
   auto now = (get_clock_sys_time_us() << 1);
@@ -17,7 +19,6 @@ bool DTX::DrTMExeRO() {
   DrTMIssueReadOnly(pending_cas_ro, pending_hash_ro);
   context->Sync();
   std::list<CasRead> pending_next_cas_ro;
-  std::list<InvisibleRead> pending_invisible_ro;
   std::list<HashRead> pending_next_hash_ro;
   if (!DrTMCheckDirectRO(pending_cas_ro, pending_next_cas_ro,
                          pending_next_hash_ro))
@@ -26,13 +27,8 @@ bool DTX::DrTMExeRO() {
                        pending_next_hash_ro))
     return false;
   for (int i = 0; i < 500; i++) {
-    if (!pending_invisible_ro.empty() || !pending_next_cas_ro.empty() ||
-        !pending_next_hash_ro.empty()) {
+    if (!pending_next_cas_ro.empty() || !pending_next_hash_ro.empty()) {
       context->Sync();
-      if (i > 5) {
-        SDS_INFO("retry too many times");
-      }
-      if (!CheckInvisibleRO(pending_invisible_ro)) return false;
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
       if (!CheckNextHashRO(pending_next_hash_ro)) return false;
     } else {
@@ -427,7 +423,7 @@ bool DTX::DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
 
 bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
                             std::vector<HashRead> &pending_hash_ro) {
-  uint64_t read_lease = (start_time + 1000) << 1;
+  uint64_t read_lease = (start_time + DrTMLease) << 1;
   for (auto &item : read_only_set) {
     if (item.is_fetched) continue;
     auto it = item.item_ptr;
