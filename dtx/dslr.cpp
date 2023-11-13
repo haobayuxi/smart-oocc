@@ -303,8 +303,8 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
 }
 
 bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
-  for (auto iter = pending_next_direct_ro.begin();
-       iter != pending_next_direct_ro.end(); iter++) {
+  for (auto iter = pending_next_direct_rw.begin();
+       iter != pending_next_direct_rw.end(); iter++) {
     auto res = *iter;
     auto *fetched_item = (DataItem *)res.buf;
     auto *it = res.item->item_ptr.get();
@@ -322,7 +322,7 @@ bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
                     DataItemSize);
       context->PostRequest();
     }
-    iter = pending_next_direct_ro.erase(iter);
+    iter = pending_next_direct_rw.erase(iter);
   }
   return true;
 }
