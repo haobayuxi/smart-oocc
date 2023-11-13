@@ -3,6 +3,13 @@
 
 #define COUNT_MAX 32768
 
+enum DSLR_CHECK_LOCK : int {
+  SUCCESS = 0,
+  WAIT = 1,
+  BACKOFF = 2,
+  RESET = 3,
+};
+
 //    | max x| max s| n x| n s|  lock representation
 
 #define nx_mask 0x00F0
@@ -40,6 +47,13 @@ bool check_write_lock(uint64_t lock) {
     return true;
   }
   return false;
+}
+
+int check_write_lock_1(uint64_t) {
+  if (get_ns(lock) == get_max_s(lock)) {
+    return DSLR_CHECK_LOCK::SUCCESS;
+  }
+  return DSLR_CHECK_LOCK::WAIT;
 }
 
 bool check_read_lock(uint64_t lock) {
