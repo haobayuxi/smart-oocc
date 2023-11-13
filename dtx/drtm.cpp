@@ -61,10 +61,10 @@ bool DTX::DrTMExeRW() {
   if (!DrTMCheckDirectRO(pending_cas_ro, pending_next_cas_ro,
                          pending_next_hash_ro))
     return false;
-  if (!DrTMCheckHashRO(pending_hash_ro, pending_next_cas_ro,
+  if (!DrTMCheckHashRO(pending_hash_ro, pending_next_cas_rw,
                        pending_next_hash_ro))
     return false;
-  if (!DrTMCheckHashRW(pending_hash_rw, pending_invisible_ro,
+  if (!DrTMCheckHashRW(pending_hash_rw, pending_next_cas_rw,
                        pending_next_hash_rw))
     return false;
   if (!CheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
@@ -74,7 +74,7 @@ bool DTX::DrTMExeRW() {
                       pending_next_off_rw))
     return false;
   for (int i = 0; i < 100; i++) {
-    if (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty() ||
+    if (!pending_next_cas_rw.empty() || !pending_next_hash_ro.empty() ||
         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
       context->Sync();
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
@@ -83,6 +83,7 @@ bool DTX::DrTMExeRW() {
         return false;
       if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
         return false;
+      if (!DrTMCheckNextCasRW(pending_next_cas_rw)) return false;
     } else {
       break;
     }
@@ -315,7 +316,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
 }
 
 bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
-                          std::list<InvisibleRead> &pending_invisible_ro,
+                          std::list<CasRead> &pending_next_cas_rw,
                           std::list<HashRead> &pending_next_hash_rw) {
   for (auto &res : pending_hash_rw) {
     auto *local_hash_node = (HashNode *)res.buf;
@@ -332,8 +333,24 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
       }
     }
     if (likely(find)) {
-      if (unlikely((it->lock))) {
+      if (unlikely((it->lock != STATE_CLEAN))) {
         return false;
+      } else {
+        // get write lock and data
+        char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+        char *data_buf = AllocLocalBuffer(DataItemSize);
+        pending_next_cas_rw.emplace_back(CasRead{.node_id = res.node_id,
+                                                 .item = res.item,
+                                                 .cas_buf = cas_buf,
+                                                 .data_buf = data_buf});
+        context->CompareAndSwap(
+            cas_buf,
+            GlobalAddress(res.node_id,
+                          it->GetRemoteLockAddr(it->remote_offset)),
+            STATE_CLEAN, tx_id);
+        context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
+                      DataItemSize);
+        context->PostRequest();
       }
     } else {
       auto *local_hash_node = (HashNode *)res.buf;
@@ -351,7 +368,7 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
   return true;
 }
 
-bool DTX::DrTMCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
+bool DTX::DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
                               std::list<HashRead> &pending_next_hash_rw) {
   for (auto iter = pending_next_hash_rw.begin();
        iter != pending_next_hash_rw.end();) {
@@ -372,6 +389,21 @@ bool DTX::DrTMCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
     if (likely(find)) {
       if (unlikely((it->lock))) {
         return false;
+      } else {
+        char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+        char *data_buf = AllocLocalBuffer(DataItemSize);
+        pending_next_cas_rw.emplace_back(CasRead{.node_id = res.node_id,
+                                                 .item = res.item,
+                                                 .cas_buf = cas_buf,
+                                                 .data_buf = data_buf});
+        context->CompareAndSwap(
+            cas_buf,
+            GlobalAddress(res.node_id,
+                          it->GetRemoteLockAddr(it->remote_offset)),
+            STATE_CLEAN, tx_id);
+        context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
+                      DataItemSize);
+        context->PostRequest();
       }
     } else {
       auto *local_hash_node = (HashNode *)res.buf;
@@ -485,6 +517,43 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                     sizeof(HashNode));
       context->PostRequest();
     }
+  }
+  return true;
+}
+
+bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
+  for (auto iter = pending_next_cas_rw.begin();
+       iter != pending_next_cas_rw.end();) {
+    auto res = *iter;
+    auto lock_value = *((lock_t *)res.cas_buf);
+    if (lock_value != STATE_CLEAN) {
+      // context->read(res.buf, GlobalAddress(res.node_id, res.off),
+      //               sizeof(lock_t));
+      // iter++;
+      return false;
+    }
+    auto it = res.item->item_ptr;
+    auto *fetched_item = (DataItem *)(res.data_buf);
+    if (likely(fetched_item->key == it->key &&
+               fetched_item->table_id == it->table_id)) {
+      if (it->user_insert) {
+        if (it->version < fetched_item->version) return false;
+        old_version_for_insert.push_back(
+            OldVersionForInsert{.table_id = it->table_id,
+                                .key = it->key,
+                                .version = fetched_item->version});
+      } else {
+        if (likely(fetched_item->valid)) {
+          assert(fetched_item->remote_offset == it->remote_offset);
+          *it = *fetched_item;
+        } else {
+          addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
+          return false;
+        }
+      }
+      res.item->is_fetched = true;
+    }
+    iter++;
   }
   return true;
 }

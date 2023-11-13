@@ -587,7 +587,6 @@ bool DTX::DSLRCommit() {
       it->version++;
     }
 
-    it->lock = STATE_CLEAN;
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
 

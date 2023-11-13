@@ -346,13 +346,14 @@ class DTX {
                           std::vector<HashRead> &pending_hash_rw,
                           std::vector<InsertOffRead> &pending_insert_off_rw);
   bool DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
-                       std::list<InvisibleRead> &pending_invisible_ro,
+                       std::list<CasRead> &pending_next_cas_rw,
                        std::list<HashRead> &pending_next_hash_rw);
-  bool DrTMCheckNextHashRW(std::list<InvisibleRead> &pending_invisible_ro,
+  bool DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
                            std::list<HashRead> &pending_next_hash_rw);
   bool DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                       std::list<HashRead> &pending_next_hash_rw,
                       std::list<InsertOffRead> &pending_next_off_rw);
+  bool DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw);
 
   //   DSLR
   bool DSLRExeRO();
