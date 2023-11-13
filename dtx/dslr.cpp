@@ -569,15 +569,12 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                          std::list<DirectRead> &pending_next_direct_rw,
                          std::list<InsertOffRead> &pending_next_off_rw) {
   for (auto &re : pending_cas_rw) {
-    if (*((lock_t *)re.cas_buf) != STATE_CLEAN) {
-      return false;
-    }
     auto it = re.item->item_ptr;
     auto *fetched_item = (DataItem *)(re.data_buf);
     if (likely(fetched_item->key == it->key &&
                fetched_item->table_id == it->table_id)) {
       if (it->user_insert) {
-        if (it->version < fetched_item->version) return false;
+        // if (it->version < fetched_item->version) return false;
         old_version_for_insert.push_back(
             OldVersionForInsert{.table_id = it->table_id,
                                 .key = it->key,
