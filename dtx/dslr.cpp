@@ -5,10 +5,10 @@
 
 //    | max x| max s| n x| n s|  lock representation
 
-#define nx_mask 0xF000
-#define ns_mask 0x0F00
-#define max_x_mask 0x00F0
-#define max_s_mask 0x000F
+#define nx_mask 0x00F0
+#define ns_mask 0x000F
+#define max_x_mask 0xF000
+#define max_s_mask 0x0F00
 
 #define acquire_read_lock 0x0100
 #define acquire_write_lock 0x1000
