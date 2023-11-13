@@ -386,6 +386,8 @@ class DTX {
                       std::list<HashRead> &pending_next_hash_rw,
                       std::list<DirectRead> &pending_next_direct_rw,
                       std::list<InsertOffRead> &pending_next_off_rw);
+  bool DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
+                          std::list<DirectRead> pending_next_direct_rw);
 
  private:
   char *AllocLocalBuffer(size_t size) { return context->Alloc(size); }
