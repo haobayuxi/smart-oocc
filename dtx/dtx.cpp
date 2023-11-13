@@ -131,8 +131,6 @@ bool DTX::CoalescentCommit() {
     context->PostRequest();
   }
   context->Sync();
-  end_time = get_clock_sys_time_us();
-  SDS_INFO("commit time %ld", end_time - start_time);
   return true;
 }
 

@@ -33,8 +33,6 @@ thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
 thread_local YCSB *ycsb_client;
 thread_local bool *workgen_arr;
-thread_local struct timespec tx_start_time;
-thread_local struct timespec tx_end_time;
 
 thread_local uint64_t rdma_cnt;
 std::atomic<uint64_t> rdma_cnt_sum(0);
@@ -105,12 +103,13 @@ void RunTx(DTXContext *context) {
   uint64_t commit_tx = 0;
   tx_id_local = (uint64_t)GetThreadID() << 50;
   int timer_idx = GetThreadID() * coroutines + GetTaskID();
+  struct timespec tx_start_time;
+  struct timespec tx_end_time;
   // Running transactions
   while (true) {
     uint64_t iter = ++tx_id_local;  // Global atomic transaction id
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
-
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
 #ifdef ABORT_DISCARD
 
@@ -123,7 +122,7 @@ void RunTx(DTXContext *context) {
       double tx_usec =
           (tx_end_time.tv_sec - tx_start_time.tv_sec) * 1000000 +
           (double)(tx_end_time.tv_nsec - tx_start_time.tv_nsec) / 1000;
-      SDS_INFO("tx_usec=%lf", tx_usec);
+      // SDS_INFO("tx_usec=%lf", tx_usec);
       timer[timer_idx] = tx_usec;
       timer_idx += threads * coroutines;
       commit_tx++;
