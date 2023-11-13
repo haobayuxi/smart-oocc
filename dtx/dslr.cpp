@@ -13,7 +13,7 @@
 #define acquire_read_lock 0x0100
 #define acquire_write_lock 0x1000
 #define release_read_lock 0x0001
-#define realese_write_lock 0x0010
+#define relese_write_lock 0x0010
 
 #define max_s_minus1 0xFF00
 #define max_x_minus1 0xF000
@@ -588,13 +588,12 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
           *it = *fetched_item;
           if (!check_write_lock(it->lock)) {
             char *data_buf = AllocLocalBuffer(DataItemSize);
-            pending_next_direct_rw.emplace_back(CasRead{
-                .node_id = node_id,
+            pending_next_direct_rw.emplace_back(DirectRead{
+                .node_id = re.node_id,
                 .item = re.item,
-                .cas_buf = faa_buf,
-                .data_buf = data_buf,
+                .buf = data_buf,
             });
-            context->read(data_buf, GlobalAddress(node_id, offset),
+            context->read(data_buf, GlobalAddress(node_id, it->remote_offset),
                           DataItemSize);
             context->PostRequest();
           }
@@ -666,7 +665,7 @@ bool DTX::DSLRCommit() {
   }
   context->Sync();
   for (auto &set_it : read_write_set) {
-    char *data_buf = AllocLocalBuffer(sizeof(lock_t));
+    char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
     auto it = set_it.item_ptr;
 
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
