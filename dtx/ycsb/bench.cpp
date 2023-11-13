@@ -12,7 +12,7 @@
 
 using namespace std::placeholders;
 
-#define RetryUntilSuccess 0
+#define RetryUntilSuccess 1
 
 size_t kMaxTransactions = 10000;
 pthread_barrier_t barrier;
@@ -68,26 +68,26 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
     }
   }
   bool commit_status = true;
-  // if (RetryUntilSuccess) {
-  //   while (true) {
-  //     if (!dtx->TxExe()) {
-  //       dtx->Clean();
-  //       continue;
-  //     };
-  //     // Commit transaction
-  //     if (!dtx->TxCommit()) {
-  //       dtx->Clean();
+  if (RetryUntilSuccess) {
+    while (true) {
+      if (!dtx->TxExe()) {
+        dtx->Clean();
+        continue;
+      };
+      // Commit transaction
+      if (!dtx->TxCommit()) {
+        dtx->Clean();
 
-  //     } else {
-  //       return true;
-  //     }
-  //   }
+      } else {
+        return true;
+      }
+    }
 
-  // } else {
-  if (!dtx->TxExe()) return false;
-  // Commit transaction
-  commit_status = dtx->TxCommit();
-  // }
+  } else {
+    if (!dtx->TxExe()) return false;
+    // Commit transaction
+    commit_status = dtx->TxCommit();
+  }
 
   return commit_status;
 }
