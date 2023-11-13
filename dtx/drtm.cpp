@@ -79,7 +79,7 @@ bool DTX::DrTMExeRW() {
       context->Sync();
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
       if (!CheckNextHashRO(pending_next_hash_ro)) return false;
-      if (!DrTMCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
+      if (!DrTMCheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
         return false;
       if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
         return false;
