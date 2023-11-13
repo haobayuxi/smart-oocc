@@ -595,4 +595,6 @@ bool DTX::DSLRCommit() {
                    DataItemSize);
     context->PostRequest();
   }
+
+  return true;
 }
