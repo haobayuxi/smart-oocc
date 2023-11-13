@@ -120,6 +120,11 @@ bool DTX::DSLRExeRW() {
       context->Sync();
       if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
       if (!DSLRCheckDirectRW(pending_next_direct_rw)) return false;
+
+      if (!DSLRCheckNextCasRO(pending_next_cas_ro, pending_next_direct_ro))
+        return false;
+      if (!DSLRCheckNextCasRW(pending_next_cas_rw, pending_next_direct_rw))
+        return false;
       if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
         return false;
       if (!DSLRCheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
@@ -415,8 +420,20 @@ bool DTX::DSLRCheckNextHashRO(std::list<CasRead> &pending_next_cas_ro,
       context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                     DataItemSize);
       context->PostRequest();
-      iter = pending_next_hash_ro.erase(iter);
+
+    } else {
+      auto *local_hash_node = (HashNode *)res.buf;
+      if (local_hash_node->next == nullptr) return false;
+      auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
+                      res.meta.base_off;
+      pending_next_hash_ro.emplace_back(HashRead{.node_id = res.node_id,
+                                                 .item = res.item,
+                                                 .buf = res.buf,
+                                                 .meta = res.meta});
+      context->read(res.buf, GlobalAddress(res.node_id, node_off),
+                    sizeof(HashNode));
     }
+    iter = pending_next_hash_ro.erase(iter);
   }
 
   return true;
@@ -521,7 +538,7 @@ bool DTX::DSLRCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
     }
 
     iter = pending_next_hash_rw.erase(iter);
-    iter++;
+    // iter++;
   }
 
   return true;
