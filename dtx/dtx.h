@@ -233,6 +233,7 @@ class DTX {
         }
       }
     } else {
+      DSLRCommit();
     }
 
     context->EndTask();
