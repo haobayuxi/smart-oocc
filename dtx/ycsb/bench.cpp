@@ -12,6 +12,8 @@
 
 using namespace std::placeholders;
 
+#define RetryUntilSuccess 1
+
 size_t kMaxTransactions = 10000;
 pthread_barrier_t barrier;
 uint64_t threads;
@@ -65,9 +67,19 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
       dtx->AddToReadWriteSet(micro_obj);
     }
   }
-  if (!dtx->TxExe()) return false;
-  // Commit transaction
-  bool commit_status = dtx->TxCommit();
+  bool commit_status = true;
+  if (RetryUntilSuccess) {
+    do {
+      if (!dtx->TxExe()) return false;
+      // Commit transaction
+      commit_status = dtx->TxCommit();
+    } while (!commit_status);
+  } else {
+    if (!dtx->TxExe()) return false;
+    // Commit transaction
+    commit_status = dtx->TxCommit();
+  }
+
   return commit_status;
 }
 
@@ -111,11 +123,7 @@ void RunTx(DTXContext *context) {
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
-#ifdef ABORT_DISCARD
-
-#else
     tx_committed = TxYCSB(iter, dtx);
-#endif
     // Stat after one transaction finishes
     if (tx_committed) {
       clock_gettime(CLOCK_REALTIME, &tx_end_time);
