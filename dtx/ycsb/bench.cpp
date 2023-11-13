@@ -71,12 +71,12 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
   if (RetryUntilSuccess) {
     while (true) {
       if (!dtx->TxExe()) {
-        dtx->clean();
+        dtx->Clean();
         continue;
       };
       // Commit transaction
       if (!dtx->TxCommit()) {
-        dtx->clean();
+        dtx->Clean();
 
       } else {
         return true;
