@@ -362,6 +362,7 @@ class DTX {
   bool DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
                            std::list<HashRead> &pending_next_hash_rw);
   bool DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
+                      std::list<CasRead> &pending_next_cas_rw,
                       std::list<HashRead> &pending_next_hash_rw,
                       std::list<InsertOffRead> &pending_next_off_rw);
   bool DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw);
