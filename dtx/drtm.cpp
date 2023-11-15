@@ -493,6 +493,7 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
         return false;
       } else {
         // cas to get write lock
+        SDS_INFO("lease expire get write lock");
         char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
         char *data_buf = AllocLocalBuffer(DataItemSize);
         pending_next_cas_rw.emplace_back(CasRead{
