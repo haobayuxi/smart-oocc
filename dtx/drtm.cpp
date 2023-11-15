@@ -601,7 +601,7 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
           fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
       context->CompareAndSwap(res.cas_buf, GlobalAddress(res.node_id, offset),
                               lock, tx_id << 1 + 1);
-      context->read(res.data_buf, GlobalAddress(re.node_id, offset),
+      context->read(res.data_buf, GlobalAddress(res.node_id, offset),
                     DataItemSize);
       context->PostRequest();
     }
