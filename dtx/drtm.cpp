@@ -599,7 +599,7 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
       // cas to get write lock
       auto offset =
           fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
-      context->CompareAndSwap(res.cas_buf, GlobalAddress(re.node_id, offset),
+      context->CompareAndSwap(res.cas_buf, GlobalAddress(res.node_id, offset),
                               lock, tx_id << 1 + 1);
       context->read(res.data_buf, GlobalAddress(re.node_id, offset),
                     DataItemSize);
