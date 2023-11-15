@@ -30,8 +30,9 @@ bool DTX::DrTMExeRO() {
     if (i > 10) {
       SDS_INFO("wrogn");
     }
+
+    context->Sync();
     if (!pending_next_cas_ro.empty() || !pending_next_hash_ro.empty()) {
-      context->Sync();
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
       if (!CheckNextHashRO(pending_next_hash_ro)) return false;
     } else {
