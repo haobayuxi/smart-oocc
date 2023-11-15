@@ -459,6 +459,7 @@ bool DTX::CheckInvisibleRO(std::list<InvisibleRead> &pending_invisible_ro) {
 }
 
 bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
+  SDS_INFO("check next hash ro");
   for (auto iter = pending_next_hash_ro.begin();
        iter != pending_next_hash_ro.end();) {
     auto res = *iter;
