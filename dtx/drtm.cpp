@@ -1,6 +1,6 @@
 #include "dtx.h"
 
-#define DrTMLease 1000
+uint64_t DrTMLease = 1000;
 
 ALWAYS_INLINE
 uint64_t next_lease() { return (get_clock_sys_time_us() + DrTMLease) << 1; }
