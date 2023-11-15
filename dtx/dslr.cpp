@@ -49,8 +49,17 @@ bool check_write_lock(uint64_t lock) {
   return false;
 }
 
-int check_write_lock_1(uint64_t lock) {
-  if (get_ns(lock) == get_max_s(lock)) {
+int check_write_lock_1(uint64_t lock, uint64_t offset,
+                       std::list<ResetLock> &reset) {
+  auto maxs = get_max_s(lock);
+  auto maxx = get_max_x(lock);
+  if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
+    return DSLR_CHECK_LOCK::BACKOFF;
+  } else if (maxx == COUNT_MAX - 1) {
+    reset.emplace_back(ResetLock { .offset = offset, .lock = lock; });
+  }
+
+  if (get_ns(lock) == maxs) {
     return DSLR_CHECK_LOCK::SUCCESS;
   }
   return DSLR_CHECK_LOCK::WAIT;
