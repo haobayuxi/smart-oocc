@@ -253,6 +253,7 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                                                  .meta = meta});
       context->read((char *)local_hash_node,
                     GlobalAddress(remote_node_id, node_off), sizeof(HashNode));
+      context->PostRequest();
     }
   }
   return true;
@@ -296,6 +297,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
               GlobalAddress(res.node_id,
                             it->GetRemoteLockAddr(it->remote_offset)),
               it->lock, next_lease());
+          context->PostRequest();
           context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                         DataItemSize);
           context->PostRequest();
@@ -312,6 +314,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
                                                  .meta = res.meta});
       context->read(res.buf, GlobalAddress(res.node_id, node_off),
                     sizeof(HashNode));
+      context->PostRequest();
     }
   }
   return true;
@@ -365,6 +368,7 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
                                                  .meta = res.meta});
       context->read(res.buf, GlobalAddress(res.node_id, node_off),
                     sizeof(HashNode));
+      context->PostRequest();
     }
   }
   return true;
@@ -418,6 +422,7 @@ bool DTX::DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
                                                  .meta = res.meta});
       context->read(res.buf, GlobalAddress(res.node_id, node_off),
                     sizeof(HashNode));
+      context->PostRequest();
     }
 
     iter = pending_next_hash_rw.erase(iter);
