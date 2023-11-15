@@ -39,6 +39,8 @@ struct DataSetItem {
   bool is_fetched;
   bool is_logged;
   node_id_t read_which_node;
+  uint64_t prev_maxx;
+  uint64_t prev_maxs;
 };
 
 struct OldVersionForInsert {
@@ -97,6 +99,7 @@ struct CommitWrite {
 struct ResetLock {
   uint64_t offset;
   uint64_t lock;
+  char *cas_buf;
 };
 
 class DTX {
@@ -365,6 +368,7 @@ class DTX {
   bool DSLRExeRO();
   bool DSLRExeRW();
   bool DSLRCommit();
+  bool CheckReset();
   bool DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro);
   bool DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw);
   bool DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
@@ -437,6 +441,7 @@ class DTX {
   std::vector<DataSetItem> read_write_set;
   std::vector<size_t> not_eager_locked_rw_set;
   std::vector<size_t> locked_rw_set;
+  std::list<ResetLock> reset;
   std::vector<OldVersionForInsert> old_version_for_insert;
   struct pair_hash {
     inline std::size_t operator()(

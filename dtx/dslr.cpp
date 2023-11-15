@@ -42,37 +42,51 @@ uint64_t get_nx(uint64_t lock) {
 
 uint64_t get_ns(uint64_t lock) { return lock | max_s_mask; }
 
-bool check_write_lock(uint64_t lock) {
-  if (get_ns(lock) == get_max_s(lock)) {
-    return true;
-  }
-  return false;
-}
-
-int check_write_lock_1(uint64_t lock, uint64_t offset,
-                       std::list<ResetLock> &reset) {
+int check_write_lock1(uint64_t lock, uint64_t offset,
+                      std::list<ResetLock> &reset) {
   auto maxs = get_max_s(lock);
   auto maxx = get_max_x(lock);
   if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
     return DSLR_CHECK_LOCK::BACKOFF;
   } else if (maxx == COUNT_MAX - 1) {
+    char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+    memset(cas_buf, 0, sizeof(lock_t));
     reset.emplace_back(ResetLock{
         .offset = offset,
         .lock = lock,
+        .cas_buf = cas_buf,
     });
   }
 
-  if (get_ns(lock) == maxs) {
+  if (get_nx(lock) == maxx) {
     return DSLR_CHECK_LOCK::SUCCESS;
   }
   return DSLR_CHECK_LOCK::WAIT;
 }
-
-bool check_read_lock(uint64_t lock) {
-  if (get_nx(lock) == get_max_x(lock)) {
-    return true;
+bool check_write_lock(uint64_t lock) { return true; }
+bool check_read_lock(uint64_t lock) { return true; }
+int check_read_lock1(uint64_t lock, uint64_t offset,
+                     std::list<ResetLock> &reset) {
+  auto maxs = get_max_s(lock);
+  auto maxx = get_max_x(lock);
+  if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
+    return DSLR_CHECK_LOCK::BACKOFF;
+  } else if (maxs == COUNT_MAX - 1) {
+    auto reset_lock = maxx << 16 + COUNT_MAX;
+    reset_lock = (reset_lock << 32) + reset_lock;
+    char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+    memset(cas_buf, 0, sizeof(lock_t));
+    reset.emplace_back(ResetLock{
+        .offset = offset,
+        .lock = reset_lock,
+        .cas_buf = cas_buf,
+    });
   }
-  return false;
+
+  if (get_nx(lock) == maxx) {
+    return DSLR_CHECK_LOCK::SUCCESS;
+  }
+  return DSLR_CHECK_LOCK::WAIT;
 }
 
 bool DTX::DSLRExeRO() {
@@ -760,5 +774,25 @@ bool DTX::DSLRCommit() {
     context->PostRequest();
   }
   context->Sync();
+  while (!reset.empty()) {
+    CheckReset();
+    context->Sync();
+  }
+  return true;
+}
+
+bool DTX::CheckReset() {
+  for (auto iter = reset.begin(); iter != reset.end();) {
+    auto res = *iter;
+
+    if (*((uint64_t *)res.cas_buf) != res.lock) {
+      context->CompareAndSwap(res.cas_buf, GlobalAddress(0, res.offset),
+                              res.lock, 0);
+      context->PostRequest();
+      iter++;
+    } else {
+      iter = reset.erase(iter);
+    }
+  }
   return true;
 }
