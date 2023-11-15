@@ -27,9 +27,7 @@ bool DTX::DrTMExeRO() {
                        pending_next_hash_ro))
     return false;
   for (int i = 0; i < 500; i++) {
-    if (i > 10) {
-      SDS_INFO("retry too many");
-    }
+    SDS_INFO("retry %d", i);
     context->Sync();
     if (!pending_next_cas_ro.empty()) {
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
@@ -38,6 +36,7 @@ bool DTX::DrTMExeRO() {
       break;
     }
   }
+  SDS_INFO("break out");
   return true;
 }
 
