@@ -56,7 +56,10 @@ int check_write_lock_1(uint64_t lock, uint64_t offset,
   if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
     return DSLR_CHECK_LOCK::BACKOFF;
   } else if (maxx == COUNT_MAX - 1) {
-    reset.emplace_back(ResetLock { .offset = offset, .lock = lock; });
+    reset.emplace_back(ResetLock{
+        .offset = offset,
+        .lock = lock,
+    });
   }
 
   if (get_ns(lock) == maxs) {
