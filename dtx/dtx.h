@@ -97,7 +97,7 @@ struct CommitWrite {
 struct ResetLock {
   uint64_t offset;
   uint64_t lock;
-}
+};
 
 class DTX {
  public:
