@@ -345,7 +345,7 @@ int Initiator::post_request() {
   }
   req_buf.size = 0;
   if (TaskPool::IsEnabled()) {
-    state.per_coro_waiting[task_id] += 1;
+    state.per_coro_waiting[task_id] += wr_size;
   }
   state.post_req[req_buf.mem_node_id] += wr_size;
   state.inflight_ack += wr_size;
@@ -471,7 +471,7 @@ int Initiator::poll_once(node_t mem_node_id, bool notify) {
         auto task_id = TASK_ID(wr_id);
         // SDS_INFO("task id = %d, waiting= %d", task_id,
         //          state.per_coro_waiting[task_id]);
-        state.per_coro_waiting[task_id] -= 1;
+        state.per_coro_waiting[task_id] -= size;
         if (state.per_coro_waiting[task_id] == 0) {
           //   SDS_INFO("notify %d", task_id);
           NotifyTask(task_id);

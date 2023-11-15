@@ -498,6 +498,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
                       res.meta.base_off;
       context->read(res.buf, GlobalAddress(res.node_id, node_off),
                     sizeof(HashNode));
+      context->PostRequest();
       iter++;
     }
   }
