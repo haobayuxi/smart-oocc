@@ -1,7 +1,7 @@
 
 #include "dtx.h"
 
-#define COUNT_MAX 32768
+const uint64_t COUNT_MAX 32768;
 
 enum DSLR_CHECK_LOCK : int {
   SUCCESS = 0,
@@ -42,52 +42,52 @@ uint64_t get_nx(uint64_t lock) {
 
 uint64_t get_ns(uint64_t lock) { return lock | max_s_mask; }
 
-int check_write_lock1(uint64_t lock, uint64_t offset,
-                      std::list<ResetLock> &reset) {
-  auto maxs = get_max_s(lock);
-  auto maxx = get_max_x(lock);
-  if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
-    return DSLR_CHECK_LOCK::BACKOFF;
-  } else if (maxx == COUNT_MAX - 1) {
-    char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-    memset(cas_buf, 0, sizeof(lock_t));
-    reset.emplace_back(ResetLock{
-        .offset = offset,
-        .lock = lock,
-        .cas_buf = cas_buf,
-    });
-  }
+// int check_write_lock1(uint64_t lock, uint64_t offset,
+//                       std::list<ResetLock> &reset) {
+//   auto maxs = get_max_s(lock);
+//   auto maxx = get_max_x(lock);
+//   if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
+//     return DSLR_CHECK_LOCK::BACKOFF;
+//   } else if (maxx == COUNT_MAX - 1) {
+//     char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+//     memset(cas_buf, 0, sizeof(lock_t));
+//     reset.emplace_back(ResetLock{
+//         .offset = offset,
+//         .lock = lock,
+//         .cas_buf = cas_buf,
+//     });
+//   }
 
-  if (get_nx(lock) == maxx) {
-    return DSLR_CHECK_LOCK::SUCCESS;
-  }
-  return DSLR_CHECK_LOCK::WAIT;
-}
+//   if (get_nx(lock) == maxx) {
+//     return DSLR_CHECK_LOCK::SUCCESS;
+//   }
+//   return DSLR_CHECK_LOCK::WAIT;
+// }
 bool check_write_lock(uint64_t lock) { return true; }
 bool check_read_lock(uint64_t lock) { return true; }
-int check_read_lock1(uint64_t lock, uint64_t offset,
-                     std::list<ResetLock> &reset) {
-  auto maxs = get_max_s(lock);
-  auto maxx = get_max_x(lock);
-  if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
-    return DSLR_CHECK_LOCK::BACKOFF;
-  } else if (maxs == COUNT_MAX - 1) {
-    auto reset_lock = maxx << 16 + COUNT_MAX;
-    reset_lock = (reset_lock << 32) + reset_lock;
-    char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-    memset(cas_buf, 0, sizeof(lock_t));
-    reset.emplace_back(ResetLock{
-        .offset = offset,
-        .lock = reset_lock,
-        .cas_buf = cas_buf,
-    });
-  }
+// int check_read_lock1(uint64_t lock, uint64_t offset,
+//                      std::list<ResetLock> &reset) {
+//   auto maxs = get_max_s(lock);
+//   auto maxx = get_max_x(lock);
+//   if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
+//     return DSLR_CHECK_LOCK::BACKOFF;
+//   } else if (maxs == COUNT_MAX - 1) {
+//     auto reset_lock = maxx << 16 + COUNT_MAX;
+//     reset_lock = (reset_lock << 32) + reset_lock;
+//     char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+//     memset(cas_buf, 0, sizeof(lock_t));
+//     reset.emplace_back(ResetLock{
+//         .offset = offset,
+//         .lock = reset_lock,
+//         .cas_buf = cas_buf,
+//     });
+//   }
 
-  if (get_nx(lock) == maxx) {
-    return DSLR_CHECK_LOCK::SUCCESS;
-  }
-  return DSLR_CHECK_LOCK::WAIT;
-}
+//   if (get_nx(lock) == maxx) {
+//     return DSLR_CHECK_LOCK::SUCCESS;
+//   }
+//   return DSLR_CHECK_LOCK::WAIT;
+// }
 
 bool DTX::DSLRExeRO() {
   std::vector<CasRead> pending_cas_ro;
