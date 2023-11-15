@@ -27,10 +27,6 @@ bool DTX::DrTMExeRO() {
                        pending_next_hash_ro))
     return false;
   for (int i = 0; i < 500; i++) {
-    if (i > 10) {
-      SDS_INFO("wrogn");
-    }
-
     context->Sync();
     if (!pending_next_cas_ro.empty() || !pending_next_hash_ro.empty()) {
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
@@ -74,9 +70,9 @@ bool DTX::DrTMExeRW() {
                       pending_next_off_rw))
     return false;
   for (int i = 0; i < 100; i++) {
+    context->Sync();
     if (!pending_next_cas_rw.empty() || !pending_next_hash_ro.empty() ||
         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
-      context->Sync();
       if (!CheckInvisibleRO(pending_invisible_ro)) return false;
       if (!CheckNextHashRO(pending_next_hash_ro)) return false;
       if (!DrTMCheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
@@ -213,9 +209,8 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
           return false;
         } else {
           if (!lease_expired(it->lock)) {
-            // SDS_INFO("lease expired %ld", tx_id);
-            SDS_INFO("txid =%ld,key=%ld,nextlease=%ld,direct lease expired",
-                     tx_id, it->key, next_lease());
+            // SDS_INFO("txid =%ld,key=%ld,nextlease=%ld,direct lease expired",
+            //          tx_id, it->key, next_lease());
             // retry
             char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
             char *data_buf = AllocLocalBuffer(DataItemSize);
@@ -445,7 +440,7 @@ bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
           .cas_buf = cas_buf,
           .data_buf = data_buf,
       });
-      SDS_INFO("txid =%ld,key=%ld,lease=%ld", tx_id, it->key, read_lease);
+      // SDS_INFO("txid =%ld,key=%ld,lease=%ld", tx_id, it->key, read_lease);
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)), 0,
           read_lease);
