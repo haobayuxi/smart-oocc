@@ -122,7 +122,7 @@ bool DTX::DrTMIssueReadWrite(
                                           .data_buf = data_buf});
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, STATE_LOCKED);
+          STATE_CLEAN, txid << 1 + 1);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
@@ -482,7 +482,7 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
 
     auto it = re.item->item_ptr;
     auto *fetched_item = (DataItem *)(re.data_buf);
-    if (lock != STATE_CLEAN) {
+    if (fetched_item->lock != (tx_id << 1 + 1)) {
       // check lease
       if (lock % 2 == 1) {
         // write locked
@@ -566,31 +566,7 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
     auto res = *iter;
     auto *fetched_item = (DataItem *)(re.data_buf);
     auto lock = *((lock_t *)res.cas_buf);
-    if (lock % 2 == 1) {
-      // write locked
-      return false;
-    }
-    if (!lease_expired(lock)) {
-      // lease not expired , abort
-      return false;
-    } else {
-      // cas to get write lock
-      char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-      char *data_buf = AllocLocalBuffer(DataItemSize);
-      pending_cas_ro.emplace_back(CasRead{
-          .node_id = re.node_id,
-          .item = re.item,
-          .cas_buf = cas_buf,
-          .data_buf = data_buf,
-      });
-      auto offset =
-          fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
-      context->CompareAndSwap(cas_buf, GlobalAddress(re.node_id, offset), lock,
-                              tx_id << 1 + 1);
-      context->read(data_buf, GlobalAddress(re.node_id, offset), DataItemSize);
-      context->PostRequest();
-    }
-    else {
+    if (fetched_item->lock == (tx_id << 1 + 1)) {
       auto it = res.item->item_ptr;
       auto *fetched_item = (DataItem *)(res.data_buf);
       if (likely(fetched_item->key == it->key &&
@@ -613,6 +589,28 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
         res.item->is_fetched = true;
       }
       iter = pending_next_cas_rw.erase(iter);
+    } else if (lock % 2 == 1) {
+      // write locked
+      return false;
+    } else if (!lease_expired(lock)) {
+      // lease not expired , abort
+      return false;
+    } else {
+      // cas to get write lock
+      char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+      char *data_buf = AllocLocalBuffer(DataItemSize);
+      pending_cas_ro.emplace_back(CasRead{
+          .node_id = re.node_id,
+          .item = re.item,
+          .cas_buf = cas_buf,
+          .data_buf = data_buf,
+      });
+      auto offset =
+          fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
+      context->CompareAndSwap(cas_buf, GlobalAddress(re.node_id, offset), lock,
+                              tx_id << 1 + 1);
+      context->read(data_buf, GlobalAddress(re.node_id, offset), DataItemSize);
+      context->PostRequest();
     }
   }
   return true;
