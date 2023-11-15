@@ -743,3 +743,41 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
   }
   return true;
 }
+
+bool DTX::OOCCCommit() {
+  char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+  std::vector<CommitWrite> pending_commit_write;
+  context->Sync();
+  auto end_time = get_clock_sys_time_us();
+  if (txn_sys == DTX_SYS::OOCC) {
+    while ((last_write_lock_time + lease) > end_time) {
+      end_time = get_clock_sys_time_us();
+    }
+  }
+  for (auto &set_it : read_write_set) {
+    char *data_buf = AllocLocalBuffer(DataItemSize);
+    auto it = set_it.item_ptr;
+    if (!it->user_insert) {
+      it->version++;
+    }
+    // if (delayed_unlock) {
+    //   it->lock = STATE_READ_LOCKED;
+    // } else {
+    //   it->lock = tx_id;
+    // }
+    it->lock = 0;
+    memcpy(data_buf, (char *)it.get(), DataItemSize);
+    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+    // pending_commit_write.push_back(
+    //     CommitWrite{.node_id = node_id, .lock_off =
+    //     it->GetRemoteLockAddr()});
+    // SDS_INFO("commit key %ld, offset = %ld, txid=%ld", it->key,
+    //          it->remote_offset, tx_id);
+    // context->Write(cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr()),
+    //                sizeof(lock_t));
+    context->Write(data_buf, GlobalAddress(node_id, it->remote_offset),
+                   DataItemSize);
+    context->PostRequest();
+  }
+  return true;
+}

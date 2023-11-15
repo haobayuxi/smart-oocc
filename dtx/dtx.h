@@ -217,7 +217,7 @@ class DTX {
       }
 
       if (!is_ro_tx) {
-        if (CoalescentCommit()) {
+        if (OOCCCommit()) {
           context->EndTask();
           return true;
         } else {
@@ -283,6 +283,8 @@ class DTX {
   bool Validate();
 
   bool CoalescentCommit();
+
+  bool OOCCCommit();
 
   void Abort();
 
