@@ -283,6 +283,8 @@ int main(int argc, char **argv) {
     SDS_INFO("running OOCC");
   } else if (txn_sys == DTX_SYS::OCC) {
     SDS_INFO("running OCC");
+  } else if (txn_sys == DTX_SYS::DrTMH) {
+    SDS_INFO("running DrTM");
   }
 
   delayed = config.get("delayed").get_bool();

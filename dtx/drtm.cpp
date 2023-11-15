@@ -1,6 +1,6 @@
 #include "dtx.h"
 
-uint64_t DrTMLease = 1000;
+uint64_t DrTMLease = 500;
 
 ALWAYS_INLINE
 uint64_t next_lease() { return (get_clock_sys_time_us() + DrTMLease) << 1; }
@@ -27,6 +27,9 @@ bool DTX::DrTMExeRO() {
                        pending_next_hash_ro))
     return false;
   for (int i = 0; i < 500; i++) {
+    if (i > 10) {
+      SDS_INFO("wrogn");
+    }
     if (!pending_next_cas_ro.empty() || !pending_next_hash_ro.empty()) {
       context->Sync();
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
@@ -367,7 +370,7 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
 bool DTX::DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
                               std::list<HashRead> &pending_next_hash_rw) {
   for (auto iter = pending_next_hash_rw.begin();
-       iter != pending_next_hash_rw.end();) {
+       iter != pending_next_hash_rw.end(); iter++) {
     auto res = *iter;
     auto *local_hash_node = (HashNode *)res.buf;
     auto *it = res.item->item_ptr.get();
@@ -415,7 +418,6 @@ bool DTX::DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
     }
 
     iter = pending_next_hash_rw.erase(iter);
-    iter++;
   }
 
   return true;
@@ -519,7 +521,7 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
 
 bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
   for (auto iter = pending_next_cas_rw.begin();
-       iter != pending_next_cas_rw.end();) {
+       iter != pending_next_cas_rw.end(); iter++) {
     auto res = *iter;
     auto lock_value = *((lock_t *)res.cas_buf);
     if (lock_value != STATE_CLEAN) {
@@ -549,7 +551,6 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
       }
       res.item->is_fetched = true;
     }
-    iter++;
   }
   return true;
 }

@@ -782,14 +782,13 @@ bool DTX::DSLRCommit() {
 }
 
 bool DTX::CheckReset() {
-  for (auto iter = reset.begin(); iter != reset.end();) {
+  for (auto iter = reset.begin(); iter != reset.end(); iter++) {
     auto res = *iter;
 
     if (*((uint64_t *)res.cas_buf) != res.lock) {
       context->CompareAndSwap(res.cas_buf, GlobalAddress(0, res.offset),
                               res.lock, 0);
       context->PostRequest();
-      iter++;
     } else {
       iter = reset.erase(iter);
     }
