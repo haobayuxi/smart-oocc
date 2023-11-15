@@ -1,7 +1,7 @@
 
 #include "dtx.h"
 
-const uint64_t COUNT_MAX 32768;
+const uint64_t COUNT_MAX = 32768;
 
 enum DSLR_CHECK_LOCK : int {
   SUCCESS = 0,
