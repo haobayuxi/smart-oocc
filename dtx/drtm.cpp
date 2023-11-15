@@ -27,7 +27,7 @@ bool DTX::DrTMExeRO() {
                        pending_next_hash_ro))
     return false;
   for (int i = 0; i < 500; i++) {
-    SDS_INFO("retry %d txid = %ld", i, tx_id);
+    // SDS_INFO("retry %d txid = %ld", i, tx_id);
     context->Sync();
     if (!pending_next_cas_ro.empty()) {
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
@@ -36,7 +36,7 @@ bool DTX::DrTMExeRO() {
       break;
     }
   }
-  SDS_INFO("break out txid = %ld", tx_id);
+  // SDS_INFO("break out txid = %ld", tx_id);
   return true;
 }
 
@@ -212,8 +212,8 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
           return false;
         } else {
           if (!lease_expired(it->lock)) {
-            SDS_INFO("txid =%ld,key=%ld,nextlease=%ld,direct lease expired",
-                     tx_id, it->key, next_lease());
+            // SDS_INFO("txid =%ld,key=%ld,nextlease=%ld,direct lease expired",
+            //          tx_id, it->key, next_lease());
             // retry
             char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
             char *data_buf = AllocLocalBuffer(DataItemSize);
@@ -235,8 +235,9 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                 DataItemSize);
             context->PostRequest();
           } else {
-            SDS_INFO("txid =%ld,key=%ld,lease not expired %ld", tx_id, it->key,
-                     it->lock);
+            // SDS_INFO("txid =%ld,key=%ld,lease not expired %ld", tx_id,
+            // it->key,
+            //          it->lock);
           }
         }
       } else {
@@ -452,7 +453,7 @@ bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
           .cas_buf = cas_buf,
           .data_buf = data_buf,
       });
-      SDS_INFO("txid =%ld,key=%ld,lease=%ld", tx_id, it->key, read_lease);
+      // SDS_INFO("txid =%ld,key=%ld,lease=%ld", tx_id, it->key, read_lease);
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)), 0,
           read_lease);
