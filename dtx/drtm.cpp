@@ -175,7 +175,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
                 GlobalAddress(res.node_id, it->GetRemoteLockAddr(
                                                fetched_item->remote_offset)),
                 it->lock, next_lease());
-            context->PostRequest();
+            // context->PostRequest();
             context->read(
                 res.data_buf,
                 GlobalAddress(res.node_id, fetched_item->remote_offset),
@@ -213,8 +213,8 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
           return false;
         } else {
           if (!lease_expired(it->lock)) {
-            // SDS_INFO("txid =%ld,key=%ld,nextlease=%ld,direct lease expired",
-            //          tx_id, it->key, next_lease());
+            SDS_INFO("txid =%ld,key=%ld,nextlease=%ld,direct lease expired",
+                     tx_id, it->key, next_lease());
             // retry
             char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
             char *data_buf = AllocLocalBuffer(DataItemSize);
@@ -229,12 +229,15 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                 GlobalAddress(res.node_id, it->GetRemoteLockAddr(
                                                fetched_item->remote_offset)),
                 it->lock, next_lease());
-            context->PostRequest();
+            // context->PostRequest();
             context->read(
                 data_buf,
                 GlobalAddress(res.node_id, fetched_item->remote_offset),
                 DataItemSize);
             context->PostRequest();
+          } else {
+            SDS_INFO("txid =%ld,key=%ld,lease not expired %ld", tx_id, it->key,
+                     it->lock);
           }
         }
       } else {
@@ -297,7 +300,7 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
               GlobalAddress(res.node_id,
                             it->GetRemoteLockAddr(it->remote_offset)),
               it->lock, next_lease());
-          context->PostRequest();
+          // context->PostRequest();
           context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                         DataItemSize);
           context->PostRequest();
@@ -450,7 +453,7 @@ bool DTX::DrTMIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
           .cas_buf = cas_buf,
           .data_buf = data_buf,
       });
-      // SDS_INFO("txid =%ld,key=%ld,lease=%ld", tx_id, it->key, read_lease);
+      SDS_INFO("txid =%ld,key=%ld,lease=%ld", tx_id, it->key, read_lease);
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)), 0,
           read_lease);
