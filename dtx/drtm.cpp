@@ -122,7 +122,7 @@ bool DTX::DrTMIssueReadWrite(
                                           .data_buf = data_buf});
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, txid << 1 + 1);
+          STATE_CLEAN, tx_id << 1 + 1);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
@@ -564,7 +564,7 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
   for (auto iter = pending_next_cas_rw.begin();
        iter != pending_next_cas_rw.end(); iter++) {
     auto res = *iter;
-    auto *fetched_item = (DataItem *)(re.data_buf);
+    auto *fetched_item = (DataItem *)(res.data_buf);
     auto lock = *((lock_t *)res.cas_buf);
     if (fetched_item->lock == (tx_id << 1 + 1)) {
       auto it = res.item->item_ptr;
@@ -597,19 +597,12 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
       return false;
     } else {
       // cas to get write lock
-      char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-      char *data_buf = AllocLocalBuffer(DataItemSize);
-      pending_cas_ro.emplace_back(CasRead{
-          .node_id = re.node_id,
-          .item = re.item,
-          .cas_buf = cas_buf,
-          .data_buf = data_buf,
-      });
       auto offset =
           fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
-      context->CompareAndSwap(cas_buf, GlobalAddress(re.node_id, offset), lock,
-                              tx_id << 1 + 1);
-      context->read(data_buf, GlobalAddress(re.node_id, offset), DataItemSize);
+      context->CompareAndSwap(res.cas_buf, GlobalAddress(re.node_id, offset),
+                              lock, tx_id << 1 + 1);
+      context->read(res.data_buf, GlobalAddress(re.node_id, offset),
+                    DataItemSize);
       context->PostRequest();
     }
   }
