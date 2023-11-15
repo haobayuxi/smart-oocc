@@ -27,7 +27,7 @@ bool DTX::DrTMExeRO() {
                        pending_next_hash_ro))
     return false;
   for (int i = 0; i < 500; i++) {
-    SDS_INFO("retry %d", i);
+    SDS_INFO("retry %d txid = %ld", i, tx_id);
     context->Sync();
     if (!pending_next_cas_ro.empty()) {
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
@@ -36,7 +36,7 @@ bool DTX::DrTMExeRO() {
       break;
     }
   }
-  SDS_INFO("break out");
+  SDS_INFO("break out txid = %ld", tx_id);
   return true;
 }
 
