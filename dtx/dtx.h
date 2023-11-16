@@ -114,7 +114,7 @@ class DTX {
     tx_id = txid;
     start_time = get_clock_sys_time_us();
   }
-
+  ALWAYS_INLINE
   void AddToReadOnlySet(DataItemPtr item) {
     DataSetItem data_set_item{.item_ptr = std::move(item),
                               .is_fetched = false,
@@ -122,7 +122,7 @@ class DTX {
                               .read_which_node = -1};
     read_only_set.emplace_back(data_set_item);
   }
-
+  ALWAYS_INLINE
   void AddToReadWriteSet(DataItemPtr item) {
     DataSetItem data_set_item{.item_ptr = std::move(item),
                               .is_fetched = false,
