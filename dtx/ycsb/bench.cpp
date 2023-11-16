@@ -12,7 +12,7 @@
 
 using namespace std::placeholders;
 
-#define RetryUntilSuccess 0
+#define RetryUntilSuccess 1
 
 size_t kMaxTransactions = 10000;
 pthread_barrier_t barrier;

@@ -46,6 +46,7 @@ bool TxGetSubsciberData(tx_id_t tx_id, DTX *dtx) {
       (table_id_t)TATPTableType::kSubscriberTable, sub_key.item_key);
   // Add r/w set and execute transaction
   dtx->AddToReadOnlySet(sub_obj);
+  dtx->AddToReadOnlySet(sub_obj);
   // tatp_sub_key_t sub_key2;
   // sub_key2.s_id = tatp_client->GetNonUniformRandomSubscriber(&seed);
   // // This empty data sub_obj will be filled by RDMA reading from remote when
