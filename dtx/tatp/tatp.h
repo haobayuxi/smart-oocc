@@ -334,9 +334,10 @@ class TATP {
    */
   ALWAYS_INLINE
   uint32_t GetNonUniformRandomSubscriber(uint64_t *thread_local_seed) const {
-    return ((FastRand(thread_local_seed) % subscriber_size) |
-            (FastRand(thread_local_seed) & A)) %
-           subscriber_size;
+    // return ((FastRand(thread_local_seed) % subscriber_size) |
+    //         (FastRand(thread_local_seed) & A)) %
+    //        subscriber_size;
+    return FastRand(thread_local_seed) % subscriber_size;
   }
 
   /* Get a subscriber number from a subscriber ID, fast */
