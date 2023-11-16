@@ -301,12 +301,11 @@ class TATP {
     TATPTxType *workgen_arr = new TATPTxType[100];
 
     int i = 0, j = 0;
-    j += 100;
+    // j += 100;
 
-    for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetSubsciberData;
-    return workgen_arr;
+    // for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetSubsciberData;
+    // return workgen_arr;
     j += FREQUENCY_GET_SUBSCRIBER_DATA;
-
     for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetSubsciberData;
 
     j += FREQUENCY_GET_ACCESS_DATA;

@@ -62,11 +62,10 @@ bool DTX::ExeRW() {
     return false;
   if (!CheckCasRW(pending_cas_rw, pending_next_hash_rw, pending_next_off_rw))
     return false;
-  while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty() ||
-         !pending_next_cas_rw.empty() || !pending_next_hash_rw.empty() ||
-         !pending_next_off_rw.empty()) {
+  while (!pending_next_hash_ro.empty() || !pending_next_cas_rw.empty() ||
+         !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
     context->Sync();
-    if (!CheckInvisibleRO(pending_invisible_ro)) return false;
+    // if (!CheckInvisibleRO(pending_invisible_ro)) return false;
     if (!CheckNextHashRO(pending_next_hash_ro)) return false;
     if (!CheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
       return false;
