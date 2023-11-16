@@ -24,7 +24,7 @@ static ALWAYS_INLINE uint32_t FastRand(uint64_t *seed) {
 #define TATP_MAX_SUBSCRIBERS 1000000000
 
 /* STORED PROCEDURE EXECUTION FREQUENCIES (0-100) */
-#define FREQUENCY_GET_SUBSCRIBER_DATA 100   // Single
+#define FREQUENCY_GET_SUBSCRIBER_DATA 35    // Single
 #define FREQUENCY_GET_ACCESS_DATA 35        // Single
 #define FREQUENCY_GET_NEW_DESTINATION 10    // Single
 #define FREQUENCY_UPDATE_SUBSCRIBER_DATA 2  // Single
@@ -301,8 +301,12 @@ class TATP {
     TATPTxType *workgen_arr = new TATPTxType[100];
 
     int i = 0, j = 0;
+    j += 100;
 
+    for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetSubsciberData;
+    return workgen_arr;
     j += FREQUENCY_GET_SUBSCRIBER_DATA;
+
     for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetSubsciberData;
 
     j += FREQUENCY_GET_ACCESS_DATA;
