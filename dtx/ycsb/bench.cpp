@@ -144,9 +144,10 @@ void RunTx(DTXContext *context) {
       timer_idx += threads * coroutines;
       commit_tx++;
       IdleExecution();
-    } else {
-      SDS_INFO("not found?");
     }
+    //  else {
+    //   SDS_INFO("not found?");
+    // }
     // Stat after a million of transactions finish
     if (attempt_tx == ATTEMPTED_NUM) {
       attempts.fetch_add(attempt_tx);
