@@ -171,8 +171,10 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
             // retry
             context->CompareAndSwap(
                 res.cas_buf,
-                GlobalAddress(res.node_id, it->GetRemoteLockAddr(
-                                               fetched_item->remote_offset)),
+                GlobalAddress(
+                    res.node_id,
+                    it->GetRemoteLockAddr(fetched_item->GetRemoteLockAddr(
+                        fetched_item->remote_offset))),
                 it->lock, next_lease());
             // context->PostRequest();
             context->read(
@@ -409,7 +411,7 @@ bool DTX::DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
             cas_buf,
             GlobalAddress(res.node_id,
                           it->GetRemoteLockAddr(it->remote_offset)),
-            STATE_CLEAN, tx_id);
+            STATE_CLEAN, tx_id << 1 + 1);
         context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                       DataItemSize);
         context->PostRequest();
@@ -505,7 +507,8 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
             fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
         context->CompareAndSwap(cas_buf, GlobalAddress(re.node_id, offset),
                                 lock, tx_id << 1 + 1);
-        context->read(data_buf, GlobalAddress(re.node_id, offset),
+        context->read(data_buf,
+                      GlobalAddress(re.node_id, fetched_item->remote_offset),
                       DataItemSize);
         context->PostRequest();
         continue;
