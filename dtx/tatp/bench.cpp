@@ -148,17 +148,19 @@ bool TxGetAccessData(tx_id_t tx_id, DTX *dtx) {
   dtx->AddToReadOnlySet(acc_obj);
   dtx->AddToReadOnlySet(acc_obj);
   if (!dtx->TxExe()) return false;
-  if (acc_obj->value_size > 0) {
-    /* The key was found */
-    auto *value = (tatp_accinf_val_t *)(acc_obj->value);
-    assert(value->data1 == tatp_accinf_data1_magic);
-    bool commit_status = dtx->TxCommit();
-    return commit_status;
-  } else {
-    /* Key not found */
-    dtx->TxAbortReadOnly();
-    return false;
-  }
+  bool commit_status = dtx->TxCommit();
+  return commit_status;
+  // if (acc_obj->value_size > 0) {
+  //   /* The key was found */
+  //   auto *value = (tatp_accinf_val_t *)(acc_obj->value);
+  //   assert(value->data1 == tatp_accinf_data1_magic);
+  //   bool commit_status = dtx->TxCommit();
+  //   return commit_status;
+  // } else {
+  //   /* Key not found */
+  //   dtx->TxAbortReadOnly();
+  //   return false;
+  // }
 }
 
 bool TxUpdateSubscriberData(tx_id_t tx_id, DTX *dtx) {
