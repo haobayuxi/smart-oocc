@@ -225,10 +225,10 @@ class DTX {
         }
       }
     } else if (txn_sys == DTX_SYS::OCC) {
-      if (is_ro_tx && read_only_set.size() == 1) {
-        context->EndTask();
-        return true;
-      }
+      // if (is_ro_tx && read_only_set.size() == 1) {
+      //   context->EndTask();
+      //   return true;
+      // }
       // if (!Validate()) {
       //   goto ABORT;
       // }
