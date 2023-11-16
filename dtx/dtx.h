@@ -229,9 +229,9 @@ class DTX {
         context->EndTask();
         return true;
       }
-      if (!Validate()) {
-        goto ABORT;
-      }
+      // if (!Validate()) {
+      //   goto ABORT;
+      // }
       if (!is_ro_tx) {
         if (CoalescentCommit()) {
           context->EndTask();
