@@ -480,7 +480,7 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
   for (auto &re : pending_cas_rw) {
     auto lock = *((lock_t *)re.cas_buf);
 
-    auto it = re.item->item_ptr;
+    auto *it = re.item->item_ptr.get();
     auto *fetched_item = (DataItem *)(re.data_buf);
     if (fetched_item->lock != (tx_id << 1 + 1)) {
       // check lease
@@ -567,7 +567,7 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
     auto *fetched_item = (DataItem *)(res.data_buf);
     auto lock = *((lock_t *)res.cas_buf);
     if (fetched_item->lock == (tx_id << 1 + 1)) {
-      auto it = res.item->item_ptr;
+      auto *it = res.item->item_ptr.get();
       auto *fetched_item = (DataItem *)(res.data_buf);
       if (likely(fetched_item->key == it->key &&
                  fetched_item->table_id == it->table_id)) {
