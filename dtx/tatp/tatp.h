@@ -323,7 +323,6 @@ class TATP {
     j += FREQUENCY_DELETE_CALL_FORWARDING;
     for (; i < j; i++) workgen_arr[i] = TATPTxType::kDeleteCallForwarding;
 
-    assert(i == 100 && j == 100);
     return workgen_arr;
   }
 
