@@ -44,7 +44,7 @@ uint64_t get_nx(uint64_t lock) {
 
 uint64_t get_ns(uint64_t lock) { return lock | max_s_mask; }
 
-int DTX::check_write_lock(uint64_t lock, uint64_t offset) {
+int DTX::check_write_lock1(uint64_t lock, uint64_t offset) {
   auto maxs = get_max_s(lock);
   auto maxx = get_max_x(lock);
   if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
@@ -68,7 +68,7 @@ int DTX::check_write_lock(uint64_t lock, uint64_t offset) {
 }
 bool check_write_lock(uint64_t lock) { return true; }
 bool check_read_lock(uint64_t lock) { return true; }
-int DTX::check_read_lock(uint64_t lock, uint64_t offset) {
+int DTX::check_read_lock1(uint64_t lock, uint64_t offset) {
   auto maxs = get_max_s(lock);
   auto maxx = get_max_x(lock);
   if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
