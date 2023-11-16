@@ -308,7 +308,6 @@ bool DTX::DrTMCheckHashRO(std::vector<HashRead> &pending_hash_ro,
           context->PostRequest();
         }
       }
-      //   SDS_INFO("hash found");
     } else {
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
@@ -357,7 +356,7 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
             cas_buf,
             GlobalAddress(res.node_id,
                           it->GetRemoteLockAddr(it->remote_offset)),
-            STATE_CLEAN, tx_id);
+            STATE_CLEAN, tx_id << 1 + 1);
         context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                       DataItemSize);
         context->PostRequest();
