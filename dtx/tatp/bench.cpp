@@ -46,14 +46,14 @@ bool TxGetSubsciberData(tx_id_t tx_id, DTX *dtx) {
       (table_id_t)TATPTableType::kSubscriberTable, sub_key.item_key);
   // Add r/w set and execute transaction
   dtx->AddToReadOnlySet(sub_obj);
-  tatp_sub_key_t sub_key2;
-  sub_key2.s_id = tatp_client->GetNonUniformRandomSubscriber(&seed);
-  // This empty data sub_obj will be filled by RDMA reading from remote when
-  // running transaction
-  auto sub_obj2 = std::make_shared<DataItem>(
-      (table_id_t)TATPTableType::kSubscriberTable, sub_key2.item_key);
+  // tatp_sub_key_t sub_key2;
+  // sub_key2.s_id = tatp_client->GetNonUniformRandomSubscriber(&seed);
+  // // This empty data sub_obj will be filled by RDMA reading from remote when
+  // // running transaction
+  // auto sub_obj2 = std::make_shared<DataItem>(
+  //     (table_id_t)TATPTableType::kSubscriberTable, sub_key2.item_key);
   // Add r/w set and execute transaction
-  dtx->AddToReadOnlySet(sub_obj2);
+  dtx->AddToReadOnlySet(sub_obj);
   if (!dtx->TxExe()) return false;
   // Get value
   auto *value = (tatp_sub_val_t *)(sub_obj->value);
@@ -140,13 +140,13 @@ bool TxGetAccessData(tx_id_t tx_id, DTX *dtx) {
   auto acc_obj = std::make_shared<DataItem>(
       (table_id_t)TATPTableType::kAccessInfoTable, key.item_key);
 
-  tatp_accinf_key_t key2;
-  key2.s_id = tatp_client->GetNonUniformRandomSubscriber(&seed);
-  key2.ai_type = (FastRand(&seed) & 3) + 1;
-  auto acc_obj2 = std::make_shared<DataItem>(
-      (table_id_t)TATPTableType::kAccessInfoTable, key2.item_key);
+  // tatp_accinf_key_t key2;
+  // key2.s_id = tatp_client->GetNonUniformRandomSubscriber(&seed);
+  // key2.ai_type = (FastRand(&seed) & 3) + 1;
+  // auto acc_obj2 = std::make_shared<DataItem>(
+  //     (table_id_t)TATPTableType::kAccessInfoTable, key2.item_key);
   dtx->AddToReadOnlySet(acc_obj);
-  dtx->AddToReadOnlySet(acc_obj2);
+  dtx->AddToReadOnlySet(acc_obj);
   if (!dtx->TxExe()) return false;
   if (acc_obj->value_size > 0) {
     /* The key was found */
