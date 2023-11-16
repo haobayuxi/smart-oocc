@@ -189,7 +189,7 @@ bool DTX::IssueReadOnly(std::vector<DirectRead> &pending_direct_ro,
       pending_direct_ro.emplace_back(
           DirectRead{.node_id = node_id, .item = &item, .buf = buf});
       context->read(buf, GlobalAddress(node_id, offset), DataItemSize);
-      context->PostRequest();
+      // context->PostRequest();
     } else {
       HashMeta meta = GetPrimaryHashMetaWithTableID(it->table_id);
       uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
@@ -198,9 +198,10 @@ bool DTX::IssueReadOnly(std::vector<DirectRead> &pending_direct_ro,
       pending_hash_ro.emplace_back(HashRead{
           .node_id = node_id, .item = &item, .buf = buf, .meta = meta});
       context->read(buf, GlobalAddress(node_id, node_off), sizeof(HashNode));
-      context->PostRequest();
+      // context->PostRequest();
     }
   }
+  context->PostRequest();
   return true;
 }
 
