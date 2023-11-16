@@ -320,11 +320,11 @@ class TATP {
     j += FREQUENCY_UPDATE_LOCATION;
     for (; i < j; i++) workgen_arr[i] = TATPTxType::kUpdateLocation;
 
-    j += FREQUENCY_INSERT_CALL_FORWARDING;
-    for (; i < j; i++) workgen_arr[i] = TATPTxType::kInsertCallForwarding;
+    // j += FREQUENCY_INSERT_CALL_FORWARDING;
+    // for (; i < j; i++) workgen_arr[i] = TATPTxType::kInsertCallForwarding;
 
-    j += FREQUENCY_DELETE_CALL_FORWARDING;
-    for (; i < j; i++) workgen_arr[i] = TATPTxType::kDeleteCallForwarding;
+    // j += FREQUENCY_DELETE_CALL_FORWARDING;
+    // for (; i < j; i++) workgen_arr[i] = TATPTxType::kDeleteCallForwarding;
 
     return workgen_arr;
   }
