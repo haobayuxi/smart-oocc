@@ -388,12 +388,6 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     if (likely(find)) {
       if (unlikely((it->lock > STATE_READ_LOCKED))) {
         return false;
-        // char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-        // uint64_t lock_offset = it->GetRemoteLockAddr(it->remote_offset);
-        // pending_invisible_ro.emplace_back(InvisibleRead{
-        //     .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
-        // context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
-        //               sizeof(lock_t));
       }
     } else {
       return false;

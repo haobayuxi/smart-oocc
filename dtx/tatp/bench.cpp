@@ -54,6 +54,7 @@ bool TxGetSubsciberData(tx_id_t tx_id, DTX *dtx) {
   //     (table_id_t)TATPTableType::kSubscriberTable, sub_key2.item_key);
   // Add r/w set and execute transaction
   dtx->AddToReadOnlySet(sub_obj);
+  dtx->AddToReadOnlySet(sub_obj);
   if (!dtx->TxExe()) return false;
   // Get value
   auto *value = (tatp_sub_val_t *)(sub_obj->value);
@@ -145,6 +146,7 @@ bool TxGetAccessData(tx_id_t tx_id, DTX *dtx) {
   // key2.ai_type = (FastRand(&seed) & 3) + 1;
   // auto acc_obj2 = std::make_shared<DataItem>(
   //     (table_id_t)TATPTableType::kAccessInfoTable, key2.item_key);
+  dtx->AddToReadOnlySet(acc_obj);
   dtx->AddToReadOnlySet(acc_obj);
   dtx->AddToReadOnlySet(acc_obj);
   if (!dtx->TxExe()) return false;
