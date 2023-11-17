@@ -629,7 +629,7 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
         }
       }
     } else {
-      addr_cache->Insert(re.node_id, it->table_id, it->key, NOT_FOUND);
+      addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
       return false;
     }
   }
