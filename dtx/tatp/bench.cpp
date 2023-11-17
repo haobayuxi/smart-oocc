@@ -146,6 +146,7 @@ bool TxGetAccessData(tx_id_t tx_id, DTX *dtx) {
   // auto acc_obj2 = std::make_shared<DataItem>(
   //     (table_id_t)TATPTableType::kAccessInfoTable, key2.item_key);
   dtx->AddToReadOnlySet(acc_obj);
+  dtx->AddToReadOnlySet(acc_obj);
   if (!dtx->TxExe()) return false;
   bool commit_status = dtx->TxCommit();
   return commit_status;
