@@ -601,6 +601,8 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
           if (fetched_item->lock == (tx_id << 1 + 1)) {
             *it = *fetched_item;
             res.item->is_fetched = true;
+
+            iter = pending_next_cas_rw.erase(iter);
           } else if (lock % 2 == 1) {
             // write locked
             return false;
@@ -628,7 +630,6 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
     } else {
       return false;
     }
-    iter = pending_next_cas_rw.erase(iter);
   }
   return true;
 }
