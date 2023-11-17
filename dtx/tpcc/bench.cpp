@@ -1012,7 +1012,7 @@ void execute_thread(int id, DTXContext* context) {
   seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51) *
              kMaxThreads +
          id;
-  tpcc_client = new TPCC();
+  tpcc_client = new TPCC(seed);
   workgen_arr = tpcc_client->CreateWorkgenArray();
   WarmUp(context);
   //   SDS_INFO("warm up done");
@@ -1142,7 +1142,7 @@ int main(int argc, char** argv) {
   coroutines = argc < 3 ? 1 : atoi(argv[2]);
   timer = new double[kMaxTransactions];
   DTXContext* context = new DTXContext(config, threads);
-  tpcc_client = new TPCC();
+  tpcc_client = new TPCC(seed);
   timespec ts_begin, ts_end;
   pthread_barrier_init(&barrier, nullptr, threads + 1);
   std::vector<std::thread> workers;
