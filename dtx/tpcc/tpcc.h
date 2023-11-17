@@ -580,20 +580,20 @@ class TPCC {
   }
 
   ALWAYS_INLINE
-  int RandomNumber(FastRandom& r, int min, int max) {
+  int RandomNumber(FastRandom* r, int min, int max) {
     return CheckBetweenInclusive((int)(r.NextUniform() * (max - min + 1) + min),
                                  min, max);
   }
 
   ALWAYS_INLINE
-  int NonUniformRandom(FastRandom& r, int A, int C, int min, int max) {
+  int NonUniformRandom(FastRandom* r, int A, int C, int min, int max) {
     return (((RandomNumber(r, 0, A) | RandomNumber(r, min, max)) + C) %
             (max - min + 1)) +
            min;
   }
 
   ALWAYS_INLINE
-  int64_t GetItemId(FastRandom& r) {
+  int64_t GetItemId(FastRandom* r) {
     return CheckBetweenInclusive(
         g_uniform_item_dist ? RandomNumber(r, 1, num_item)
                             : NonUniformRandom(r, 8191, 7911, 1, num_item),
@@ -601,7 +601,7 @@ class TPCC {
   }
 
   ALWAYS_INLINE
-  int GetCustomerId(FastRandom& r) {
+  int GetCustomerId(FastRandom* r) {
     return CheckBetweenInclusive(
         NonUniformRandom(r, 1023, 259, 1, num_customer_per_district), 1,
         num_customer_per_district);
@@ -609,14 +609,14 @@ class TPCC {
 
   // pick a number between [start, end)
   ALWAYS_INLINE
-  unsigned PickWarehouseId(FastRandom& r, unsigned start, unsigned end) {
+  unsigned PickWarehouseId(FastRandom* r, unsigned start, unsigned end) {
     assert(start < end);
     const unsigned diff = end - start;
     if (diff == 1) return start;
     return (r.Next() % diff) + start;
   }
 
-  inline size_t GetCustomerLastName(uint8_t* buf, FastRandom& r, int num) {
+  inline size_t GetCustomerLastName(uint8_t* buf, FastRandom* r, int num) {
     const std::string& s0 = NameTokens[num / 100];
     const std::string& s1 = NameTokens[(num / 10) % 10];
     const std::string& s2 = NameTokens[num % 10];
@@ -634,11 +634,11 @@ class TPCC {
   }
 
   ALWAYS_INLINE
-  size_t GetCustomerLastName(char* buf, FastRandom& r, int num) {
+  size_t GetCustomerLastName(char* buf, FastRandom* r, int num) {
     return GetCustomerLastName((uint8_t*)buf, r, num);
   }
 
-  inline std::string GetCustomerLastName(FastRandom& r, int num) {
+  inline std::string GetCustomerLastName(FastRandom* r, int num) {
     std::string ret;
     ret.resize(CustomerLastNameMaxSize);
     ret.resize(GetCustomerLastName((uint8_t*)&ret[0], r, num));
@@ -646,27 +646,27 @@ class TPCC {
   }
 
   ALWAYS_INLINE
-  std::string GetNonUniformCustomerLastNameLoad(FastRandom& r) {
+  std::string GetNonUniformCustomerLastNameLoad(FastRandom* r) {
     return GetCustomerLastName(r, NonUniformRandom(r, 255, 157, 0, 999));
   }
 
   ALWAYS_INLINE
-  size_t GetNonUniformCustomerLastNameRun(uint8_t* buf, FastRandom& r) {
+  size_t GetNonUniformCustomerLastNameRun(uint8_t* buf, FastRandom* r) {
     return GetCustomerLastName(buf, r, NonUniformRandom(r, 255, 223, 0, 999));
   }
 
   ALWAYS_INLINE
-  size_t GetNonUniformCustomerLastNameRun(char* buf, FastRandom& r) {
+  size_t GetNonUniformCustomerLastNameRun(char* buf, FastRandom* r) {
     return GetNonUniformCustomerLastNameRun((uint8_t*)buf, r);
   }
 
   ALWAYS_INLINE
-  std::string GetNonUniformCustomerLastNameRun(FastRandom& r) {
+  std::string GetNonUniformCustomerLastNameRun(FastRandom* r) {
     return GetCustomerLastName(r, NonUniformRandom(r, 255, 223, 0, 999));
   }
 
   ALWAYS_INLINE
-  std::string RandomStr(FastRandom& r, uint64_t len) {
+  std::string RandomStr(FastRandom* r, uint64_t len) {
     // this is a property of the oltpbench implementation...
     if (!len) return "";
 
@@ -684,7 +684,7 @@ class TPCC {
 
   // RandomNStr() actually produces a string of length len
   ALWAYS_INLINE
-  std::string RandomNStr(FastRandom& r, uint64_t len) {
+  std::string RandomNStr(FastRandom* r, uint64_t len) {
     const char base = '0';
     std::string buf(len, 0);
     for (uint64_t i = 0; i < len; i++) buf[i] = (char)(base + (r.Next() % 10));
