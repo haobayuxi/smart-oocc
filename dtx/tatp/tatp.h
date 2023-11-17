@@ -27,8 +27,8 @@ static ALWAYS_INLINE uint32_t FastRand(uint64_t *seed) {
 #define FREQUENCY_GET_SUBSCRIBER_DATA 35    // Single
 #define FREQUENCY_GET_ACCESS_DATA 35        // Single
 #define FREQUENCY_GET_NEW_DESTINATION 10    // Single
-#define FREQUENCY_UPDATE_SUBSCRIBER_DATA 6  // Single
-#define FREQUENCY_UPDATE_LOCATION 14        // Multi
+#define FREQUENCY_UPDATE_SUBSCRIBER_DATA 2  // Single
+#define FREQUENCY_UPDATE_LOCATION 18        // Multi
 #define FREQUENCY_INSERT_CALL_FORWARDING 2  // Multi
 #define FREQUENCY_DELETE_CALL_FORWARDING 2  // Multi
 
