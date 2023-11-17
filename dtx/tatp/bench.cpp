@@ -136,7 +136,7 @@ bool TxGetAccessData(tx_id_t tx_id, DTX *dtx) {
   dtx->TxBegin(tx_id);
   tatp_accinf_key_t key;
   key.s_id = tatp_client->GetNonUniformRandomSubscriber(&seed);
-  key.ai_type = (FastRand(&seed) & 3) + 1;
+  key.ai_type = 1;
   auto acc_obj = std::make_shared<DataItem>(
       (table_id_t)TATPTableType::kAccessInfoTable, key.item_key);
 
