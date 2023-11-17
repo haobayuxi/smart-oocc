@@ -28,7 +28,7 @@ int txn_sys;
 
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
-thread_local TPCC* tatp_client;
+thread_local TPCC* tpcc_client;
 thread_local uint64_t tx_id_local;
 thread_local TPCCTxType* workgen_arr;
 
@@ -37,8 +37,7 @@ std::atomic<uint64_t> rdma_cnt_sum(0);
 
 thread_local int running_tasks;
 
-bool TxNewOrder(TPCC* tpcc_client, FastRandom* random_generator,
-                coro_yield_t& yield, tx_id_t tx_id, DTX* dtx) {
+bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
   /*
   "NEW_ORDER": {
   "getWarehouseTaxRate": "SELECT W_TAX FROM WAREHOUSE WHERE W_ID = ?", # w_id
@@ -382,8 +381,7 @@ bool TxNewOrder(TPCC* tpcc_client, FastRandom* random_generator,
   return commit_status;
 }
 
-bool TxPayment(TPCC* tpcc_client, FastRandom* random_generator,
-               coro_yield_t& yield, tx_id_t tx_id, DTX* dtx) {
+bool TxPayment(tx_id_t tx_id, DTX* dtx) {
   /*
    "getWarehouse": "SELECT W_NAME, W_STREET_1, W_STREET_2, W_CITY, W_STATE,
    W_ZIP FROM WAREHOUSE WHERE W_ID = ?", # w_id "updateWarehouseBalance":
@@ -568,8 +566,7 @@ bool TxPayment(TPCC* tpcc_client, FastRandom* random_generator,
   return commit_status;
 }
 
-bool TxDelivery(TPCC* tpcc_client, FastRandom* random_generator,
-                coro_yield_t& yield, tx_id_t tx_id, DTX* dtx) {
+bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
   /*
   "getNewOrder": "SELECT NO_O_ID FROM NEW_ORDER WHERE NO_D_ID = ? AND NO_W_ID =
   ? AND NO_O_ID > -1 LIMIT 1", # "deleteNewOrder": "DELETE FROM NEW_ORDER WHERE
@@ -721,8 +718,7 @@ bool TxDelivery(TPCC* tpcc_client, FastRandom* random_generator,
   return commit_status;
 }
 
-bool TxOrderStatus(TPCC* tpcc_client, FastRandom* random_generator,
-                   coro_yield_t& yield, tx_id_t tx_id, DTX* dtx) {
+bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
   /*
   "ORDER_STATUS": {
   "getCustomerByCustomerId": "SELECT C_ID, C_FIRST, C_MIDDLE, C_LAST, C_BALANCE
@@ -813,8 +809,7 @@ bool TxOrderStatus(TPCC* tpcc_client, FastRandom* random_generator,
   return commit_status;
 }
 
-bool TxStockLevel(TPCC* tpcc_client, FastRandom* random_generator,
-                  coro_yield_t& yield, tx_id_t tx_id, DTX* dtx) {
+bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
   /*
    "getOId": "SELECT D_NEXT_O_ID FROM DISTRICT WHERE D_W_ID = ? AND D_ID = ?",
    "getStockCount": "SELECT COUNT(DISTINCT(OL_I_ID)) FROM ORDER_LINE, STOCK
@@ -990,84 +985,24 @@ void RunTx(DTXContext* context) {
     uint64_t iter = ++tx_id_local;  // Global atomic transaction id
     attempt_tx++;
 
-    TATPTxType tx_type = workgen_arr[iter % 100];
+    TPCCTxType tx_type = workgen_arr[iter % 100];
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
-#ifdef ABORT_DISCARD
     switch (tx_type) {
-      case TATPTxType::kGetSubsciberData:
-        do {
-          tx_committed = TxGetSubsciberData(iter, dtx);
-        } while (!tx_committed);
+      case TPCCTxType::kNewOrder:
+
         break;
-      case TATPTxType::kGetNewDestination:
-        do {
-          tx_committed = TxGetNewDestination(iter, dtx);
-        } while (!tx_committed);
+      case TPCCTxType::kDelivery:
         break;
-      case TATPTxType::kGetAccessData:
-        do {
-          tx_committed = TxGetAccessData(iter, dtx);
-        } while (!tx_committed);
+      case TPCCTxType::kOrderStatus:
         break;
-      case TATPTxType::kUpdateSubscriberData:
-        do {
-          tx_committed = TxUpdateSubscriberData(iter, dtx);
-        } while (!tx_committed);
+      case TPCCTxType::kPayment:
         break;
-      case TATPTxType::kUpdateLocation:
-        do {
-          tx_committed = TxUpdateLocation(iter, dtx);
-        } while (!tx_committed);
-        break;
-      case TATPTxType::kInsertCallForwarding:
-        do {
-          tx_committed = TxInsertCallForwarding(iter, dtx);
-        } while (!tx_committed);
-        break;
-      case TATPTxType::kDeleteCallForwarding:
-        do {
-          tx_committed = TxDeleteCallForwarding(iter, dtx);
-        } while (!tx_committed);
+      case TPCCTxType::kStockLevel:
         break;
       default:
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
         abort();
     }
-#else
-    switch (tx_type) {
-      case TATPTxType::kGetSubsciberData:
-        SDS_INFO("get sub");
-        tx_committed = TxGetSubsciberData(iter, dtx);
-        break;
-      case TATPTxType::kGetNewDestination:
-        SDS_INFO("get new dest");
-        tx_committed = TxGetNewDestination(iter, dtx);
-        break;
-      case TATPTxType::kGetAccessData:
-        SDS_INFO("get get access");
-        tx_committed = TxGetAccessData(iter, dtx);
-        break;
-      case TATPTxType::kUpdateSubscriberData:
-        SDS_INFO("update sub");
-        tx_committed = TxUpdateSubscriberData(iter, dtx);
-        break;
-      case TATPTxType::kUpdateLocation:
-        SDS_INFO("update location");
-        tx_committed = TxUpdateLocation(iter, dtx);
-        break;
-      case TATPTxType::kInsertCallForwarding:
-        SDS_INFO("insert sub");
-        tx_committed = TxInsertCallForwarding(iter, dtx);
-        break;
-      case TATPTxType::kDeleteCallForwarding:
-        SDS_INFO("delete sub");
-        tx_committed = TxDeleteCallForwarding(iter, dtx);
-        break;
-      default:
-        printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
-        abort();
-    }
-#endif
     // Stat after one transaction finishes
     if (tx_committed) {
       clock_gettime(CLOCK_REALTIME, &tx_end_time);
