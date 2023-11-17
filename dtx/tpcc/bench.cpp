@@ -925,31 +925,10 @@ void WarmUp(DTXContext* context) {
   DTX* dtx = new DTX(context, txn_sys, lease);
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
-    TATPTxType tx_type = workgen_arr[FastRand(&seed) % 100];
+    TPCCTxType tx_type = workgen_arr[FastRand(&seed) % 100];
     uint64_t iter = ++tx_id_local;
     // Global atomic transaction id
     switch (tx_type) {
-      case TATPTxType::kGetSubsciberData:
-        tx_committed = TxGetSubsciberData(iter, dtx);
-        break;
-      case TATPTxType::kGetNewDestination:
-        tx_committed = TxGetNewDestination(iter, dtx);
-        break;
-      case TATPTxType::kGetAccessData:
-        tx_committed = TxGetAccessData(iter, dtx);
-        break;
-      case TATPTxType::kUpdateSubscriberData:
-        tx_committed = TxUpdateSubscriberData(iter, dtx);
-        break;
-      case TATPTxType::kUpdateLocation:
-        tx_committed = TxUpdateLocation(iter, dtx);
-        break;
-      case TATPTxType::kInsertCallForwarding:
-        tx_committed = TxInsertCallForwarding(iter, dtx);
-        break;
-      case TATPTxType::kDeleteCallForwarding:
-        tx_committed = TxDeleteCallForwarding(iter, dtx);
-        break;
       default:
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
         abort();
@@ -1027,24 +1006,14 @@ void RunTx(DTXContext* context) {
 
 void execute_thread(int id, DTXContext* context) {
   BindCore(id);
-#if 0
-    assert(coroutines == 1);
-    ATTEMPTED_NUM = kMaxTransactions / threads;
-    seed = rdtsc() * kMaxThreads + id;
-    tatp_client = new TATP();
-    workgen_arr = tatp_client->CreateWorkgenArray();
-    pthread_barrier_wait(&barrier);
-    RunTx(manager);
-    pthread_barrier_wait(&barrier);
-    rdma_cnt_sum += rdma_cnt;
-#endif
+
   ATTEMPTED_NUM = kMaxTransactions / threads / coroutines;
   auto hostname = GetHostName();
   seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51) *
              kMaxThreads +
          id;
-  tatp_client = new TATP();
-  workgen_arr = tatp_client->CreateWorkgenArray();
+  tpcc_client = new TPCC();
+  workgen_arr = tpcc_client->CreateWorkgenArray();
   WarmUp(context);
   //   SDS_INFO("warm up done");
   TaskPool::Enable();
@@ -1111,7 +1080,7 @@ void report(double elapsed_time, JsonConfig& config) {
   if (getenv("DUMP_PREFIX")) {
     dump_prefix = std::string(getenv("DUMP_PREFIX"));
   } else {
-    dump_prefix = "dtx-tatp";
+    dump_prefix = "dtx-tpcc";
   }
   SDS_INFO(
       "%s: #thread = %ld, #coro_per_thread = %ld, "
@@ -1171,7 +1140,7 @@ int main(int argc, char** argv) {
   coroutines = argc < 3 ? 1 : atoi(argv[2]);
   timer = new double[kMaxTransactions];
   DTXContext* context = new DTXContext(config, threads);
-  tatp_client = new TATP();
+  tpcc_client = new TPCC();
   timespec ts_begin, ts_end;
   pthread_barrier_init(&barrier, nullptr, threads + 1);
   std::vector<std::thread> workers;
