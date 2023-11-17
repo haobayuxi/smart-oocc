@@ -25,71 +25,38 @@ void TPCC::LoadTable(node_id_t node_id, node_id_t num_server,
   // Initiate + Populate table for primary role
   if ((node_id_t)TPCCTableType::kWarehouseTable % num_server == node_id) {
     printf("Primary: Initializing Warehouse table\n");
-    std::string config_filepath = "workload/tpcc/tpcc_tables/warehouse.json";
-    auto json_config = JsonConfig::load_file(config_filepath);
-    auto table_config = json_config.get("table");
     warehouse_table = new HashStore((table_id_t)TPCCTableType::kWarehouseTable,
-                                    table_config.get("bkt_num").get_uint64(),
-                                    mem_store_alloc_param);
+                                    num_warehouse, mem_store_alloc_param);
     printf("Warehouse table setup\n");
     PopulateWarehouseTable(9324, mem_store_reserve_param);
     primary_table_ptrs.push_back(warehouse_table);
   }
   if ((node_id_t)TPCCTableType::kDistrictTable % num_server == node_id) {
     printf("Primary: Initializing District table\n");
-    std::string warehouse_config_filepath =
-        "workload/tpcc/tpcc_tables/warehouse.json";
-    auto warehouse_json_config =
-        JsonConfig::load_file(warehouse_config_filepath);
-    auto warehouse_table_config = warehouse_json_config.get("table");
-    std::string district_config_filepath =
-        "workload/tpcc/tpcc_tables/district.json";
-    auto district_json_config = JsonConfig::load_file(district_config_filepath);
-    auto district_table_config = district_json_config.get("table");
-    district_table =
-        new HashStore((table_id_t)TPCCTableType::kDistrictTable,
-                      warehouse_table_config.get("bkt_num").get_uint64() *
-                          district_table_config.get("bkt_num").get_uint64(),
-                      mem_store_alloc_param);
+
+    district_table = new HashStore((table_id_t)TPCCTableType::kDistrictTable,
+                                   num_warehouse * num_district_per_warehouse,
+                                   mem_store_alloc_param);
 
     PopulateDistrictTable(129856349, mem_store_reserve_param);
     primary_table_ptrs.push_back(district_table);
   }
   if ((node_id_t)TPCCTableType::kCustomerTable % num_server == node_id) {
     printf("Primary: Initializing Customer+CustomerIndex+History table\n");
-    std::string warehouse_config_filepath =
-        "workload/tpcc/tpcc_tables/warehouse.json";
-    auto warehouse_json_config =
-        JsonConfig::load_file(warehouse_config_filepath);
-    auto warehouse_table_config = warehouse_json_config.get("table");
-    std::string district_config_filepath =
-        "workload/tpcc/tpcc_tables/district.json";
-    auto district_json_config = JsonConfig::load_file(district_config_filepath);
-    auto district_table_config = district_json_config.get("table");
-    std::string customer_config_filepath =
-        "workload/tpcc/tpcc_tables/customer.json";
-    auto customer_json_config = JsonConfig::load_file(customer_config_filepath);
-    auto customer_table_config = customer_json_config.get("table");
 
-    customer_table =
-        new HashStore((table_id_t)TPCCTableType::kCustomerTable,
-                      warehouse_table_config.get("bkt_num").get_uint64() *
-                          district_table_config.get("bkt_num").get_uint64() *
-                          customer_table_config.get("bkt_num").get_uint64(),
-                      mem_store_alloc_param);
+    customer_table = new HashStore(
+        (table_id_t)TPCCTableType::kCustomerTable,
+        num_warehouse * num_district_per_warehouse * num_customer_per_district,
+        mem_store_alloc_param);
 
-    customer_index_table =
-        new HashStore((table_id_t)TPCCTableType::kCustomerIndexTable,
-                      warehouse_table_config.get("bkt_num").get_uint64() *
-                          district_table_config.get("bkt_num").get_uint64() *
-                          customer_table_config.get("bkt_num").get_uint64(),
-                      mem_store_alloc_param);
-    history_table =
-        new HashStore((table_id_t)TPCCTableType::kHistoryTable,
-                      warehouse_table_config.get("bkt_num").get_uint64() *
-                          district_table_config.get("bkt_num").get_uint64() *
-                          customer_table_config.get("bkt_num").get_uint64(),
-                      mem_store_alloc_param);
+    customer_index_table = new HashStore(
+        (table_id_t)TPCCTableType::kCustomerIndexTable,
+        num_warehouse * num_district_per_warehouse * num_customer_per_district,
+        mem_store_alloc_param);
+    history_table = new HashStore(
+        (table_id_t)TPCCTableType::kHistoryTable,
+        num_warehouse * num_district_per_warehouse * num_customer_per_district,
+        mem_store_alloc_param);
 
     PopulateCustomerAndHistoryTable(923587856425, mem_store_reserve_param);
     primary_table_ptrs.push_back(customer_table);
@@ -97,45 +64,23 @@ void TPCC::LoadTable(node_id_t node_id, node_id_t num_server,
     primary_table_ptrs.push_back(history_table);
   }
   if ((node_id_t)TPCCTableType::kOrderTable % num_server == node_id) {
-    printf("Primary: Initializing Order+OrderIndex+NewOrder+OrderLine table\n");
-    std::string warehouse_config_filepath =
-        "workload/tpcc/tpcc_tables/warehouse.json";
-    auto warehouse_json_config =
-        JsonConfig::load_file(warehouse_config_filepath);
-    auto warehouse_table_config = warehouse_json_config.get("table");
-    std::string district_config_filepath =
-        "workload/tpcc/tpcc_tables/district.json";
-    auto district_json_config = JsonConfig::load_file(district_config_filepath);
-    auto district_table_config = district_json_config.get("table");
-    std::string customer_config_filepath =
-        "workload/tpcc/tpcc_tables/customer.json";
-    auto customer_json_config = JsonConfig::load_file(customer_config_filepath);
-    auto customer_table_config = customer_json_config.get("table");
-
-    order_table =
-        new HashStore((table_id_t)TPCCTableType::kOrderTable,
-                      warehouse_table_config.get("bkt_num").get_uint64() *
-                          district_table_config.get("bkt_num").get_uint64() *
-                          customer_table_config.get("bkt_num").get_uint64(),
-                      mem_store_alloc_param);
-    order_index_table =
-        new HashStore((table_id_t)TPCCTableType::kOrderIndexTable,
-                      warehouse_table_config.get("bkt_num").get_uint64() *
-                          district_table_config.get("bkt_num").get_uint64() *
-                          customer_table_config.get("bkt_num").get_uint64(),
-                      mem_store_alloc_param);
-    new_order_table = new HashStore(
-        (table_id_t)TPCCTableType::kNewOrderTable,
-        warehouse_table_config.get("bkt_num").get_uint64() *
-            district_table_config.get("bkt_num").get_uint64() *
-            customer_table_config.get("bkt_num").get_uint64() * 0.3,
+    order_table = new HashStore(
+        (table_id_t)TPCCTableType::kOrderTable,
+        num_warehouse * num_district_per_warehouse * num_customer_per_district,
         mem_store_alloc_param);
-    order_line_table = new HashStore(
-        (table_id_t)TPCCTableType::kOrderLineTable,
-        warehouse_table_config.get("bkt_num").get_uint64() *
-            district_table_config.get("bkt_num").get_uint64() *
-            customer_table_config.get("bkt_num").get_uint64() * 15,
+    order_index_table = new HashStore(
+        (table_id_t)TPCCTableType::kOrderIndexTable,
+        num_warehouse * num_district_per_warehouse * num_customer_per_district,
         mem_store_alloc_param);
+    new_order_table = new HashStore((table_id_t)TPCCTableType::kNewOrderTable,
+                                    num_warehouse * num_district_per_warehouse *
+                                        num_customer_per_district * 0.3,
+                                    mem_store_alloc_param);
+    order_line_table =
+        new HashStore((table_id_t)TPCCTableType::kOrderLineTable,
+                      num_warehouse * num_district_per_warehouse *
+                          num_customer_per_district * 15,
+                      mem_store_alloc_param);
 
     PopulateOrderNewOrderAndOrderLineTable(2343352, mem_store_reserve_param);
     primary_table_ptrs.push_back(order_table);
@@ -145,22 +90,16 @@ void TPCC::LoadTable(node_id_t node_id, node_id_t num_server,
   }
   if ((node_id_t)TPCCTableType::kStockTable % num_server == node_id) {
     printf("Primary: Initializing Stock table\n");
-    std::string config_filepath = "workload/tpcc/tpcc_tables/stock.json";
-    auto json_config = JsonConfig::load_file(config_filepath);
-    auto table_config = json_config.get("table");
+
     stock_table = new HashStore((table_id_t)TPCCTableType::kStockTable,
-                                table_config.get("bkt_num").get_uint64(),
-                                mem_store_alloc_param);
+                                num_stock_per_warehouse, mem_store_alloc_param);
     PopulateStockTable(89785943, mem_store_reserve_param);
     primary_table_ptrs.push_back(stock_table);
   }
   if ((node_id_t)TPCCTableType::kItemTable % num_server == node_id) {
     printf("Primary: Initializing Item table\n");
-    std::string config_filepath = "workload/tpcc/tpcc_tables/item.json";
-    auto json_config = JsonConfig::load_file(config_filepath);
-    auto table_config = json_config.get("table");
-    item_table = new HashStore((table_id_t)TPCCTableType::kItemTable,
-                               table_config.get("bkt_num").get_uint64(),
+
+    item_table = new HashStore((table_id_t)TPCCTableType::kItemTable, num_item,
                                mem_store_alloc_param);
     PopulateItemTable(235443, mem_store_reserve_param);
     primary_table_ptrs.push_back(item_table);
