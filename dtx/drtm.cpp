@@ -535,6 +535,7 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
       } else {
         if (likely(fetched_item->valid)) {
           assert(fetched_item->remote_offset == it->remote_offset);
+          SDS_INFO("found key%ld", it->key);
           *it = *fetched_item;
         } else {
           addr_cache->Insert(re.node_id, it->table_id, it->key, NOT_FOUND);
@@ -593,6 +594,7 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
         } else {
           if (likely(fetched_item->valid)) {
             assert(fetched_item->remote_offset == it->remote_offset);
+            SDS_INFO("found key%ld", it->key);
             *it = *fetched_item;
           } else {
             addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
