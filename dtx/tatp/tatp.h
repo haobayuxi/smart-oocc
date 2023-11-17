@@ -302,7 +302,9 @@ class TATP {
 
     int i = 0, j = 0;
     // j += 100;
+    for (; i < 100; i++) workgen_arr[i] = TATPTxType::kUpdateSubscriberData;
 
+    return workgen_arr;
     // for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetSubsciberData;
     // return workgen_arr;
     j += FREQUENCY_GET_SUBSCRIBER_DATA;
