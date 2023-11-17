@@ -162,27 +162,27 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
       (table_id_t)TPCCTableType::kDistrictTable, dist_key.item_key);
   dtx->AddToReadWriteSet(dist_obj);
 
-  if (!dtx->TxExe(yield)) return false;
+  if (!dtx->TxExe()) return false;
 
   auto* ware_val = (tpcc_warehouse_val_t*)ware_obj->value;
   std::string check(ware_val->w_zip);
   if (check != tpcc_zip_magic) {
-    RDMA_LOG(FATAL) << "[FATAL] Read warehouse unmatch, tid-cid-txid: "
-                    << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+    SDS_PERROR << "[FATAL] Read warehouse unmatch, tid-cid-txid: " << dtx->t_id
+               << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   auto* cust_val = (tpcc_customer_val_t*)cust_obj->value;
   // c_since never be 0
   if (cust_val->c_since == 0) {
-    RDMA_LOG(FATAL) << "[FATAL] Read customer unmatch, tid-cid-txid: "
-                    << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+    SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " << dtx->t_id
+               << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   tpcc_district_val_t* dist_val = (tpcc_district_val_t*)dist_obj->value;
   check = std::string(dist_val->d_zip);
   if (check != tpcc_zip_magic) {
-    RDMA_LOG(FATAL) << "[FATAL] Read district unmatch, tid-cid-txid: "
-                    << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+    SDS_PERROR << "[FATAL] Read district unmatch, tid-cid-txid: " << dtx->t_id
+               << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   const auto my_next_o_id = dist_val->d_next_o_id;
@@ -219,7 +219,7 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
       sizeof(tpcc_order_index_val_t), order_index_key.item_key, tx_id, 1);
   dtx->AddToReadWriteSet(oidx_obj);
 
-  if (!dtx->TxExe(yield)) return false;
+  if (!dtx->TxExe()) return false;
 
   // Respectively assign values
   tpcc_new_order_val_t* norder_val = (tpcc_new_order_val_t*)norder_obj->value;
@@ -258,18 +258,18 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
         (table_id_t)TPCCTableType::kStockTable, stock_key.item_key);
     dtx->AddToReadWriteSet(stock_obj);
 
-    if (!dtx->TxExe(yield)) return false;
+    if (!dtx->TxExe()) return false;
 
     tpcc_item_val_t* item_val = (tpcc_item_val_t*)item_obj->value;
     tpcc_stock_val_t* stock_val = (tpcc_stock_val_t*)stock_obj->value;
 
     if (item_val->debug_magic != tpcc_add_magic) {
-      RDMA_LOG(FATAL) << "[FATAL] Read item unmatch, tid-cid-txid: "
-                      << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+      SDS_PERROR << "[FATAL] Read item unmatch, tid-cid-txid: " << dtx->t_id
+                 << "-" << dtx->coro_id << "-" << tx_id;
     }
     if (stock_val->debug_magic != tpcc_add_magic) {
-      RDMA_LOG(FATAL) << "[FATAL] Read stock unmatch, tid-cid-txid: "
-                      << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+      SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " << dtx->t_id
+                 << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     if (stock_val->s_quantity - ol_quantity >= 10) {
@@ -287,14 +287,12 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
                                                    my_next_o_id, ol_number);
     tpcc_order_line_key_t order_line_key;
     order_line_key.ol_id = ol_key;
-    // RDMA_LOG(DBG) << warehouse_id << " " << district_id << " " <<
-    // my_next_o_id << " " <<  ol_number << ". ol_key: " << ol_key;
     auto ol_obj = std::make_shared<DataItem>(
         (table_id_t)TPCCTableType::kOrderLineTable,
         sizeof(tpcc_order_line_val_t), order_line_key.item_key, tx_id, 1);
     dtx->AddToReadWriteSet(ol_obj);
 
-    if (!dtx->TxExe(yield)) return false;
+    if (!dtx->TxExe()) return false;
 
     tpcc_order_line_val_t* order_line_val =
         (tpcc_order_line_val_t*)ol_obj->value;
@@ -328,18 +326,18 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
         (table_id_t)TPCCTableType::kStockTable, stock_key.item_key);
     dtx->AddToReadWriteSet(stock_obj);
 
-    if (!dtx->TxExe(yield)) return false;
+    if (!dtx->TxExe()) return false;
 
     tpcc_item_val_t* item_val = (tpcc_item_val_t*)item_obj->value;
     tpcc_stock_val_t* stock_val = (tpcc_stock_val_t*)stock_obj->value;
 
     if (item_val->debug_magic != tpcc_add_magic) {
-      RDMA_LOG(FATAL) << "[FATAL] Read item unmatch, tid-cid-txid: "
-                      << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+      SDS_PERROR << "[FATAL] Read item unmatch, tid-cid-txid: " << dtx->t_id
+                 << "-" << dtx->coro_id << "-" << tx_id;
     }
     if (stock_val->debug_magic != tpcc_add_magic) {
-      RDMA_LOG(FATAL) << "[FATAL] Read stock unmatch, tid-cid-txid: "
-                      << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+      SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " << dtx->t_id
+                 << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     if (stock_val->s_quantity - ol_quantity >= 10) {
@@ -357,14 +355,12 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
         warehouse_id, district_id, my_next_o_id, num_local_stocks + ol_number);
     tpcc_order_line_key_t order_line_key;
     order_line_key.ol_id = ol_key;
-    // RDMA_LOG(DBG) << warehouse_id << " " << district_id << " " <<
-    // my_next_o_id << " " <<  num_local_stocks + ol_number << ". ol_key: " <<
-    // ol_key;
+
     auto ol_obj = std::make_shared<DataItem>(
         (table_id_t)TPCCTableType::kOrderLineTable,
         sizeof(tpcc_order_line_val_t), order_line_key.item_key, tx_id, 1);
     dtx->AddToReadWriteSet(ol_obj);
-    if (!dtx->TxExe(yield)) return false;
+    if (!dtx->TxExe()) return false;
 
     tpcc_order_line_val_t* order_line_val =
         (tpcc_order_line_val_t*)ol_obj->value;
@@ -377,7 +373,7 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
     order_line_val->debug_magic = tpcc_add_magic;
   }
 
-  bool commit_status = dtx->TxCommit(yield);
+  bool commit_status = dtx->TxCommit();
   return commit_status;
 }
 
@@ -501,27 +497,27 @@ bool TxPayment(tx_id_t tx_id, DTX* dtx) {
       hist_key.item_key, tx_id, 1);
   dtx->AddToReadWriteSet(hist_obj);
 
-  if (!dtx->TxExe(yield)) return false;
+  if (!dtx->TxExe()) return false;
 
   tpcc_warehouse_val_t* ware_val = (tpcc_warehouse_val_t*)ware_obj->value;
   std::string check(ware_val->w_zip);
   if (check != tpcc_zip_magic) {
-    RDMA_LOG(FATAL) << "[FATAL] Read warehouse unmatch, tid-cid-txid: "
-                    << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+    SDS_PERROR << "[FATAL] Read warehouse unmatch, tid-cid-txid: " << dtx->t_id
+               << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   tpcc_district_val_t* dist_val = (tpcc_district_val_t*)dist_obj->value;
   check = std::string(dist_val->d_zip);
   if (check != tpcc_zip_magic) {
-    RDMA_LOG(FATAL) << "[FATAL] Read district unmatch, tid-cid-txid: "
-                    << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+    SDS_PERROR << "[FATAL] Read district unmatch, tid-cid-txid: " << dtx->t_id
+               << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   tpcc_customer_val_t* cust_val = (tpcc_customer_val_t*)cust_obj->value;
   // c_since never be 0
   if (cust_val->c_since == 0) {
-    RDMA_LOG(FATAL) << "[FATAL] Read customer unmatch, tid-cid-txid: "
-                    << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+    SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " << dtx->t_id
+               << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   ware_val->w_ytd += h_amount;
@@ -562,7 +558,7 @@ bool TxPayment(tx_id_t tx_id, DTX* dtx) {
   strcat(hist_val->h_data, "    ");
   strcat(hist_val->h_data, dist_val->d_name);
 
-  bool commit_status = dtx->TxCommit(yield);
+  bool commit_status = dtx->TxCommit();
   return commit_status;
 }
 
@@ -615,7 +611,7 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
 
     // Get the new order record with the o_id. Probe if the new order record
     // exists
-    if (!dtx->TxExe(yield, false)) {
+    if (!dtx->TxExe(, false)) {
       dtx->RemoveLastROItem();
       continue;
     }
@@ -635,12 +631,12 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
 
     // The row in the ORDER table with matching O_W_ID (equals W_ ID), O_D_ID
     // (equals D_ID), and O_ID (equals NO_O_ID) is selected
-    if (!dtx->TxExe(yield)) return false;
+    if (!dtx->TxExe()) return false;
 
     auto* no_val = (tpcc_new_order_val_t*)norder_obj->value;
     if (no_val->debug_magic != tpcc_add_magic) {
-      RDMA_LOG(FATAL) << "[FATAL] Read new order unmatch, tid-cid-txid: "
-                      << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+      SDS_PERROR << "[FATAL] Read new order unmatch, tid-cid-txid: "
+                 << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     norder_obj->valid = 0;  // deleteNewOrder
@@ -648,8 +644,8 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
     // o_entry_d never be 0
     tpcc_order_val_t* order_val = (tpcc_order_val_t*)order_obj->value;
     if (order_val->o_entry_d == 0) {
-      RDMA_LOG(FATAL) << "[FATAL] Read order unmatch, tid-cid-txid: "
-                      << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+      SDS_PERROR << "[FATAL] Read order unmatch, tid-cid-txid: " << dtx->t_id
+                 << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     // O_C_ID, the customer number, is retrieved
@@ -673,7 +669,7 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
           (table_id_t)TPCCTableType::kOrderLineTable, order_line_key.item_key);
       dtx->AddToReadOnlySet(ol_obj);
 
-      if (!dtx->TxExe(yield, false)) {
+      if (!dtx->TxExe(, false)) {
         // Fail not abort
         dtx->RemoveLastROItem();
         continue;
@@ -681,8 +677,8 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
       tpcc_order_line_val_t* order_line_val =
           (tpcc_order_line_val_t*)ol_obj->value;
       if (order_line_val->debug_magic != tpcc_add_magic) {
-        RDMA_LOG(FATAL) << "[FATAL] Read order line unmatch, tid-cid-txid: "
-                        << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+        SDS_PERROR << "[FATAL] Read order line unmatch, tid-cid-txid: "
+                   << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
       }
       order_line_val->ol_delivery_d = current_ts;
       sum_ol_amount += order_line_val->ol_amount;
@@ -697,13 +693,13 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
         (table_id_t)TPCCTableType::kCustomerTable, cust_key.item_key);
     dtx->AddToReadWriteSet(cust_obj);
 
-    if (!dtx->TxExe(yield)) return false;
+    if (!dtx->TxExe()) return false;
 
     tpcc_customer_val_t* cust_val = (tpcc_customer_val_t*)cust_obj->value;
     // c_since never be 0
     if (cust_val->c_since == 0) {
-      RDMA_LOG(FATAL) << "[FATAL] Read customer unmatch, tid-cid-txid: "
-                      << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+      SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " << dtx->t_id
+                 << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     // C_BALANCE is increased by the sum of all order-line amounts (OL_AMOUNT)
@@ -714,7 +710,7 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
     cust_val->c_delivery_cnt += 1;
   }
 
-  bool commit_status = dtx->TxCommit(yield);
+  bool commit_status = dtx->TxCommit();
   return commit_status;
 }
 
@@ -777,20 +773,20 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
       (table_id_t)TPCCTableType::kOrderTable, order_key.item_key);
   dtx->AddToReadOnlySet(order_obj);
 
-  if (!dtx->TxExe(yield)) return false;
+  if (!dtx->TxExe()) return false;
 
   tpcc_customer_val_t* cust_val = (tpcc_customer_val_t*)cust_obj->value;
   // c_since never be 0
   if (cust_val->c_since == 0) {
-    RDMA_LOG(FATAL) << "[FATAL] Read customer unmatch, tid-cid-txid: "
-                    << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+    SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " << dtx->t_id
+               << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   // o_entry_d never be 0
   tpcc_order_val_t* order_val = (tpcc_order_val_t*)order_obj->value;
   if (order_val->o_entry_d == 0) {
-    RDMA_LOG(FATAL) << "[FATAL] Read order unmatch, tid-cid-txid: " << dtx->t_id
-                    << "-" << dtx->coro_id << "-" << tx_id;
+    SDS_PERROR << "[FATAL] Read order unmatch, tid-cid-txid: " << dtx->t_id
+               << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   for (int i = 1; i <= order_val->o_ol_cnt; i++) {
@@ -803,9 +799,9 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
     dtx->AddToReadOnlySet(ol_obj);
   }
 
-  if (!dtx->TxExe(yield)) return false;
+  if (!dtx->TxExe()) return false;
 
-  bool commit_status = dtx->TxCommit(yield);
+  bool commit_status = dtx->TxCommit();
   return commit_status;
 }
 
@@ -842,13 +838,13 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
       (table_id_t)TPCCTableType::kDistrictTable, dist_key.item_key);
   dtx->AddToReadOnlySet(dist_obj);
 
-  if (!dtx->TxExe(yield)) return false;
+  if (!dtx->TxExe()) return false;
 
   tpcc_district_val_t* dist_val = (tpcc_district_val_t*)dist_obj->value;
   std::string check = std::string(dist_val->d_zip);
   if (check != tpcc_zip_magic) {
-    RDMA_LOG(FATAL) << "[FATAL] Read district unmatch, tid-cid-txid: "
-                    << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+    SDS_PERROR << "[FATAL] Read district unmatch, tid-cid-txid: " << dtx->t_id
+               << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   int32_t o_id = dist_val->d_next_o_id;
@@ -870,7 +866,7 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
           (table_id_t)TPCCTableType::kOrderLineTable, order_line_key.item_key);
       dtx->AddToReadOnlySet(ol_obj);
 
-      if (!dtx->TxExe(yield, false)) {
+      if (!dtx->TxExe()) {
         // Not found, not abort
         dtx->RemoveLastROItem();
         break;
@@ -878,8 +874,8 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
 
       tpcc_order_line_val_t* ol_val = (tpcc_order_line_val_t*)ol_obj->value;
       if (ol_val->debug_magic != tpcc_add_magic) {
-        RDMA_LOG(FATAL) << "[FATAL] Read order line unmatch, tid-cid-txid: "
-                        << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+        SDS_PERROR << "[FATAL] Read order line unmatch, tid-cid-txid: "
+                   << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
       }
 
       int64_t s_key = tpcc_client->MakeStockKey(warehouse_id, ol_val->ol_i_id);
@@ -889,12 +885,12 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
           (table_id_t)TPCCTableType::kStockTable, stock_key.item_key);
       dtx->AddToReadOnlySet(stock_obj);
 
-      if (!dtx->TxExe(yield)) return false;
+      if (!dtx->TxExe()) return false;
 
       tpcc_stock_val_t* stock_val = (tpcc_stock_val_t*)stock_obj->value;
       if (stock_val->debug_magic != tpcc_add_magic) {
-        RDMA_LOG(FATAL) << "[FATAL] Read stock unmatch, tid-cid-txid: "
-                        << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+        SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " << dtx->t_id
+                   << "-" << dtx->coro_id << "-" << tx_id;
       }
 
       if (stock_val->s_quantity < threshold) {
@@ -915,7 +911,7 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
     }
   }
 
-  bool commit_status = dtx->TxCommit(yield);
+  bool commit_status = dtx->TxCommit();
   return commit_status;
 }
 
@@ -945,7 +941,7 @@ static void IdleExecution() {
   if (g_idle_cycles) {
     uint64_t start_tsc = rdtsc();
     while (rdtsc() - start_tsc < g_idle_cycles) {
-      YieldTask();
+      Task();
     }
   }
 }
@@ -1026,7 +1022,7 @@ void execute_thread(int id, DTXContext* context) {
     task_pool.spawn(std::bind(&RunTx, context), 128 * 1024);
   }
   while (!task_pool.empty()) {
-    YieldTask();
+    Task();
   }
   pthread_barrier_wait(&barrier);
   rdma_cnt_sum += rdma_cnt;

@@ -433,9 +433,10 @@ class DTX {
   bool delayed_unlock;
   uint64_t last_write_lock_time;
 
+  t_id_t t_id;
+
  private:
   tx_id_t tx_id;
-  t_id_t t_id;
   uint64_t start_time;
 
   DTXContext *context;
