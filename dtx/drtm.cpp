@@ -338,6 +338,7 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
     for (auto &item : local_hash_node->data_items) {
       if (item.valid && item.key == it->key && item.table_id == it->table_id) {
         *it = item;
+        SDS_INFO("insert into cache key%ld", it->key);
         addr_cache->Insert(res.node_id, it->table_id, it->key,
                            it->remote_offset);
         res.item->is_fetched = true;
@@ -398,6 +399,7 @@ bool DTX::DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
     for (auto &item : local_hash_node->data_items) {
       if (item.valid && item.key == it->key && item.table_id == it->table_id) {
         *it = item;
+        SDS_INFO("insert into cache key%ld", it->key);
         addr_cache->Insert(res.node_id, it->table_id, it->key,
                            it->remote_offset);
         res.item->is_fetched = true;
