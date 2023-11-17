@@ -441,9 +441,9 @@ class TPCC {
 
   uint32_t num_customer_per_district = 3000;
 
-  uint32_t num_item = 100000;
+  uint32_t num_item = 1000;
 
-  uint32_t num_stock_per_warehouse = 100000;
+  uint32_t num_stock_per_warehouse = 1000;
 
   /* Tables */
   HashStore* warehouse_table = nullptr;
