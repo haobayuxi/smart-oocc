@@ -139,28 +139,11 @@ bool TxGetAccessData(tx_id_t tx_id, DTX *dtx) {
   key.ai_type = 1;
   auto acc_obj = std::make_shared<DataItem>(
       (table_id_t)TATPTableType::kAccessInfoTable, key.item_key);
-
-  // tatp_accinf_key_t key2;
-  // key2.s_id = tatp_client->GetNonUniformRandomSubscriber(&seed);
-  // key2.ai_type = (FastRand(&seed) & 3) + 1;
-  // auto acc_obj2 = std::make_shared<DataItem>(
-  //     (table_id_t)TATPTableType::kAccessInfoTable, key2.item_key);
   dtx->AddToReadOnlySet(acc_obj);
   dtx->AddToReadOnlySet(acc_obj);
   if (!dtx->TxExe()) return false;
   bool commit_status = dtx->TxCommit();
   return commit_status;
-  // if (acc_obj->value_size > 0) {
-  //   /* The key was found */
-  //   auto *value = (tatp_accinf_val_t *)(acc_obj->value);
-  //   assert(value->data1 == tatp_accinf_data1_magic);
-  //   bool commit_status = dtx->TxCommit();
-  //   return commit_status;
-  // } else {
-  //   /* Key not found */
-  //   dtx->TxAbortReadOnly();
-  //   return false;
-  // }
 }
 
 bool TxUpdateSubscriberData(tx_id_t tx_id, DTX *dtx) {

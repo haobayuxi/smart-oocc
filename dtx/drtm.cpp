@@ -8,7 +8,7 @@ ALWAYS_INLINE
 bool DTX::lease_expired(uint64_t lock) {
   auto now = (get_clock_sys_time_us() << 1);
   if (lock > now) {
-    return true;
+    return true;  // return true lease not expired
   }
   return false;
 }
@@ -342,24 +342,29 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
       }
     }
     if (likely(find)) {
-      if (unlikely((it->lock != STATE_CLEAN))) {
+      if (it->lock % 2 == 1) {
+        // write locked
         return false;
       } else {
-        // get write lock and data
-        char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-        char *data_buf = AllocLocalBuffer(DataItemSize);
-        pending_next_cas_rw.emplace_back(CasRead{.node_id = res.node_id,
-                                                 .item = res.item,
-                                                 .cas_buf = cas_buf,
-                                                 .data_buf = data_buf});
-        context->CompareAndSwap(
-            cas_buf,
-            GlobalAddress(res.node_id,
-                          it->GetRemoteLockAddr(it->remote_offset)),
-            STATE_CLEAN, tx_id << 1 + 1);
-        context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
-                      DataItemSize);
-        context->PostRequest();
+        if (!lease_expired(it->lock)) {
+          // get write lock and data
+          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          char *data_buf = AllocLocalBuffer(DataItemSize);
+          pending_next_cas_rw.emplace_back(CasRead{.node_id = res.node_id,
+                                                   .item = res.item,
+                                                   .cas_buf = cas_buf,
+                                                   .data_buf = data_buf});
+          context->CompareAndSwap(
+              cas_buf,
+              GlobalAddress(res.node_id,
+                            it->GetRemoteLockAddr(it->remote_offset)),
+              STATE_CLEAN, tx_id << 1 + 1);
+          context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
+                        DataItemSize);
+          context->PostRequest();
+        } else {
+          return false;
+        }
       }
     } else {
       auto *local_hash_node = (HashNode *)res.buf;
@@ -489,7 +494,7 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
         // write locked
         return false;
       }
-      if (!lease_expired(lock)) {
+      if (lease_expired(lock)) {
         // lease not expired , abort
         return false;
       } else {
