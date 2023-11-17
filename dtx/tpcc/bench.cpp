@@ -75,11 +75,10 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
   int district_id_end_ = tpcc_client->num_district_per_warehouse;
 
   const uint32_t warehouse_id = tpcc_client->PickWarehouseId(
-      random_generator[dtx->coro_id], warehouse_id_start_, warehouse_id_end_);
+      tpcc_client->r, warehouse_id_start_, warehouse_id_end_);
   const uint32_t district_id = tpcc_client->RandomNumber(
-      random_generator[dtx->coro_id], district_id_start, district_id_end_);
-  const uint32_t customer_id =
-      tpcc_client->GetCustomerId(random_generator[dtx->coro_id]);
+      tpcc_client->r, district_id_start, district_id_end_);
+  const uint32_t customer_id = tpcc_client->GetCustomerId(tpcc_client->r);
   int64_t c_key =
       tpcc_client->MakeCustomerKey(warehouse_id, district_id, customer_id);
 
@@ -97,13 +96,13 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
   int num_remote_stocks(0), num_local_stocks(0);
 
   const int num_items = tpcc_client->RandomNumber(
-      random_generator[dtx->coro_id], tpcc_order_line_val_t::MIN_OL_CNT,
+      tpcc_client->r, tpcc_order_line_val_t::MIN_OL_CNT,
       tpcc_order_line_val_t::MAX_OL_CNT);
 
   for (int i = 0; i < num_items; i++) {
-    int64_t item_id = tpcc_client->GetItemId(random_generator[dtx->coro_id]);
+    int64_t item_id = tpcc_client->GetItemId(tpcc_client->r);
     if (tpcc_client->num_warehouse == 1 ||
-        tpcc_client->RandomNumber(random_generator[dtx->coro_id], 1, 100) >
+        tpcc_client->RandomNumber(tpcc_client->r, 1, 100) >
             g_new_order_remote_item_pct) {
       // local stock case
       uint32_t supplier_warehouse_id = warehouse_id;
@@ -123,7 +122,7 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
       uint32_t supplier_warehouse_id;
       do {
         supplier_warehouse_id = tpcc_client->RandomNumber(
-            random_generator[dtx->coro_id], 1, tpcc_client->num_warehouse);
+            tpcc_client->r, 1, tpcc_client->num_warehouse);
       } while (supplier_warehouse_id == warehouse_id);
 
       all_local = 0;
@@ -244,7 +243,7 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
   for (int ol_number = 1; ol_number <= num_local_stocks; ol_number++) {
     const int64_t ol_i_id = local_item_ids[ol_number - 1];
     const uint32_t ol_quantity =
-        tpcc_client->RandomNumber(random_generator[dtx->coro_id], 1, 10);
+        tpcc_client->RandomNumber(tpcc_client->r, 1, 10);
     // read item info
     tpcc_item_key_t tpcc_item_key;
     tpcc_item_key.i_id = ol_i_id;
@@ -312,7 +311,7 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
   for (int ol_number = 1; ol_number <= num_remote_stocks; ol_number++) {
     const int64_t ol_i_id = remote_item_ids[ol_number - 1];
     const uint32_t ol_quantity =
-        tpcc_client->RandomNumber(random_generator[dtx->coro_id], 1, 10);
+        tpcc_client->RandomNumber(tpcc_client->r, 1, 10);
     // read item info
     tpcc_item_key_t tpcc_item_key;
     tpcc_item_key.i_id = ol_i_id;
@@ -411,8 +410,8 @@ bool TxPayment(tx_id_t tx_id, DTX* dtx) {
 
   // Generate parameters
 
-  int x = tpcc_client->RandomNumber(random_generator[dtx->coro_id], 1, 100);
-  int y = tpcc_client->RandomNumber(random_generator[dtx->coro_id], 1, 100);
+  int x = tpcc_client->RandomNumber(tpcc_client->r, 1, 100);
+  int y = tpcc_client->RandomNumber(tpcc_client->r, 1, 100);
 
   int warehouse_id_start_ = 1;
   int warehouse_id_end_ = tpcc_client->num_warehouse;
@@ -421,9 +420,9 @@ bool TxPayment(tx_id_t tx_id, DTX* dtx) {
   int district_id_end_ = tpcc_client->num_district_per_warehouse;
 
   const uint32_t warehouse_id = tpcc_client->PickWarehouseId(
-      random_generator[dtx->coro_id], warehouse_id_start_, warehouse_id_end_);
+      tpcc_client->r, warehouse_id_start_, warehouse_id_end_);
   const uint32_t district_id = tpcc_client->RandomNumber(
-      random_generator[dtx->coro_id], district_id_start, district_id_end_);
+      tpcc_client->r, district_id_start, district_id_end_);
 
   int32_t c_w_id;
   int32_t c_d_id;
@@ -435,29 +434,26 @@ bool TxPayment(tx_id_t tx_id, DTX* dtx) {
     // 15%: paying through another warehouse:
     // select in range [1, num_warehouses] excluding w_id
     do {
-      c_w_id = tpcc_client->RandomNumber(random_generator[dtx->coro_id], 1,
+      c_w_id = tpcc_client->RandomNumber(tpcc_client->r, 1,
                                          tpcc_client->num_warehouse);
     } while (c_w_id == warehouse_id);
-    c_d_id = tpcc_client->RandomNumber(random_generator[dtx->coro_id],
-                                       district_id_start, district_id_end_);
+    c_d_id = tpcc_client->RandomNumber(tpcc_client->r, district_id_start,
+                                       district_id_end_);
   }
   uint32_t customer_id = 0;
   // The payment amount (H_AMOUNT) is randomly selected within [1.00 ..
   // 5,000.00].
-  float h_amount = (float)tpcc_client->RandomNumber(
-                       random_generator[dtx->coro_id], 100, 500000) /
-                   100.0;
+  float h_amount =
+      (float)tpcc_client->RandomNumber(tpcc_client->r, 100, 500000) / 100.0;
   if (y <= 60) {
     // 60%: payment by last name
     char last_name[tpcc_customer_val_t::MAX_LAST + 1];
-    size_t size = (tpcc_client->GetNonUniformCustomerLastNameLoad(
-                       random_generator[dtx->coro_id]))
-                      .size();
-    ASSERT(tpcc_customer_val_t::MAX_LAST - size >= 0);
-    strcpy(last_name, tpcc_client
-                          ->GetNonUniformCustomerLastNameLoad(
-                              random_generator[dtx->coro_id])
-                          .c_str());
+    size_t size =
+        (tpcc_client->GetNonUniformCustomerLastNameLoad(tpcc_client->r)).size();
+    assert(tpcc_customer_val_t::MAX_LAST - size >= 0);
+    strcpy(
+        last_name,
+        tpcc_client->GetNonUniformCustomerLastNameLoad(tpcc_client->r).c_str());
     // FIXME:: Find customer by the last name
     // All rows in the CUSTOMER table with matching C_W_ID, C_D_ID and C_LAST
     // are selected sorted by C_FIRST in ascending order. Let n be the number of
@@ -465,11 +461,11 @@ bool TxPayment(tx_id_t tx_id, DTX* dtx) {
     // C_STATE, C_ZIP, C_PHONE, C_SINCE, C_CREDIT, C_CREDIT_LIM, C_DISCOUNT, and
     // C_BALANCE are retrieved from the row at position (n/ 2 rounded up to the
     // next integer) in the sorted set of selected rows from the CUSTOMER table.
-    customer_id = tpcc_client->GetCustomerId(random_generator[dtx->coro_id]);
+    customer_id = tpcc_client->GetCustomerId(tpcc_client->r);
   } else {
     // 40%: payment by id
     ASSERT(y > 60);
-    customer_id = tpcc_client->GetCustomerId(random_generator[dtx->coro_id]);
+    customer_id = tpcc_client->GetCustomerId(tpcc_client->r);
   }
 
   // Run
@@ -592,9 +588,9 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
   int warehouse_id_start_ = 1;
   int warehouse_id_end_ = tpcc_client->num_warehouse;
   const uint32_t warehouse_id = tpcc_client->PickWarehouseId(
-      random_generator[dtx->coro_id], warehouse_id_start_, warehouse_id_end_);
+      tpcc_client->r, warehouse_id_start_, warehouse_id_end_);
   const int o_carrier_id = tpcc_client->RandomNumber(
-      random_generator[dtx->coro_id], tpcc_order_val_t::MIN_CARRIER_ID,
+      tpcc_client->r, tpcc_order_val_t::MIN_CARRIER_ID,
       tpcc_order_val_t::MAX_CARRIER_ID);
   const uint32_t current_ts = tpcc_client->GetCurrentTimeMillis();
 
@@ -606,8 +602,7 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
             tpcc_new_order_val_t::SCALE_CONSTANT_BETWEEN_NEWORDER_ORDER +
         1;
     int max_o_id = tpcc_client->num_customer_per_district;
-    int o_id = tpcc_client->RandomNumber(random_generator[dtx->coro_id],
-                                         min_o_id, max_o_id);
+    int o_id = tpcc_client->RandomNumber(tpcc_client->r, min_o_id, max_o_id);
 
     int64_t no_key = tpcc_client->MakeNewOrderKey(warehouse_id, d_id, o_id);
     tpcc_new_order_key_t norder_key;
@@ -739,7 +734,7 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
 
   dtx->TxBegin(tx_id);
 
-  int y = tpcc_client->RandomNumber(random_generator[dtx->coro_id], 1, 100);
+  int y = tpcc_client->RandomNumber(tpcc_client->r, 1, 100);
 
   int warehouse_id_start_ = 1;
   int warehouse_id_end_ = tpcc_client->num_warehouse;
@@ -748,16 +743,16 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
   int district_id_end_ = tpcc_client->num_district_per_warehouse;
 
   const uint32_t warehouse_id = tpcc_client->PickWarehouseId(
-      random_generator[dtx->coro_id], warehouse_id_start_, warehouse_id_end_);
+      tpcc_client->r, warehouse_id_start_, warehouse_id_end_);
   const uint32_t district_id = tpcc_client->RandomNumber(
-      random_generator[dtx->coro_id], district_id_start, district_id_end_);
+      tpcc_client->r, district_id_start, district_id_end_);
   uint32_t customer_id = 0;
 
   if (y <= 60) {
     // FIXME:: Find customer by the last name
-    customer_id = tpcc_client->GetCustomerId(random_generator[dtx->coro_id]);
+    customer_id = tpcc_client->GetCustomerId(tpcc_client->r);
   } else {
-    customer_id = tpcc_client->GetCustomerId(random_generator[dtx->coro_id]);
+    customer_id = tpcc_client->GetCustomerId(tpcc_client->r);
   }
 
   tpcc_customer_key_t cust_key;
@@ -770,9 +765,8 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
   // FIXME: Currently, we use a random order_id to maintain the distributed
   // transaction payload, but need to search the largest o_id by o_w_id, o_d_id
   // and o_c_id from the order table
-  int32_t order_id =
-      tpcc_client->RandomNumber(random_generator[dtx->coro_id], 1,
-                                tpcc_client->num_customer_per_district);
+  int32_t order_id = tpcc_client->RandomNumber(
+      tpcc_client->r, 1, tpcc_client->num_customer_per_district);
   uint64_t o_key =
       tpcc_client->MakeOrderKey(warehouse_id, district_id, order_id);
   tpcc_order_key_t order_key;
@@ -824,10 +818,9 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
 
   dtx->TxBegin(tx_id);
 
-  int32_t threshold =
-      tpcc_client->RandomNumber(random_generator[dtx->coro_id],
-                                tpcc_stock_val_t::MIN_STOCK_LEVEL_THRESHOLD,
-                                tpcc_stock_val_t::MAX_STOCK_LEVEL_THRESHOLD);
+  int32_t threshold = tpcc_client->RandomNumber(
+      tpcc_client->r, tpcc_stock_val_t::MIN_STOCK_LEVEL_THRESHOLD,
+      tpcc_stock_val_t::MAX_STOCK_LEVEL_THRESHOLD);
 
   int warehouse_id_start_ = 1;
   int warehouse_id_end_ = tpcc_client->num_warehouse;
@@ -836,9 +829,9 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
   int district_id_end_ = tpcc_client->num_district_per_warehouse;
 
   const uint32_t warehouse_id = tpcc_client->PickWarehouseId(
-      random_generator[dtx->coro_id], warehouse_id_start_, warehouse_id_end_);
+      tpcc_client->r, warehouse_id_start_, warehouse_id_end_);
   const uint32_t district_id = tpcc_client->RandomNumber(
-      random_generator[dtx->coro_id], district_id_start, district_id_end_);
+      tpcc_client->r, district_id_start, district_id_end_);
 
   uint64_t d_key = tpcc_client->MakeDistrictKey(warehouse_id, district_id);
   tpcc_district_key_t dist_key;
@@ -952,7 +945,7 @@ static void IdleExecution() {
   if (g_idle_cycles) {
     uint64_t start_tsc = rdtsc();
     while (rdtsc() - start_tsc < g_idle_cycles) {
-      Task();
+      YieldTask();
     }
   }
 }

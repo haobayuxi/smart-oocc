@@ -9,10 +9,10 @@
 #include "fast_random.h"
 #include "util/json_config.h"
 
-static ALWAYS_INLINE uint32_t FastRand(uint64_t* seed) {
-  *seed = *seed * 1103515245 + 12345;
-  return (uint32_t)(*seed >> 32);
-}
+// static ALWAYS_INLINE uint32_t FastRand(uint64_t* seed) {
+//   *seed = *seed * 1103515245 + 12345;
+//   return (uint32_t)(*seed >> 32);
+// }
 
 // YYYY-MM-DD HH:MM:SS This is supposed to be a date/time field from Jan 1st
 // 1900 - Dec 31st 2100 with a resolution of 1 second. See TPC-C 5.11.0. static
@@ -433,7 +433,7 @@ enum class TPCCTableType : uint64_t {
 class TPCC {
  public:
   std::string bench_name;
-
+  FastRandom* r;
   // Pre-defined constants, which will be modified for tests
   uint32_t num_warehouse = 3000;
 
@@ -474,7 +474,8 @@ class TPCC {
 
   // For server and client usage: Provide interfaces to servers for loading
   // tables
-  TPCC() {
+  TPCC(uint64_t seed) {
+    r = new FastRandom(seed);
     bench_name = "TPCC";
     std::string path = ROOT_DIR "/config/transaction.json";
     auto json_config = JsonConfig::load_file(path);
