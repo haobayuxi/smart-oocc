@@ -115,6 +115,7 @@ bool DTX::DrTMIssueReadWrite(
     auto offset = addr_cache->Search(node_id, it->table_id, it->key);
     if (offset != NOT_FOUND) {
       it->remote_offset = offset;
+      SDS_INFO("cache found key%ld, txid %ld", it->key, tx_id);
       locked_rw_set.emplace_back(i);
       char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
       char *data_buf = AllocLocalBuffer(DataItemSize);
@@ -141,6 +142,7 @@ bool DTX::DrTMIssueReadWrite(
                           .meta = meta,
                           .node_off = node_off});
       } else {
+        SDS_INFO("cache not found key%ld, txid %ld", it->key, tx_id);
         pending_hash_rw.emplace_back(HashRead{.node_id = node_id,
                                               .item = &read_write_set[i],
                                               .buf = local_hash_node,
