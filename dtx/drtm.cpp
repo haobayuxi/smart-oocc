@@ -548,6 +548,7 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
       }
       re.item->is_fetched = true;
     } else {
+      addr_cache->Insert(re.node_id, it->table_id, it->key, NOT_FOUND);
       // *((lock_t *)re.cas_buf) = STATE_CLEAN;
       // context->Write(re.cas_buf,
       //                GlobalAddress(re.node_id, it->GetRemoteLockAddr()),
@@ -628,6 +629,7 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
         }
       }
     } else {
+      addr_cache->Insert(re.node_id, it->table_id, it->key, NOT_FOUND);
       return false;
     }
   }
