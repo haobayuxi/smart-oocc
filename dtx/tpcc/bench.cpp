@@ -987,9 +987,10 @@ void RunTx(DTXContext* context) {
   int timer_idx = GetThreadID() * coroutines + GetTaskID();
   // Running transactions
   while (true) {
-    TATPTxType tx_type = workgen_arr[FastRand(&seed) % 100];
     uint64_t iter = ++tx_id_local;  // Global atomic transaction id
     attempt_tx++;
+
+    TATPTxType tx_type = workgen_arr[iter % 100];
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
 #ifdef ABORT_DISCARD
     switch (tx_type) {
