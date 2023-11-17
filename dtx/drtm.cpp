@@ -115,7 +115,7 @@ bool DTX::DrTMIssueReadWrite(
     auto offset = addr_cache->Search(node_id, it->table_id, it->key);
     if (offset != NOT_FOUND) {
       it->remote_offset = offset;
-      SDS_INFO("cache found key%ld, txid %ld", it->key, tx_id);
+      // SDS_INFO("cache found key%ld, txid %ld", it->key, tx_id);
       locked_rw_set.emplace_back(i);
       char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
       char *data_buf = AllocLocalBuffer(DataItemSize);
@@ -338,7 +338,7 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
     for (auto &item : local_hash_node->data_items) {
       if (item.valid && item.key == it->key && item.table_id == it->table_id) {
         *it = item;
-        SDS_INFO("insert into cache key%ld", it->key);
+        // SDS_INFO("insert into cache key%ld", it->key);
         addr_cache->Insert(res.node_id, it->table_id, it->key,
                            it->remote_offset);
         res.item->is_fetched = true;
@@ -372,6 +372,7 @@ bool DTX::DrTMCheckHashRW(std::vector<HashRead> &pending_hash_rw,
         }
       }
     } else {
+      return false;
       auto *local_hash_node = (HashNode *)res.buf;
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
@@ -399,7 +400,7 @@ bool DTX::DrTMCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
     for (auto &item : local_hash_node->data_items) {
       if (item.valid && item.key == it->key && item.table_id == it->table_id) {
         *it = item;
-        SDS_INFO("insert into cache key%ld", it->key);
+        // SDS_INFO("insert into cache key%ld", it->key);
         addr_cache->Insert(res.node_id, it->table_id, it->key,
                            it->remote_offset);
         res.item->is_fetched = true;
