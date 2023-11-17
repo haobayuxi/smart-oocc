@@ -206,7 +206,10 @@ int ResourceManager::get_remote_memory_key(node_t node_id, mr_id_t mr_id,
                                            uint32_t &rkey, uintptr_t &addr) {
   assert(node_id < config_.max_nodes && mr_id < kMemoryRegions);
   auto &entry = node_list_[node_id].peer_mr_list[mr_id];
-  assert(entry.valid && offset + length <= entry.length);
+  if (entry.valid && offset + length <= entry.length) {
+    return 1;
+  }
+  // assert(;
   rkey = entry.rkey;
   addr = entry.addr;
   return 0;
