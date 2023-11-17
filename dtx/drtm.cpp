@@ -582,51 +582,53 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
   for (auto iter = pending_next_cas_rw.begin();
        iter != pending_next_cas_rw.end(); iter++) {
     auto res = *iter;
+
+    auto *it = res.item->item_ptr.get();
     auto *fetched_item = (DataItem *)(res.data_buf);
     auto lock = *((lock_t *)res.cas_buf);
-    if (fetched_item->lock == (tx_id << 1 + 1)) {
-      auto *it = res.item->item_ptr.get();
-      auto *fetched_item = (DataItem *)(res.data_buf);
-      if (likely(fetched_item->key == it->key &&
-                 fetched_item->table_id == it->table_id)) {
-        if (it->user_insert) {
-          if (it->version < fetched_item->version) return false;
-          old_version_for_insert.push_back(
-              OldVersionForInsert{.table_id = it->table_id,
-                                  .key = it->key,
-                                  .version = fetched_item->version});
-        } else {
-          if (likely(fetched_item->valid)) {
-            assert(fetched_item->remote_offset == it->remote_offset);
-            // SDS_INFO("found key%ld", it->key);
-            *it = *fetched_item;
-          } else {
-            addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
-            return false;
-          }
-        }
-        res.item->is_fetched = true;
+    if (likely(fetched_item->key == it->key &&
+               fetched_item->table_id == it->table_id)) {
+      if (it->user_insert) {
+        if (it->version < fetched_item->version) return false;
+        old_version_for_insert.push_back(
+            OldVersionForInsert{.table_id = it->table_id,
+                                .key = it->key,
+                                .version = fetched_item->version});
       } else {
-        return false;
+        if (likely(fetched_item->valid)) {
+          assert(fetched_item->remote_offset == it->remote_offset);
+          // SDS_INFO("found key%ld", it->key);
+          if (fetched_item->lock == (tx_id << 1 + 1)) {
+            *it = *fetched_item;
+            res.item->is_fetched = true;
+          } else if (lock % 2 == 1) {
+            // write locked
+            return false;
+          } else if (lease_expired(lock)) {
+            // lease not expired , abort
+            return false;
+          } else {
+            // cas to get write lock
+            auto offset =
+                fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
+            context->CompareAndSwap(res.cas_buf,
+                                    GlobalAddress(res.node_id, offset), lock,
+                                    tx_id << 1 + 1);
+            context->read(
+                res.data_buf,
+                GlobalAddress(res.node_id, fetched_item->remote_offset),
+                DataItemSize);
+            context->PostRequest();
+          }
+        } else {
+          addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
+          return false;
+        }
       }
-      iter = pending_next_cas_rw.erase(iter);
-    } else if (lock % 2 == 1) {
-      // write locked
-      return false;
-    } else if (lease_expired(lock)) {
-      // lease not expired , abort
-      return false;
     } else {
-      // cas to get write lock
-      auto offset =
-          fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
-      context->CompareAndSwap(res.cas_buf, GlobalAddress(res.node_id, offset),
-                              lock, tx_id << 1 + 1);
-      context->read(res.data_buf,
-                    GlobalAddress(res.node_id, fetched_item->remote_offset),
-                    DataItemSize);
-      context->PostRequest();
+      return false;
     }
+    iter = pending_next_cas_rw.erase(iter);
   }
   return true;
 }
