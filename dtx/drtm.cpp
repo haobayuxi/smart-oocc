@@ -142,7 +142,7 @@ bool DTX::DrTMIssueReadWrite(
                           .meta = meta,
                           .node_off = node_off});
       } else {
-        SDS_INFO("cache not found key%ld, txid %ld", it->key, tx_id);
+        // SDS_INFO("cache not found key%ld, txid %ld", it->key, tx_id);
         pending_hash_rw.emplace_back(HashRead{.node_id = node_id,
                                               .item = &read_write_set[i],
                                               .buf = local_hash_node,
