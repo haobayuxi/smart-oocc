@@ -464,7 +464,7 @@ bool TxPayment(tx_id_t tx_id, DTX* dtx) {
     customer_id = tpcc_client->GetCustomerId(tpcc_client->r);
   } else {
     // 40%: payment by id
-    ASSERT(y > 60);
+    assert(y > 60);
     customer_id = tpcc_client->GetCustomerId(tpcc_client->r);
   }
 
@@ -613,7 +613,7 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
 
     // Get the new order record with the o_id. Probe if the new order record
     // exists
-    if (!dtx->TxExe(, false)) {
+    if (!dtx->TxExe()) {
       dtx->RemoveLastROItem();
       continue;
     }
@@ -671,7 +671,7 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
           (table_id_t)TPCCTableType::kOrderLineTable, order_line_key.item_key);
       dtx->AddToReadOnlySet(ol_obj);
 
-      if (!dtx->TxExe(, false)) {
+      if (!dtx->TxExe()) {
         // Fail not abort
         dtx->RemoveLastROItem();
         continue;

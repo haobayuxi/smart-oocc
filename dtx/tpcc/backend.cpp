@@ -12,7 +12,7 @@
 using namespace sds;
 
 void setup(Target &target) {
-  static_assert(MAX_ITEM_SIZE == 40, "");
+  static_assert(MAX_ITEM_SIZE == 664, "");
   uint64_t hash_buf_size = 4ull * 1024 * 1024 * 1024;
 
   char *hash_buffer = (char *)target.alloc_chunk(hash_buf_size / kChunkSize);
@@ -30,7 +30,7 @@ void setup(Target &target) {
   MemStoreReserveParam mem_store_reserve_param(hash_reserve_buffer, 0,
                                                hash_buffer + hash_buf_size);
   std::vector<HashStore *> all_tables;
-  auto tpcc = new TPCC();
+  auto tpcc = new TPCC(0);
   tpcc->LoadTable(&mem_store_alloc_param, &mem_store_reserve_param);
   all_tables = tpcc->GetHashStore();
   auto *hash_meta = (HashMeta *)target.alloc_chunk(
