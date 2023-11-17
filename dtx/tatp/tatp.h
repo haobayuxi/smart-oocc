@@ -306,19 +306,19 @@ class TATP {
     // for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetSubsciberData;
     // return workgen_arr;
     j += FREQUENCY_GET_SUBSCRIBER_DATA;
-    for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetSubsciberData;
+    for (; i < 100; i++) workgen_arr[i] = TATPTxType::kGetSubsciberData;
 
-    j += FREQUENCY_GET_ACCESS_DATA;
-    for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetAccessData;
+    // j += FREQUENCY_GET_ACCESS_DATA;
+    // for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetAccessData;
 
-    j += FREQUENCY_GET_NEW_DESTINATION;
-    for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetNewDestination;
+    // j += FREQUENCY_GET_NEW_DESTINATION;
+    // for (; i < j; i++) workgen_arr[i] = TATPTxType::kGetNewDestination;
 
-    j += FREQUENCY_UPDATE_SUBSCRIBER_DATA;
-    for (; i < j; i++) workgen_arr[i] = TATPTxType::kUpdateSubscriberData;
+    // j += FREQUENCY_UPDATE_SUBSCRIBER_DATA;
+    // for (; i < j; i++) workgen_arr[i] = TATPTxType::kUpdateSubscriberData;
 
-    j += FREQUENCY_UPDATE_LOCATION;
-    for (; i < j; i++) workgen_arr[i] = TATPTxType::kUpdateLocation;
+    // j += FREQUENCY_UPDATE_LOCATION;
+    // for (; i < j; i++) workgen_arr[i] = TATPTxType::kUpdateLocation;
 
     // j += FREQUENCY_INSERT_CALL_FORWARDING;
     // for (; i < j; i++) workgen_arr[i] = TATPTxType::kInsertCallForwarding;
