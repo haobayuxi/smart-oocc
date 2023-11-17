@@ -929,6 +929,21 @@ void WarmUp(DTXContext* context) {
     uint64_t iter = ++tx_id_local;
     // Global atomic transaction id
     switch (tx_type) {
+      case TPCCTxType::kNewOrder:
+        TxNewOrder(iter, dtx);
+        break;
+      case TPCCTxType::kDelivery:
+        TxDelivery(iter, dtx);
+        break;
+      case TPCCTxType::kOrderStatus:
+        TxOrderStatus(iter, dtx);
+        break;
+      case TPCCTxType::kPayment:
+        TxPayment(iter, dtx);
+        break;
+      case TPCCTxType::kStockLevel:
+        TxStockLevel(iter, dtx);
+        break;
       default:
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
         abort();
@@ -968,15 +983,19 @@ void RunTx(DTXContext* context) {
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
     switch (tx_type) {
       case TPCCTxType::kNewOrder:
-
+        TxNewOrder(iter, dtx);
         break;
       case TPCCTxType::kDelivery:
+        TxDelivery(iter, dtx);
         break;
       case TPCCTxType::kOrderStatus:
+        TxOrderStatus(iter, dtx);
         break;
       case TPCCTxType::kPayment:
+        TxPayment(iter, dtx);
         break;
       case TPCCTxType::kStockLevel:
+        TxStockLevel(iter, dtx);
         break;
       default:
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
