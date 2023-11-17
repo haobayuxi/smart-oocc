@@ -25,6 +25,7 @@ std::atomic<uint64_t> tx_id_generator(0);
 
 int lease;
 int txn_sys;
+bool delayed;
 
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
@@ -167,22 +168,25 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
   auto* ware_val = (tpcc_warehouse_val_t*)ware_obj->value;
   std::string check(ware_val->w_zip);
   if (check != tpcc_zip_magic) {
-    SDS_PERROR << "[FATAL] Read warehouse unmatch, tid-cid-txid: " << dtx->t_id
-               << "-" << dtx->coro_id << "-" << tx_id;
+    // SDS_PERROR << "[FATAL] Read warehouse unmatch, tid-cid-txid: " <<
+    // dtx->t_id
+    //            << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   auto* cust_val = (tpcc_customer_val_t*)cust_obj->value;
   // c_since never be 0
   if (cust_val->c_since == 0) {
-    SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " << dtx->t_id
-               << "-" << dtx->coro_id << "-" << tx_id;
+    // SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " <<
+    // dtx->t_id
+    //            << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   tpcc_district_val_t* dist_val = (tpcc_district_val_t*)dist_obj->value;
   check = std::string(dist_val->d_zip);
   if (check != tpcc_zip_magic) {
-    SDS_PERROR << "[FATAL] Read district unmatch, tid-cid-txid: " << dtx->t_id
-               << "-" << dtx->coro_id << "-" << tx_id;
+    // SDS_PERROR << "[FATAL] Read district unmatch, tid-cid-txid: " <<
+    // dtx->t_id
+    //            << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   const auto my_next_o_id = dist_val->d_next_o_id;
@@ -264,12 +268,12 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
     tpcc_stock_val_t* stock_val = (tpcc_stock_val_t*)stock_obj->value;
 
     if (item_val->debug_magic != tpcc_add_magic) {
-      SDS_PERROR << "[FATAL] Read item unmatch, tid-cid-txid: " << dtx->t_id
-                 << "-" << dtx->coro_id << "-" << tx_id;
+      // SDS_PERROR << "[FATAL] Read item unmatch, tid-cid-txid: " << dtx->t_id
+      //            << "-" << dtx->coro_id << "-" << tx_id;
     }
     if (stock_val->debug_magic != tpcc_add_magic) {
-      SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " << dtx->t_id
-                 << "-" << dtx->coro_id << "-" << tx_id;
+      // SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " << dtx->t_id
+      //            << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     if (stock_val->s_quantity - ol_quantity >= 10) {
@@ -332,12 +336,12 @@ bool TxNewOrder(tx_id_t tx_id, DTX* dtx) {
     tpcc_stock_val_t* stock_val = (tpcc_stock_val_t*)stock_obj->value;
 
     if (item_val->debug_magic != tpcc_add_magic) {
-      SDS_PERROR << "[FATAL] Read item unmatch, tid-cid-txid: " << dtx->t_id
-                 << "-" << dtx->coro_id << "-" << tx_id;
+      // SDS_PERROR << "[FATAL] Read item unmatch, tid-cid-txid: " << dtx->t_id
+      //            << "-" << dtx->coro_id << "-" << tx_id;
     }
     if (stock_val->debug_magic != tpcc_add_magic) {
-      SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " << dtx->t_id
-                 << "-" << dtx->coro_id << "-" << tx_id;
+      // SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " << dtx->t_id
+      //            << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     if (stock_val->s_quantity - ol_quantity >= 10) {
@@ -502,22 +506,25 @@ bool TxPayment(tx_id_t tx_id, DTX* dtx) {
   tpcc_warehouse_val_t* ware_val = (tpcc_warehouse_val_t*)ware_obj->value;
   std::string check(ware_val->w_zip);
   if (check != tpcc_zip_magic) {
-    SDS_PERROR << "[FATAL] Read warehouse unmatch, tid-cid-txid: " << dtx->t_id
-               << "-" << dtx->coro_id << "-" << tx_id;
+    // SDS_PERROR << "[FATAL] Read warehouse unmatch, tid-cid-txid: " <<
+    // dtx->t_id
+    //            << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   tpcc_district_val_t* dist_val = (tpcc_district_val_t*)dist_obj->value;
   check = std::string(dist_val->d_zip);
   if (check != tpcc_zip_magic) {
-    SDS_PERROR << "[FATAL] Read district unmatch, tid-cid-txid: " << dtx->t_id
-               << "-" << dtx->coro_id << "-" << tx_id;
+    // SDS_PERROR << "[FATAL] Read district unmatch, tid-cid-txid: " <<
+    // dtx->t_id
+    //            << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   tpcc_customer_val_t* cust_val = (tpcc_customer_val_t*)cust_obj->value;
   // c_since never be 0
   if (cust_val->c_since == 0) {
-    SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " << dtx->t_id
-               << "-" << dtx->coro_id << "-" << tx_id;
+    // SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " <<
+    // dtx->t_id
+    //            << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   ware_val->w_ytd += h_amount;
@@ -635,8 +642,8 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
 
     auto* no_val = (tpcc_new_order_val_t*)norder_obj->value;
     if (no_val->debug_magic != tpcc_add_magic) {
-      SDS_PERROR << "[FATAL] Read new order unmatch, tid-cid-txid: "
-                 << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+      // SDS_PERROR << "[FATAL] Read new order unmatch, tid-cid-txid: "
+      //            << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     norder_obj->valid = 0;  // deleteNewOrder
@@ -644,8 +651,8 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
     // o_entry_d never be 0
     tpcc_order_val_t* order_val = (tpcc_order_val_t*)order_obj->value;
     if (order_val->o_entry_d == 0) {
-      SDS_PERROR << "[FATAL] Read order unmatch, tid-cid-txid: " << dtx->t_id
-                 << "-" << dtx->coro_id << "-" << tx_id;
+      // SDS_PERROR << "[FATAL] Read order unmatch, tid-cid-txid: " << dtx->t_id
+      //            << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     // O_C_ID, the customer number, is retrieved
@@ -677,8 +684,8 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
       tpcc_order_line_val_t* order_line_val =
           (tpcc_order_line_val_t*)ol_obj->value;
       if (order_line_val->debug_magic != tpcc_add_magic) {
-        SDS_PERROR << "[FATAL] Read order line unmatch, tid-cid-txid: "
-                   << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+        // SDS_PERROR << "[FATAL] Read order line unmatch, tid-cid-txid: "
+        //            << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
       }
       order_line_val->ol_delivery_d = current_ts;
       sum_ol_amount += order_line_val->ol_amount;
@@ -698,8 +705,9 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
     tpcc_customer_val_t* cust_val = (tpcc_customer_val_t*)cust_obj->value;
     // c_since never be 0
     if (cust_val->c_since == 0) {
-      SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " << dtx->t_id
-                 << "-" << dtx->coro_id << "-" << tx_id;
+      // SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " <<
+      // dtx->t_id
+      //            << "-" << dtx->coro_id << "-" << tx_id;
     }
 
     // C_BALANCE is increased by the sum of all order-line amounts (OL_AMOUNT)
@@ -778,15 +786,16 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
   tpcc_customer_val_t* cust_val = (tpcc_customer_val_t*)cust_obj->value;
   // c_since never be 0
   if (cust_val->c_since == 0) {
-    SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " << dtx->t_id
-               << "-" << dtx->coro_id << "-" << tx_id;
+    // SDS_PERROR << "[FATAL] Read customer unmatch, tid-cid-txid: " <<
+    // dtx->t_id
+    //            << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   // o_entry_d never be 0
   tpcc_order_val_t* order_val = (tpcc_order_val_t*)order_obj->value;
   if (order_val->o_entry_d == 0) {
-    SDS_PERROR << "[FATAL] Read order unmatch, tid-cid-txid: " << dtx->t_id
-               << "-" << dtx->coro_id << "-" << tx_id;
+    // SDS_PERROR << "[FATAL] Read order unmatch, tid-cid-txid: " << dtx->t_id
+    //            << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   for (int i = 1; i <= order_val->o_ol_cnt; i++) {
@@ -843,8 +852,9 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
   tpcc_district_val_t* dist_val = (tpcc_district_val_t*)dist_obj->value;
   std::string check = std::string(dist_val->d_zip);
   if (check != tpcc_zip_magic) {
-    SDS_PERROR << "[FATAL] Read district unmatch, tid-cid-txid: " << dtx->t_id
-               << "-" << dtx->coro_id << "-" << tx_id;
+    // SDS_PERROR << "[FATAL] Read district unmatch, tid-cid-txid: " <<
+    // dtx->t_id
+    //            << "-" << dtx->coro_id << "-" << tx_id;
   }
 
   int32_t o_id = dist_val->d_next_o_id;
@@ -874,8 +884,8 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
 
       tpcc_order_line_val_t* ol_val = (tpcc_order_line_val_t*)ol_obj->value;
       if (ol_val->debug_magic != tpcc_add_magic) {
-        SDS_PERROR << "[FATAL] Read order line unmatch, tid-cid-txid: "
-                   << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+        // SDS_PERROR << "[FATAL] Read order line unmatch, tid-cid-txid: "
+        //            << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
       }
 
       int64_t s_key = tpcc_client->MakeStockKey(warehouse_id, ol_val->ol_i_id);
@@ -889,8 +899,9 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
 
       tpcc_stock_val_t* stock_val = (tpcc_stock_val_t*)stock_obj->value;
       if (stock_val->debug_magic != tpcc_add_magic) {
-        SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " << dtx->t_id
-                   << "-" << dtx->coro_id << "-" << tx_id;
+        // SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " <<
+        // dtx->t_id
+        //            << "-" << dtx->coro_id << "-" << tx_id;
       }
 
       if (stock_val->s_quantity < threshold) {
@@ -918,7 +929,7 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
 /******************** The business logic (Transaction) end ********************/
 
 void WarmUp(DTXContext* context) {
-  DTX* dtx = new DTX(context, txn_sys, lease);
+  DTX* dtx = new DTX(context, txn_sys, lease, delayed);
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
     TPCCTxType tx_type = workgen_arr[FastRand(&seed) % 100];
@@ -947,7 +958,7 @@ static void IdleExecution() {
 }
 
 void RunTx(DTXContext* context) {
-  DTX* dtx = new DTX(context, txn_sys, lease);
+  DTX* dtx = new DTX(context, txn_sys, lease, delayed);
   struct timespec tx_start_time, tx_end_time;
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
@@ -1022,7 +1033,7 @@ void execute_thread(int id, DTXContext* context) {
     task_pool.spawn(std::bind(&RunTx, context), 128 * 1024);
   }
   while (!task_pool.empty()) {
-    Task();
+    YieldTask();
   }
   pthread_barrier_wait(&barrier);
   rdma_cnt_sum += rdma_cnt;
@@ -1098,7 +1109,8 @@ void report(double elapsed_time, JsonConfig& config) {
   }
   FILE* fout = fopen(dump_file_path.c_str(), "a+");
   if (!fout) {
-    SDS_PERROR("fopen");
+    // SDS_PERROR("fopen");
+    SDS_INFO("fopen");
     return;
   }
   fprintf(
@@ -1126,6 +1138,7 @@ int main(int argc, char** argv) {
   kMaxTransactions = config.get("nr_transactions").get_uint64();
   lease = config.get("lease").get_uint64();
   txn_sys = config.get("txn_sys").get_uint64();
+  delayed = config.get("delayed").get_uint64();
   if (txn_sys == DTX_SYS::OOCC) {
     SDS_INFO("running OOCC");
   } else if (txn_sys == DTX_SYS::OCC) {
