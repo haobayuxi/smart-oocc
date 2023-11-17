@@ -31,7 +31,7 @@ void setup(Target &target) {
                                                hash_buffer + hash_buf_size);
   std::vector<HashStore *> all_tables;
   auto tpcc = new TPCC(0);
-  tpcc->LoadTable(&mem_store_alloc_param, &mem_store_reserve_param);
+  tpcc->LoadTable(0 1, &mem_store_alloc_param, &mem_store_reserve_param);
   all_tables = tpcc->GetHashStore();
   auto *hash_meta = (HashMeta *)target.alloc_chunk(
       (all_tables.size() * sizeof(HashMeta)) / kChunkSize + 1);

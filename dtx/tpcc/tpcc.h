@@ -557,10 +557,10 @@ class TPCC {
                       table_id_t table_id);
 
   ALWAYS_INLINE
-  std::vector<HashStore*>& GetPrimaryHashStore() { return primary_table_ptrs; }
+  std::vector<HashStore*>& GetHashStore() { return primary_table_ptrs; }
 
-  ALWAYS_INLINE
-  std::vector<HashStore*>& GetBackupHashStore() { return backup_table_ptrs; }
+  // ALWAYS_INLINE
+  // std::vector<HashStore*>& GetBackupHashStore() { return backup_table_ptrs; }
 
   /* Followng pieces of codes mainly comes from Silo */
   ALWAYS_INLINE
