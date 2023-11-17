@@ -496,37 +496,6 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
 
     auto *it = re.item->item_ptr.get();
     auto *fetched_item = (DataItem *)(re.data_buf);
-    if (fetched_item->lock != (tx_id << 1 + 1)) {
-      // check lease
-      if (lock % 2 == 1) {
-        // write locked
-        return false;
-      }
-      if (lease_expired(lock)) {
-        // lease not expired , abort
-        return false;
-      } else {
-        // cas to get write lock
-        char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-        char *data_buf = AllocLocalBuffer(DataItemSize);
-        pending_next_cas_rw.emplace_back(CasRead{
-            .node_id = re.node_id,
-            .item = re.item,
-            .cas_buf = cas_buf,
-            .data_buf = data_buf,
-        });
-        // SDS_INFO("get next lock key%ld", fetched_item->key);
-        auto offset =
-            fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
-        context->CompareAndSwap(cas_buf, GlobalAddress(re.node_id, offset),
-                                lock, tx_id << 1 + 1);
-        context->read(data_buf,
-                      GlobalAddress(re.node_id, fetched_item->remote_offset),
-                      DataItemSize);
-        context->PostRequest();
-        continue;
-      }
-    }
     if (likely(fetched_item->key == it->key &&
                fetched_item->table_id == it->table_id)) {
       if (it->user_insert) {
@@ -538,7 +507,39 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
       } else {
         if (likely(fetched_item->valid)) {
           assert(fetched_item->remote_offset == it->remote_offset);
-          // SDS_INFO("found key%ld", it->key);
+          if (fetched_item->lock != (tx_id << 1 + 1)) {
+            // check lease
+            if (lock % 2 == 1) {
+              // write locked
+              return false;
+            }
+            if (lease_expired(lock)) {
+              // lease not expired , abort
+              return false;
+            } else {
+              // cas to get write lock
+              char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+              char *data_buf = AllocLocalBuffer(DataItemSize);
+              pending_next_cas_rw.emplace_back(CasRead{
+                  .node_id = re.node_id,
+                  .item = re.item,
+                  .cas_buf = cas_buf,
+                  .data_buf = data_buf,
+              });
+              // SDS_INFO("get next lock key%ld", fetched_item->key);
+              auto offset =
+                  fetched_item->GetRemoteLockAddr(fetched_item->remote_offset);
+              context->CompareAndSwap(cas_buf,
+                                      GlobalAddress(re.node_id, offset), lock,
+                                      tx_id << 1 + 1);
+              context->read(
+                  data_buf,
+                  GlobalAddress(re.node_id, fetched_item->remote_offset),
+                  DataItemSize);
+              context->PostRequest();
+              continue;
+            }
+          }
           *it = *fetched_item;
         } else {
           addr_cache->Insert(re.node_id, it->table_id, it->key, NOT_FOUND);
