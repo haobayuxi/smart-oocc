@@ -488,6 +488,7 @@ class TPCC {
         conf.get("num_customer_per_district").get_uint64();
     num_item = conf.get("num_item").get_uint64();
     num_stock_per_warehouse = conf.get("num_stock_per_warehouse").get_uint64();
+    SDS_INFO("num warehouse = %d", num_warehouse);
   }
 
   ~TPCC() {
