@@ -508,7 +508,7 @@ class TPCC {
     TPCCTxType* workgen_arr = new TPCCTxType[100];
 
     int i = 0, j = 0;
-    for (; i < 100; i++) workgen_arr[i] = TPCCTxType::kNewOrder;
+    for (; i < 100; i++) workgen_arr[i] = TPCCTxType::kPayment;
     return workgen_arr;
     j += FREQUENCY_NEW_ORDER;
     for (; i < j; i++) workgen_arr[i] = TPCCTxType::kNewOrder;
