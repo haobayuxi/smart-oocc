@@ -44,19 +44,20 @@ void TPCC::LoadTable(node_id_t node_id, node_id_t num_server,
   if ((node_id_t)TPCCTableType::kCustomerTable % num_server == node_id) {
     printf("Primary: Initializing Customer+CustomerIndex+History table\n");
 
-    customer_table = new HashStore(
-        (table_id_t)TPCCTableType::kCustomerTable,
-        num_warehouse * num_district_per_warehouse * num_customer_per_district,
-        mem_store_alloc_param);
+    customer_table = new HashStore((table_id_t)TPCCTableType::kCustomerTable,
+                                   num_warehouse * num_district_per_warehouse *
+                                       num_customer_per_district * 0.5,
+                                   mem_store_alloc_param);
 
-    customer_index_table = new HashStore(
-        (table_id_t)TPCCTableType::kCustomerIndexTable,
-        num_warehouse * num_district_per_warehouse * num_customer_per_district,
-        mem_store_alloc_param);
-    history_table = new HashStore(
-        (table_id_t)TPCCTableType::kHistoryTable,
-        num_warehouse * num_district_per_warehouse * num_customer_per_district,
-        mem_store_alloc_param);
+    customer_index_table =
+        new HashStore((table_id_t)TPCCTableType::kCustomerIndexTable,
+                      num_warehouse * num_district_per_warehouse *
+                          num_customer_per_district * 0.5,
+                      mem_store_alloc_param);
+    history_table = new HashStore((table_id_t)TPCCTableType::kHistoryTable,
+                                  num_warehouse * num_district_per_warehouse *
+                                      num_customer_per_district * 0.5,
+                                  mem_store_alloc_param);
 
     PopulateCustomerAndHistoryTable(923587856425, mem_store_reserve_param);
     primary_table_ptrs.push_back(customer_table);
