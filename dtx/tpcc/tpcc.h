@@ -488,7 +488,7 @@ class TPCC {
         conf.get("num_customer_per_district").get_uint64();
     num_item = conf.get("num_item").get_uint64();
     num_stock_per_warehouse = conf.get("num_stock_per_warehouse").get_uint64();
-    SDS_INFO("num warehouse = %d", num_warehouse);
+    // SDS_INFO("num warehouse = %d", num_warehouse);
   }
 
   ~TPCC() {
@@ -508,7 +508,8 @@ class TPCC {
     TPCCTxType* workgen_arr = new TPCCTxType[100];
 
     int i = 0, j = 0;
-
+    for (; i < 100; i++) workgen_arr[i] = TPCCTxType::kNewOrder;
+    return workgen_arr;
     j += FREQUENCY_NEW_ORDER;
     for (; i < j; i++) workgen_arr[i] = TPCCTxType::kNewOrder;
 
