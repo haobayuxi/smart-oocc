@@ -10,7 +10,7 @@ enum DSLR_CHECK_LOCK : int {
   RESET = 3,
 };
 
-//    | max x| max s| n x| n s|  lock representation
+// | max x| max s| n x| n s|  lock representation
 // reset read lock |prev maxx|count max| prev maxx| count max
 // reset write lock |count max|prev maxs|count max| prev maxs
 
