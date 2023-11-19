@@ -194,6 +194,7 @@ class DTX {
         if (read_lease < end_time) {
           SDS_INFO("commit lease expired, %ld %ld, key%ld", read_lease,
                    end_time, item->key);
+          sleep(1);
           goto ABORT;
         }
       }
