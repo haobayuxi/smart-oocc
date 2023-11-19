@@ -791,7 +791,7 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
     // SDS_PERROR << "[FATAL] Read order unmatch, tid-cid-txid: " << dtx->t_id
     //            << "-" << dtx->coro_id << "-" << tx_id;
   }
-
+  SDS_INFO("find order %ld", tx_id);
   for (int i = 1; i <= order_val->o_ol_cnt; i++) {
     int64_t ol_key =
         tpcc_client->MakeOrderLineKey(warehouse_id, district_id, order_id, i);
@@ -801,10 +801,12 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
         (table_id_t)TPCCTableType::kOrderLineTable, order_line_key.item_key);
     dtx->AddToReadOnlySet(ol_obj);
   }
-
   if (!dtx->TxExe()) return false;
 
+  SDS_INFO("find order line %ld", tx_id);
   bool commit_status = dtx->TxCommit();
+
+  SDS_INFO("order commit %d %ld", commit_status, tx_id);
   return commit_status;
 }
 
