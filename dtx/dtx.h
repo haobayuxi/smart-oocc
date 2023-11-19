@@ -201,8 +201,8 @@ class DTX {
       for (auto &item : read_only_set) {
         uint64_t read_lease = item.item_ptr.get()->lock;
         if (read_lease < end_time) {
-          SDS_INFO("commit lease expired, %ld %ld, key%ld", read_lease,
-                   end_time, item.item_ptr.get()->key);
+          // SDS_INFO("commit lease expired, %ld %ld, key%ld", read_lease,
+          //          end_time, item.item_ptr.get()->key);
           sleep(1);
           goto ABORT;
         }
@@ -216,7 +216,6 @@ class DTX {
         }
       }
 
-      //   SDS_INFO("commit %ld", tx_id);
     } else if (txn_sys == DTX_SYS::OOCC) {
       // check lease
       if ((end_time - start_time) > lease) {
