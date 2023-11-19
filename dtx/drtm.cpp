@@ -188,7 +188,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
                 DataItemSize);
             context->PostRequest();
           } else {
-            SDS_INFO("key%ld, lease %ld", it->key, it->lock);
+            // SDS_INFO("key%ld, lease %ld", it->key, it->lock);
             iter = pending_next_cas_ro.erase(iter);
           }
         }
@@ -243,8 +243,9 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                 DataItemSize);
             context->PostRequest();
           } else {
-            SDS_INFO("txid =%ld,key=%ld,lease not expired %ld", tx_id, it->key,
-                     it->lock);
+            // SDS_INFO("txid =%ld,key=%ld,lease not expired %ld", tx_id,
+            // it->key,
+            //          it->lock);
           }
         }
       } else {
