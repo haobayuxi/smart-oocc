@@ -116,6 +116,7 @@ class DTX {
   }
   ALWAYS_INLINE
   void AddToReadOnlySet(DataItemPtr item) {
+    SDS_INFO("insert into readonlyset key%ld", item->key);
     DataSetItem data_set_item{.item_ptr = std::move(item),
                               .is_fetched = false,
                               .is_logged = false,
