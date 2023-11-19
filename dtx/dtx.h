@@ -434,6 +434,8 @@ class DTX {
   uint64_t last_write_lock_time;
 
   t_id_t t_id;
+  std::vector<DataSetItem> read_only_set;
+  std::vector<DataSetItem> read_write_set;
 
  private:
   tx_id_t tx_id;
@@ -443,8 +445,6 @@ class DTX {
   AddrCache *addr_cache;
 
   bool is_ro_tx;
-  std::vector<DataSetItem> read_only_set;
-  std::vector<DataSetItem> read_write_set;
   std::vector<size_t> not_eager_locked_rw_set;
   std::vector<size_t> locked_rw_set;
   std::list<ResetLock> reset;
