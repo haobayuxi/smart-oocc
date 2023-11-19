@@ -798,7 +798,6 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
       SDS_INFO("commit lease expired, %ld , key%ld", read_lease,
                item.item_ptr.get()->key);
       sleep(1);
-      goto ABORT;
     }
   }
   for (int i = 1; i <= order_val->o_ol_cnt; i++) {
@@ -816,7 +815,6 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
       SDS_INFO("commit lease expired, %ld , key%ld", read_lease,
                item.item_ptr.get()->key);
       sleep(1);
-      goto ABORT;
     }
   }
   if (!dtx->TxExe()) return false;
