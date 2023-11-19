@@ -397,7 +397,7 @@ const int64_t tpcc_add_magic =
 /* STORED PROCEDURE EXECUTION FREQUENCIES (0-100) */
 #define FREQUENCY_NEW_ORDER 45
 #define FREQUENCY_PAYMENT 43
-#define FREQUENCY_ORDER_STATUS 4
+#define FREQUENCY_ORDER_STATUS 8
 #define FREQUENCY_DELIVERY 4
 #define FREQUENCY_STOCK_LEVEL 4
 
@@ -508,8 +508,8 @@ class TPCC {
     TPCCTxType* workgen_arr = new TPCCTxType[100];
 
     int i = 0, j = 0;
-    for (; i < 100; i++) workgen_arr[i] = TPCCTxType::kStockLevel;
-    return workgen_arr;
+    // for (; i < 100; i++) workgen_arr[i] = TPCCTxType::kStockLevel;
+    // return workgen_arr;
     j += FREQUENCY_NEW_ORDER;
     for (; i < j; i++) workgen_arr[i] = TPCCTxType::kNewOrder;
 
@@ -522,8 +522,8 @@ class TPCC {
     j += FREQUENCY_DELIVERY;
     for (; i < j; i++) workgen_arr[i] = TPCCTxType::kDelivery;
 
-    j += FREQUENCY_STOCK_LEVEL;
-    for (; i < j; i++) workgen_arr[i] = TPCCTxType::kStockLevel;
+    // j += FREQUENCY_STOCK_LEVEL;
+    // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kStockLevel;
 
     assert(i == 100 && j == 100);
     return workgen_arr;
