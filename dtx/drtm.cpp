@@ -187,6 +187,7 @@ bool DTX::DrTMCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro) {
                 DataItemSize);
             context->PostRequest();
           } else {
+            SDS_INFO("key%ld, lease %ld", it->key, it->lock);
             iter = pending_next_cas_ro.erase(iter);
           }
         }
