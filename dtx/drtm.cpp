@@ -29,9 +29,9 @@ bool DTX::DrTMExeRO() {
   for (int i = 0; i < 500; i++) {
     // SDS_INFO("retry %d txid = %ld", i, tx_id);
     context->Sync();
-    if (!pending_next_cas_ro.empty()) {
+    if (!pending_next_cas_ro.empty() || !pending_next_hash_ro) {
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
-      if (!CheckNextHashRO(pending_next_hash_ro)) return false;
+      if (!DrTMCheckNextHashRO(pending_next_hash_ro)) return false;
     } else {
       break;
     }
@@ -634,4 +634,68 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
     }
   }
   return true;
+}
+
+bool DTX::DrTMCheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
+  for (auto iter = pending_next_hash_ro.begin();
+       iter != pending_next_hash_ro.end();) {
+    auto res = *iter;
+    auto *local_hash_node = (HashNode *)res.buf;
+    auto *it = res.item->item_ptr.get();
+    bool find = false;
+
+    for (auto &item : local_hash_node->data_items) {
+      if (item.valid && item.key == it->key && item.table_id == it->table_id) {
+        *it = item;
+        addr_cache->Insert(res.node_id, it->table_id, it->key,
+                           it->remote_offset);
+        res.item->is_fetched = true;
+        find = true;
+        break;
+      }
+      if (!item.valid) {
+        break;
+      }
+    }
+
+    if (likely(find)) {
+      if (it->lock % 2 == 1) {
+        // write locked
+        return false;
+      } else {
+        if (!lease_expired(it->lock)) {
+          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          char *data_buf = AllocLocalBuffer(DataItemSize);
+          pending_next_cas_ro.emplace_back(CasRead{
+              .node_id = res.node_id,
+              .item = res.item,
+              .cas_buf = cas_buf,
+              .data_buf = data_buf,
+          });
+          context->CompareAndSwap(
+              cas_buf,
+              GlobalAddress(res.node_id,
+                            it->GetRemoteLockAddr(it->remote_offset)),
+              it->lock, next_lease());
+          // context->PostRequest();
+          context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
+                        DataItemSize);
+          context->PostRequest();
+        }
+      }
+    }
+    iter = pending_next_hash_ro.erase(iter);
+  }
+  else {
+    return false;
+    if (local_hash_node->next == nullptr) return false;
+    auto node_off =
+        (uint64_t)local_hash_node->next - res.meta.data_ptr + res.meta.base_off;
+    context->read(res.buf, GlobalAddress(res.node_id, node_off),
+                  sizeof(HashNode));
+    context->PostRequest();
+    iter++;
+  }
+}
+return true;
 }

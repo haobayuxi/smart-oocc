@@ -376,6 +376,7 @@ class DTX {
                       std::list<HashRead> &pending_next_hash_rw,
                       std::list<InsertOffRead> &pending_next_off_rw);
   bool DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw);
+  bool DrTMCheckNextHashRO(std::list<HashRead> &pending_next_hash_ro);
 
   //   DSLR
   bool DSLRExeRO();
