@@ -152,6 +152,15 @@ class DTX {
     } else if (txn_sys == DTX_SYS::DrTMH) {
       if (read_write_set.empty()) {
         if (DrTMExeRO()) {
+          for (auto &item : read_only_set) {
+            uint64_t read_lease = item.item_ptr.get()->lock;
+            if (read_lease == 0) {
+              SDS_INFO("commit lease expired, %ld, key%ld", read_lease,
+                       item.item_ptr.get()->key);
+              sleep(1);
+              goto ABORT;
+            }
+          }
           return true;
         } else {
           goto ABORT;

@@ -809,14 +809,6 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
         (table_id_t)TPCCTableType::kOrderLineTable, order_line_key.item_key);
     dtx->AddToReadOnlySet(ol_obj);
   }
-  for (auto& item : dtx->read_only_set) {
-    uint64_t read_lease = item.item_ptr.get()->lock;
-    if (read_lease == 0) {
-      SDS_INFO("commit lease expired, %ld , key%ld", read_lease,
-               item.item_ptr.get()->key);
-      sleep(1);
-    }
-  }
   if (!dtx->TxExe()) return false;
 
   SDS_INFO("find order line %ld", tx_id);
