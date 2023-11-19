@@ -637,7 +637,8 @@ bool DTX::DrTMCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
   return true;
 }
 
-bool DTX::DrTMCheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
+bool DTX::DrTMCheckNextHashRO(std::list<HashRead> &pending_next_hash_ro,
+                              std::list<CasRead> &pending_next_cas_ro) {
   for (auto iter = pending_next_hash_ro.begin();
        iter != pending_next_hash_ro.end();) {
     auto res = *iter;
