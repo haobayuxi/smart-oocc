@@ -29,9 +29,10 @@ bool DTX::DrTMExeRO() {
   for (int i = 0; i < 500; i++) {
     // SDS_INFO("retry %d txid = %ld", i, tx_id);
     context->Sync();
-    if (!pending_next_cas_ro.empty() || !pending_next_hash_ro) {
+    if (!pending_next_cas_ro.empty() || !pending_next_hash_ro.empty()) {
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
-      if (!DrTMCheckNextHashRO(pending_next_hash_ro)) return false;
+      if (!DrTMCheckNextHashRO(pending_next_hash_ro, pending_next_cas_ro))
+        return false;
     } else {
       break;
     }
@@ -683,19 +684,18 @@ bool DTX::DrTMCheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
           context->PostRequest();
         }
       }
+
+      iter = pending_next_hash_ro.erase(iter);
+    } else {
+      return false;
+      if (local_hash_node->next == nullptr) return false;
+      auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
+                      res.meta.base_off;
+      context->read(res.buf, GlobalAddress(res.node_id, node_off),
+                    sizeof(HashNode));
+      context->PostRequest();
+      iter++;
     }
-    iter = pending_next_hash_ro.erase(iter);
   }
-  else {
-    return false;
-    if (local_hash_node->next == nullptr) return false;
-    auto node_off =
-        (uint64_t)local_hash_node->next - res.meta.data_ptr + res.meta.base_off;
-    context->read(res.buf, GlobalAddress(res.node_id, node_off),
-                  sizeof(HashNode));
-    context->PostRequest();
-    iter++;
-  }
-}
-return true;
+  return true;
 }
