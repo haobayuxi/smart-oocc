@@ -116,7 +116,6 @@ class DTX {
   }
   ALWAYS_INLINE
   void AddToReadOnlySet(DataItemPtr item) {
-    SDS_INFO("insert into readonlyset key%ld", item->key);
     DataSetItem data_set_item{.item_ptr = std::move(item),
                               .is_fetched = false,
                               .is_logged = false,
@@ -156,8 +155,8 @@ class DTX {
           for (auto &item : read_only_set) {
             uint64_t read_lease = item.item_ptr.get()->lock;
             if (read_lease == 0) {
-              SDS_INFO("commit lease expired, %ld, key%ld", read_lease,
-                       item.item_ptr.get()->key);
+              // SDS_INFO("commit lease expired, %ld, key%ld", read_lease,
+              //          item.item_ptr.get()->key);
               sleep(1);
               goto ABORT;
             }
