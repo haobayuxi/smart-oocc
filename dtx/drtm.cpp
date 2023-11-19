@@ -241,9 +241,8 @@ bool DTX::DrTMCheckDirectRO(std::vector<CasRead> &pending_cas_ro,
                 DataItemSize);
             context->PostRequest();
           } else {
-            // SDS_INFO("txid =%ld,key=%ld,lease not expired %ld", tx_id,
-            // it->key,
-            //          it->lock);
+            SDS_INFO("txid =%ld,key=%ld,lease not expired %ld", tx_id, it->key,
+                     it->lock);
           }
         }
       } else {
