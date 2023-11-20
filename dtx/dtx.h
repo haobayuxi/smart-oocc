@@ -112,6 +112,7 @@ class DTX {
     Clean();
     is_ro_tx = true;
     tx_id = txid;
+    re_validate = false;
     start_time = get_clock_sys_time_us();
   }
   ALWAYS_INLINE
@@ -208,7 +209,7 @@ class DTX {
 
     } else if (txn_sys == DTX_SYS::OOCC) {
       // check lease
-      if ((end_time - start_time) > lease) {
+      if ((end_time - start_time) > lease || re_validate) {
         if (!Validate()) {
           goto ABORT;
         }
@@ -432,6 +433,7 @@ class DTX {
   int txn_sys;
   bool delayed_unlock;
   uint64_t last_write_lock_time;
+  bool re_validate;
 
   t_id_t t_id;
   std::vector<DataSetItem> read_only_set;
