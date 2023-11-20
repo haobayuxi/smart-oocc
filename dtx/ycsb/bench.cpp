@@ -12,7 +12,7 @@
 
 using namespace std::placeholders;
 
-#define RetryUntilSuccess 0
+#define RetryUntilSuccess 1
 
 size_t kMaxTransactions = 10000;
 pthread_barrier_t barrier;
@@ -69,7 +69,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
   }
   bool commit_status = true;
   if (RetryUntilSuccess) {
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 30; i++) {
       if (!dtx->TxExe()) {
         dtx->Clean();
         continue;
