@@ -340,7 +340,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
           // } else {
           //   return false;
           // }
-          // return false;
+          return false;
         }
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
@@ -391,7 +391,7 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
         // if (txn_sys == DTX_SYS::OOCC) {
         //   re_validate = true;
         // } else {
-        //   return false;
+        return false;
         // }
       }
     } else {
@@ -496,7 +496,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
         // if (txn_sys == DTX_SYS::OOCC) {
         //   re_validate = true;
         // } else {
-        //   return false;
+        return false;
         // }
       }
       iter = pending_next_hash_ro.erase(iter);
