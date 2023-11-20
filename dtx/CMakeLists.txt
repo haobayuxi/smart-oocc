@@ -6,9 +6,9 @@
 # target_compile_definitions(dtx_tatp PUBLIC CONFIG_ITEM_SIZE=40)
 # target_link_libraries(dtx_tatp PUBLIC smart)
 
-# add_library(dtx_ycsb dtx.cpp dslr.cpp drtm.cpp)
-# target_compile_definitions(dtx_ycsb PUBLIC CONFIG_ITEM_SIZE=8)
-# target_link_libraries(dtx_ycsb PUBLIC smart)
+add_library(dtx_ycsb dtx.cpp dslr.cpp drtm.cpp)
+target_compile_definitions(dtx_ycsb PUBLIC CONFIG_ITEM_SIZE=8)
+target_link_libraries(dtx_ycsb PUBLIC smart)
 
 
 add_library(dtx_tpcc dtx.cpp drtm.cpp dslr.cpp)
@@ -17,6 +17,6 @@ target_link_libraries(dtx_tpcc PUBLIC smart)
 
 # add_subdirectory(smallbank)
 # add_subdirectory(tatp)
-# add_subdirectory(ycsb)
+add_subdirectory(ycsb)
 add_subdirectory(tpcc)
 
