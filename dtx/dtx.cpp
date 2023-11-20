@@ -3,6 +3,8 @@
 
 #include "dtx.h"
 
+bool Re_Validate = false;
+
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
     : context(context), tx_id(0), addr_cache(nullptr) {
   addr_cache = &context->addr_cache;
@@ -311,7 +313,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         res.item->is_fetched = true;
         // SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
         if (unlikely((it->lock > STATE_READ_LOCKED))) {
-          if (txn_sys == DTX_SYS::OOCC) {
+          if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
             re_validate = true;
           } else {
             return false;
@@ -364,7 +366,7 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     if (likely(find)) {
       if (unlikely((it->lock > STATE_READ_LOCKED))) {
         // return false;
-        if (txn_sys == DTX_SYS::OOCC) {
+        if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
           re_validate = true;
         } else {
           return false;
@@ -469,7 +471,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
         // context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
         //               sizeof(lock_t));
         // return false;
-        if (txn_sys == DTX_SYS::OOCC) {
+        if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
           re_validate = true;
         } else {
           return false;
