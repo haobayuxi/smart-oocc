@@ -27,7 +27,7 @@
     "inf_credit_weight": 1.05,
     "auto_tuning": true
   },
-  "use_conflict_avoidance": true,
+  "use_conflict_avoidance": false,
   "use_speculative_lookup": true,
   "experimental": {
     "qp_sharing": false
