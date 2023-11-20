@@ -335,7 +335,11 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         res.item->is_fetched = true;
         // SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
         if (unlikely((it->lock > STATE_READ_LOCKED))) {
-          re_validate = true;
+          if (txn_sys == DTX_SYS::OOCC) {
+            re_validate = true;
+          } else {
+            return false;
+          }
           // return false;
         }
       } else {
@@ -384,7 +388,11 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     if (likely(find)) {
       if (unlikely((it->lock > STATE_READ_LOCKED))) {
         // return false;
-        re_validate = true;
+        if (txn_sys == DTX_SYS::OOCC) {
+          re_validate = true;
+        } else {
+          return false;
+        }
       }
     } else {
       return false;
@@ -485,7 +493,11 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
         // context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
         //               sizeof(lock_t));
         // return false;
-        re_validate = true;
+        if (txn_sys == DTX_SYS::OOCC) {
+          re_validate = true;
+        } else {
+          return false;
+        }
       }
       iter = pending_next_hash_ro.erase(iter);
     } else {
