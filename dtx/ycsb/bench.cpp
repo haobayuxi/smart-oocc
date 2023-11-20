@@ -60,7 +60,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
     // SDS_INFO("txn read key = %ld", micro_key.item_key);
     DataItemPtr micro_obj =
         std::make_shared<DataItem>(MICRO_TABLE_ID, micro_key.item_key);
-    if (read_only || i % 2 == 0) {
+    if (read_only) {
       dtx->AddToReadOnlySet(micro_obj);
 
     } else {
