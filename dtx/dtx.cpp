@@ -484,7 +484,8 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
         //     .node_id = res.node_id, .buf = cas_buf, .off = lock_offset});
         // context->read(cas_buf, GlobalAddress(res.node_id, lock_offset),
         //               sizeof(lock_t));
-        return false;
+        // return false;
+        re_validate = true;
       }
       iter = pending_next_hash_ro.erase(iter);
     } else {
