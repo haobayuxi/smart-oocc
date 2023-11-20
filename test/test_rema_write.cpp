@@ -78,12 +78,29 @@ void *test_thread_func(void *arg) {
   size_t align_size = block_size < 64 ? 64 : block_size;
   char *buf = (char *)ctx->alloc_cache(align_size * 64);
   uint64_t attempts = 0;
+  depth = 1;
   pthread_barrier_wait(&barrier);
   uint64_t tokens = depth;
   std::mt19937 rnd;
   std::uniform_int_distribution<uint64_t> dist(0,
                                                kSegmentSize / block_size - 1);
-  if (type == "read") {
+
+  if (thread_id == 0) {
+    // write
+    while (!stop_signal) {
+      attempts++;
+      uint64_t offset = 0;
+      GlobalAddress remote_addr(attempts % connections, offset);
+      int rc = ctx->write(buf, remote_addr, block_size,
+                          Initiator::Option::PostRequest);
+      assert(!rc);
+
+      rc = ctx->sync();
+
+      assert(!rc);
+      --tokens;
+    }
+  } else {
     while (!stop_signal) {
       attempts++;
       uint64_t offset = thread_id * kSegmentSize + block_size * (dist(rnd));
@@ -91,43 +108,9 @@ void *test_thread_func(void *arg) {
       int rc = ctx->read(buf + align_size * tokens, remote_addr, block_size,
                          Initiator::Option::PostRequest);
       assert(!rc);
-      --tokens;
-      while (tokens == 0) {
-        rc = ctx->sync();
-        assert(!rc);
-        tokens = depth;
-      }
-    }
-  } else if (type == "write") {
-    while (!stop_signal) {
-      attempts++;
-      uint64_t offset = thread_id * kSegmentSize + block_size * (dist(rnd));
-      GlobalAddress remote_addr(attempts % connections, offset);
-      int rc = ctx->write(buf + align_size * tokens, remote_addr, block_size,
-                          Initiator::Option::PostRequest);
+      rc = ctx->sync();
       assert(!rc);
-      --tokens;
-      while (tokens == 0) {
-        rc = ctx->sync();
-        assert(!rc);
-        tokens = depth;
-      }
-    }
-  } else if (type == "atomic") {
-    assert(block_size == 8);
-    while (!stop_signal) {
-      attempts++;
-      uint64_t offset = thread_id * kSegmentSize + block_size * (dist(rnd));
-      GlobalAddress remote_addr(attempts % connections, offset);
-      int rc = ctx->compare_and_swap(buf + align_size * tokens, remote_addr, 0,
-                                     1, Initiator::Option::PostRequest);
-      assert(!rc);
-      --tokens;
-      while (tokens == 0) {
-        rc = ctx->sync();
-        assert(!rc);
-        tokens = depth;
-      }
+      // check
     }
   }
   pthread_barrier_wait(&barrier);
@@ -239,7 +222,7 @@ int main(int argc, char **argv) {
       block_size = (int)atoi(getenv("BLKSIZE"));
     }
     nr_threads = argc < 2 ? 1 : atoi(argv[1]);
-    depth = argc < 3 ? 1 : atoi(argv[2]);
+    // depth = argc < 3 ? 1 : atoi(argv[2]);
     // connections = argc < 4 ? 1 : atoi(argv[3]);
     std::vector<std::string> server_list;
     JsonConfig servers = config.get("servers");

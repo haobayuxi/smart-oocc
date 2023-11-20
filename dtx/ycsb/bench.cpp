@@ -143,7 +143,7 @@ void RunTx(DTXContext *context) {
       timer[timer_idx] = tx_usec;
       timer_idx += threads * coroutines;
       commit_tx++;
-      IdleExecution();
+      // IdleExecution();
     }
     //  else {
     //   SDS_INFO("not found?");
