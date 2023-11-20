@@ -117,19 +117,14 @@ bool DTX::CoalescentCommit() {
   context->Sync();
   auto end_time = get_clock_sys_time_us();
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
-  context->Sync();
-  if (txn_sys == DTX_SYS::OOCC) {
-    while ((last_write_lock_time + lease) > end_time) {
-      end_time = get_clock_sys_time_us();
-    }
-  }
-  *((lock_t *)cas_buf) = 0;
-  for (auto &re : pending_commit_write) {
-    context->Write(cas_buf, GlobalAddress(re.node_id, re.lock_off),
-                   sizeof(lock_t));
-    context->PostRequest();
-  }
-  context->Sync();
+  // context->Sync();
+  // *((lock_t *)cas_buf) = 0;
+  // for (auto &re : pending_commit_write) {
+  //   context->Write(cas_buf, GlobalAddress(re.node_id, re.lock_off),
+  //                  sizeof(lock_t));
+  //   context->PostRequest();
+  // }
+  // context->Sync();
   return true;
 }
 
@@ -301,11 +296,12 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-    if (delayed_unlock) {
-      it->lock = STATE_READ_LOCKED;
-    } else {
-      it->lock = tx_id;
-    }
+    // if (delayed_unlock) {
+    //   it->lock = STATE_READ_LOCKED;
+    // } else {
+    //   it->lock = tx_id;
+    // }
+    it->lock = 0;
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     pending_commit_write.push_back(
