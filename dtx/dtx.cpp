@@ -333,7 +333,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
               }
             }
           } else {
-            if (unlikely((it->lock != 0))) {
+            if (unlikely((it->lock > 1))) {
               return false;
             }
           }
@@ -393,7 +393,7 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
             }
           }
         } else {
-          if (unlikely((it->lock != 0))) {
+          if (unlikely((it->lock > 1))) {
             return false;
           }
         }
@@ -499,7 +499,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
             }
           }
         } else {
-          if (unlikely((it->lock != 0))) {
+          if (unlikely((it->lock > 1))) {
             return false;
           }
         }
