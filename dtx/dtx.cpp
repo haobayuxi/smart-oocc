@@ -764,12 +764,12 @@ bool DTX::OOCCCommit() {
       char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
       auto it = set_it.item_ptr;
       auto lock = tx_id << 1;
-      memcpy(lock_buf, (char *)&lock, DataItemSize);
+      memcpy(lock_buf, (char *)&lock, sizeof(lock_t));
       node_id_t node_id = GetPrimaryNodeID(it->table_id);
       context->Write(
           lock_buf,
           GlobalAddress(node_id, it->GetRemoteLockAddr(it->remote_offset)),
-          DataItemSize);
+          sizeof(lock_t));
       context->PostRequest();
     }
   }
