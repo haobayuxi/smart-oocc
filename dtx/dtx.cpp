@@ -774,8 +774,8 @@ bool DTX::OOCCCommit() {
           lock_buf,
           GlobalAddress(node_id, it->GetRemoteLockAddr(it->remote_offset)),
           sizeof(lock_t));
-      context->PostRequest();
     }
+    context->PostRequest();
   }
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
   std::vector<CommitWrite> pending_commit_write;

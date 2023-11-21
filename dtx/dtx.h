@@ -106,7 +106,7 @@ class DTX {
  public:
   void TxBegin(tx_id_t txid) {
     context->BeginTask();
-
+    context->Sync();
     read_only_set.clear();
     read_write_set.clear();
     Clean();
