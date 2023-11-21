@@ -5,7 +5,7 @@
 
 bool Re_Validate = false;
 bool CheckReadWriteConflict = true;
-bool DelayLock = false;
+bool DelayLock = true;
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
     : context(context), tx_id(0), addr_cache(nullptr) {
