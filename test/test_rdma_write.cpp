@@ -133,6 +133,7 @@ void *test_thread_func(void *arg) {
         memcpy((char *)id, buf, 3 * sizeof(uint64_t));
         if (id[0] == id[1] && id[0] == id[2]) {
         } else {
+          SDS_INFO("%ld, %ld, %ld", id[0], id[1], id[2]);
           assert(false);
         }
       }
