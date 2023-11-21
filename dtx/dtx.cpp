@@ -313,16 +313,14 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         *it = *fetched_item;
         res.item->is_fetched = true;
         // SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
-        if (unlikely((it->lock > 0))) {
-          if (CheckReadWriteConflict) {
+        if (CheckReadWriteConflict) {
+          if (unlikely((it->lock > 0))) {
             if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
               re_validate = true;
             } else {
               return false;
             }
           }
-
-          // return false;
         }
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
@@ -368,8 +366,8 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock > 0))) {
-        if (CheckReadWriteConflict) {
+      if (CheckReadWriteConflict) {
+        if (unlikely((it->lock > 0))) {
           if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
             re_validate = true;
           } else {
@@ -468,8 +466,8 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock > 0))) {
-        if (CheckReadWriteConflict) {
+      if (CheckReadWriteConflict) {
+        if (unlikely((it->lock > 0))) {
           if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
             re_validate = true;
           } else {
