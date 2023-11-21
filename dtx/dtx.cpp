@@ -3,7 +3,7 @@
 
 #include "dtx.h"
 
-bool CheckReadWriteConflict = true;
+bool CheckReadWriteConflict = false;
 bool DelayLock = false;
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
@@ -330,11 +330,6 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
             } else {
               return false;
             }
-            // if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
-            //   re_validate = true;
-            // } else {
-            //   return false;
-            // }
           }
         }
       } else {
