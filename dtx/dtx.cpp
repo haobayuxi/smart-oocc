@@ -764,7 +764,7 @@ bool DTX::OOCCCommit() {
     for (auto &set_it : read_write_set) {
       char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
       auto it = set_it.item_ptr;
-      auto lock = 1;
+      uint64_t lock = 1;
       memcpy(lock_buf, (char *)&lock, sizeof(lock_t));
       node_id_t node_id = GetPrimaryNodeID(it->table_id);
       context->Write(
