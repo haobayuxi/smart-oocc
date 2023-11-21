@@ -173,7 +173,7 @@ void DTX::Abort() {
     context->PostRequest();
     // }
   }
-  context->sync();
+  context->Sync();
   context->RetryTask();
   context->EndTask();
 }
