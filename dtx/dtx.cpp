@@ -3,8 +3,10 @@
 
 #include "dtx.h"
 
-bool Re_Validate = false;
 bool CheckReadWriteConflict = true;
+bool Delayed_Lock = false;
+
+uint64_t get_intention_lock(uint64_t tx_id) { return tx_id << 1 + 1; }
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
     : context(context), tx_id(0), addr_cache(nullptr) {
@@ -77,7 +79,9 @@ bool DTX::ExeRW() {
     if (!CheckNextCasRW(pending_next_cas_rw)) return false;
   }
   last_write_lock_time = get_clock_sys_time_us();
-  ParallelUndoLog();
+  if (txn_sys == DTX_SYS::OCC) {
+    ParallelUndoLog();
+  }
   return true;
 }
 
@@ -220,9 +224,15 @@ bool DTX::IssueReadWrite(std::vector<CasRead> &pending_cas_rw,
                                           .item = &read_write_set[i],
                                           .cas_buf = cas_buf,
                                           .data_buf = data_buf});
+      auto lock = 0;
+      if (Delayed_Lock) {
+        lock = tx_id << 1 + 1;
+      } else {
+        lock = tx_id << 1;
+      };
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, tx_id);
+          STATE_CLEAN, lock);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
@@ -279,11 +289,11 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-    if (delayed_unlock) {
-      it->lock = STATE_READ_LOCKED;
-    } else {
-      it->lock = tx_id;
-    }
+    // if (delayed_unlock) {
+    //   it->lock = STATE_READ_LOCKED;
+    // } else {
+    it->lock = tx_id;
+    // }
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     pending_commit_write.push_back(
@@ -313,17 +323,20 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         *it = *fetched_item;
         res.item->is_fetched = true;
         // SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
-        if (unlikely((it->lock > STATE_READ_LOCKED))) {
-          if (CheckReadWriteConflict) {
-            if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
+        if (CheckReadWriteConflict) {
+          if (Delayed_Lock) {
+            if (unlikely(it->lock > STATE_INTENTION_LOCKED)) {
+              return false;
+            } else if (it->lock == STATE_INTENTION_LOCKED) {
               re_validate = true;
-            } else {
+            }
+          } else {
+            if (unlikely((it->lock != 0))) {
               return false;
             }
           }
-
-          // return false;
         }
+
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
         return false;
@@ -368,11 +381,15 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock > STATE_READ_LOCKED))) {
-        if (CheckReadWriteConflict) {
-          if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
+      if (CheckReadWriteConflict) {
+        if (Delayed_Lock) {
+          if (unlikely(it->lock > STATE_INTENTION_LOCKED)) {
+            return false;
+          } else if (it->lock == STATE_INTENTION_LOCKED) {
             re_validate = true;
-          } else {
+          }
+        } else {
+          if (unlikely((it->lock != 0))) {
             return false;
           }
         }
@@ -468,11 +485,15 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock > STATE_READ_LOCKED))) {
-        if (CheckReadWriteConflict) {
-          if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
+      if (CheckReadWriteConflict) {
+        if (Delayed_Lock) {
+          if (unlikely(it->lock > STATE_INTENTION_LOCKED)) {
+            return false;
+          } else if (it->lock == STATE_INTENTION_LOCKED) {
             re_validate = true;
-          } else {
+          }
+        } else {
+          if (unlikely((it->lock != 0))) {
             return false;
           }
         }
@@ -574,10 +595,16 @@ int DTX::FindMatchSlot(HashRead &res, std::list<CasRead> &pending_next_cas_rw) {
                                                .item = res.item,
                                                .cas_buf = cas_buf,
                                                .data_buf = data_buf});
+      auto lock = 0;
+      if (Delayed_Lock) {
+        lock = tx_id << 1 + 1;
+      } else {
+        lock = tx_id << 1;
+      };
       context->CompareAndSwap(
           cas_buf,
           GlobalAddress(res.node_id, it->GetRemoteLockAddr(it->remote_offset)),
-          STATE_CLEAN, tx_id);
+          STATE_CLEAN, lock);
       context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                     DataItemSize);
       context->PostRequest();
@@ -731,6 +758,22 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
 }
 
 bool DTX::OOCCCommit() {
+  ParallelUndoLog();
+  if (Delayed_Lock) {
+    for (auto &set_it : read_write_set) {
+      char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
+      auto it = set_it.item_ptr;
+      auto lock = tx_id << 1;
+      memcpy(lock_buf, (char *)&lock, DataItemSize);
+      node_id_t node_id = GetPrimaryNodeID(it->table_id);
+      context->Write(
+          lock_buf,
+          GlobalAddress(node_id, it->GetRemoteLockAddr(it->remote_offset)),
+          DataItemSize);
+      context->PostRequest();
+    }
+  }
+
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
   std::vector<CommitWrite> pending_commit_write;
   context->Sync();
@@ -746,12 +789,12 @@ bool DTX::OOCCCommit() {
     if (!it->user_insert) {
       it->version++;
     }
-    if (delayed_unlock) {
-      it->lock = STATE_READ_LOCKED;
-    } else {
-      it->lock = 0;
-    }
-    // it->lock = 0;
+    // if (delayed_unlock) {
+    //   it->lock = STATE_READ_LOCKED;
+    // } else {
+    //   it->lock = 0;
+    // }
+    it->lock = 0;
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     context->Write(data_buf, GlobalAddress(node_id, it->remote_offset),
