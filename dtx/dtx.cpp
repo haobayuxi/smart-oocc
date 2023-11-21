@@ -313,7 +313,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         *it = *fetched_item;
         res.item->is_fetched = true;
         // SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
-        if (unlikely((it->lock > STATE_READ_LOCKED))) {
+        if (unlikely((it->lock > 0))) {
           if (CheckReadWriteConflict) {
             if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
               re_validate = true;
@@ -368,7 +368,7 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock > STATE_READ_LOCKED))) {
+      if (unlikely((it->lock > 0))) {
         if (CheckReadWriteConflict) {
           if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
             re_validate = true;
@@ -468,7 +468,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
     }
 
     if (likely(find)) {
-      if (unlikely((it->lock > STATE_READ_LOCKED))) {
+      if (unlikely((it->lock > 0))) {
         if (CheckReadWriteConflict) {
           if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
             re_validate = true;
