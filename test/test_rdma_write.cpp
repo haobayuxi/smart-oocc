@@ -92,6 +92,7 @@ void *test_thread_func(void *arg) {
     while (!stop_signal) {
       attempts++;
       w_lock = 1;
+      id += 1;
       // write lock
 
       memcpy(buf + 3 * sizeof(uint64_t), (char *)&w_lock, sizeof(uint64_t));
