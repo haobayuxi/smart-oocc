@@ -104,12 +104,12 @@ void *test_thread_func(void *arg) {
       assert(!rc);
       // write data
       w_lock = 0;
-      for (int i = 0; i < 3; ++) {
+      for (int i = 0; i < 3; i++) {
         memcpy(buf + i * sizeof(uint64_t), (char *)&id, sizeof(uint64_t));
       }
       memcpy(buf + 3 * sizeof(uint64_t), (char *)&w_lock, sizeof(uint64_t));
-      int rc = ctx->write(buf, remote_addr, block_size,
-                          Initiator::Option::PostRequest);
+      rc = ctx->write(buf, remote_addr, block_size,
+                      Initiator::Option::PostRequest);
       assert(!rc);
 
       rc = ctx->sync();
