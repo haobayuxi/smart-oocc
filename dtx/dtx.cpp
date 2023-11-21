@@ -760,6 +760,20 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
 }
 
 bool DTX::OOCCCommit() {
+  if (DelayLock) {
+    for (auto &set_it : read_write_set) {
+      char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
+      auto it = set_it.item_ptr;
+      auto lock = 1;
+      memcpy(lock_buf, (char *)&lock, sizeof(lock_t));
+      node_id_t node_id = GetPrimaryNodeID(it->table_id);
+      context->Write(
+          lock_buf,
+          GlobalAddress(node_id, it->GetRemoteLockAddr(it->remote_offset)),
+          sizeof(lock_t));
+      context->PostRequest();
+    }
+  }
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
   std::vector<CommitWrite> pending_commit_write;
   context->Sync();
