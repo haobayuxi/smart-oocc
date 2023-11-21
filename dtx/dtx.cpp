@@ -603,7 +603,7 @@ int DTX::FindMatchSlot(HashRead &res, std::list<CasRead> &pending_next_cas_rw) {
       context->CompareAndSwap(
           cas_buf,
           GlobalAddress(res.node_id, it->GetRemoteLockAddr(it->remote_offset)),
-          STATE_CLEAN, tx_id);
+          STATE_CLEAN, STATE_LOCKED);
       context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                     DataItemSize);
       context->PostRequest();
