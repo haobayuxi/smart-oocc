@@ -223,7 +223,7 @@ bool DTX::IssueReadWrite(std::vector<CasRead> &pending_cas_rw,
                                           .data_buf = data_buf});
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, tx_id << 2);
+          STATE_CLEAN, 2);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
