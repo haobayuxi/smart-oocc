@@ -223,7 +223,7 @@ bool DTX::IssueReadWrite(std::vector<CasRead> &pending_cas_rw,
                                           .data_buf = data_buf});
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, tx_id << 1);
+          STATE_CLEAN, tx_id);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
@@ -603,7 +603,7 @@ int DTX::FindMatchSlot(HashRead &res, std::list<CasRead> &pending_next_cas_rw) {
       context->CompareAndSwap(
           cas_buf,
           GlobalAddress(res.node_id, it->GetRemoteLockAddr(it->remote_offset)),
-          STATE_CLEAN, tx_id << 1);
+          STATE_CLEAN, tx_id);
       context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                     DataItemSize);
       context->PostRequest();
