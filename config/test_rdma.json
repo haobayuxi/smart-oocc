@@ -2,7 +2,7 @@
   "servers": [
     "optane06"
   ],
-  "port": 12345,
+  "port": 12346,
   "block_size": 8,
   "qp_num": -1,
   "dump_file_path": "test_rdma.csv",
