@@ -4,7 +4,7 @@
 #include "dtx.h"
 
 bool CheckReadWriteConflict = true;
-bool DelayLock = false;
+bool DelayLock = true;
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
     : context(context), tx_id(0), addr_cache(nullptr) {
@@ -596,7 +596,7 @@ int DTX::FindMatchSlot(HashRead &res, std::list<CasRead> &pending_next_cas_rw) {
     }
   }
   if (likely(find)) {
-    if (unlikely((it->lock != STATE_CLEAN))) {
+    if (unlikely((it->lock != tx_id << 1))) {
       return STATE_LOCKED;
     } else {
       char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
