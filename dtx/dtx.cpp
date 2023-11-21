@@ -165,12 +165,12 @@ void DTX::Abort() {
     auto &it = read_write_set[index].item_ptr;
     node_id_t primary_node_id = GetPrimaryNodeID(it->table_id);
     auto lock = it->lock;
-    if (lock >> 1 == tx_id) {
-      context->CompareAndSwap(
-          unlock_buf, GlobalAddress(primary_node_id, it->GetRemoteLockAddr()),
-          lock, 0);
-      context->PostRequest();
-    }
+    // if (lock >> 1 == tx_id) {
+    context->CompareAndSwap(
+        unlock_buf, GlobalAddress(primary_node_id, it->GetRemoteLockAddr()),
+        tx_id << 1, 0);
+    context->PostRequest();
+    // }
   }
   context->RetryTask();
   context->EndTask();
