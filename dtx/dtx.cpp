@@ -3,7 +3,6 @@
 
 #include "dtx.h"
 
-bool Re_Validate = false;
 bool CheckReadWriteConflict = true;
 bool DelayLock = true;
 
@@ -78,7 +77,9 @@ bool DTX::ExeRW() {
     if (!CheckNextCasRW(pending_next_cas_rw)) return false;
   }
   last_write_lock_time = get_clock_sys_time_us();
-  ParallelUndoLog();
+  if (txn_sys == DTX_SYS::OCC) {
+    ParallelUndoLog();
+  }
   return true;
 }
 
@@ -172,6 +173,7 @@ void DTX::Abort() {
     context->PostRequest();
     // }
   }
+  context->sync();
   context->RetryTask();
   context->EndTask();
 }
@@ -760,6 +762,7 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
 }
 
 bool DTX::OOCCCommit() {
+  ParallelUndoLog();
   if (DelayLock) {
     for (auto &set_it : read_write_set) {
       char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
