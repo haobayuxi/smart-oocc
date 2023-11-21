@@ -79,9 +79,9 @@ bool DTX::ExeRW() {
     if (!CheckNextCasRW(pending_next_cas_rw)) return false;
   }
   last_write_lock_time = get_clock_sys_time_us();
-  if (txn_sys == DTX_SYS::OCC) {
-    ParallelUndoLog();
-  }
+  // if (txn_sys == DTX_SYS::OCC) {
+  ParallelUndoLog();
+  // }
   return true;
 }
 
@@ -325,10 +325,12 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         // SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
         if (CheckReadWriteConflict) {
           if (Delayed_Lock) {
-            if (unlikely(it->lock > STATE_INTENTION_LOCKED)) {
-              return false;
-            } else if (it->lock == STATE_INTENTION_LOCKED) {
-              re_validate = true;
+            if (unlikely(it->lock > 0)) {
+              if (it->lock % 2 == 1) {
+                re_validate = true;
+              } else {
+                return false
+              }
             }
           } else {
             if (unlikely((it->lock != 0))) {
@@ -383,10 +385,12 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     if (likely(find)) {
       if (CheckReadWriteConflict) {
         if (Delayed_Lock) {
-          if (unlikely(it->lock > STATE_INTENTION_LOCKED)) {
-            return false;
-          } else if (it->lock == STATE_INTENTION_LOCKED) {
-            re_validate = true;
+          if (unlikely(it->lock > 0)) {
+            if (it->lock % 2 == 1) {
+              re_validate = true;
+            } else {
+              return false
+            }
           }
         } else {
           if (unlikely((it->lock != 0))) {
@@ -487,10 +491,12 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
     if (likely(find)) {
       if (CheckReadWriteConflict) {
         if (Delayed_Lock) {
-          if (unlikely(it->lock > STATE_INTENTION_LOCKED)) {
-            return false;
-          } else if (it->lock == STATE_INTENTION_LOCKED) {
-            re_validate = true;
+          if (unlikely(it->lock > 0)) {
+            if (it->lock % 2 == 1) {
+              re_validate = true;
+            } else {
+              return false
+            }
           }
         } else {
           if (unlikely((it->lock != 0))) {
@@ -758,7 +764,7 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
 }
 
 bool DTX::OOCCCommit() {
-  ParallelUndoLog();
+  // ParallelUndoLog();
   if (Delayed_Lock) {
     for (auto &set_it : read_write_set) {
       char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
