@@ -164,10 +164,13 @@ void DTX::Abort() {
   for (auto &index : locked_rw_set) {
     auto &it = read_write_set[index].item_ptr;
     node_id_t primary_node_id = GetPrimaryNodeID(it->table_id);
-    context->CompareAndSwap(
-        unlock_buf, GlobalAddress(primary_node_id, it->GetRemoteLockAddr()),
-        tx_id, 0);
-    context->PostRequest();
+    auto lock = it->lock;
+    if (lock >> 1 == tx_id) {
+      context->CompareAndSwap(
+          unlock_buf, GlobalAddress(primary_node_id, it->GetRemoteLockAddr()),
+          lock, 0);
+      context->PostRequest();
+    }
   }
   context->RetryTask();
   context->EndTask();
@@ -223,7 +226,7 @@ bool DTX::IssueReadWrite(std::vector<CasRead> &pending_cas_rw,
                                           .data_buf = data_buf});
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, tx_id);
+          STATE_CLEAN, tx_id << 1);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
@@ -603,7 +606,7 @@ int DTX::FindMatchSlot(HashRead &res, std::list<CasRead> &pending_next_cas_rw) {
       context->CompareAndSwap(
           cas_buf,
           GlobalAddress(res.node_id, it->GetRemoteLockAddr(it->remote_offset)),
-          STATE_CLEAN, tx_id);
+          STATE_CLEAN, tx_id << 1);
       context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                     DataItemSize);
       context->PostRequest();
