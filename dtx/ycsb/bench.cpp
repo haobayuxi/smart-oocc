@@ -122,13 +122,14 @@ void RunTx(DTXContext *context) {
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
   uint64_t commit_tx = 0;
-  tx_id_local = (uint64_t)GetThreadID() << 50;
+  tx_id_local = (uint64_t)GetThreadID() << 45;
   int timer_idx = GetThreadID() * coroutines + GetTaskID();
   struct timespec tx_start_time;
   struct timespec tx_end_time;
   // Running transactions
   while (true) {
-    uint64_t iter = ++tx_id_local;  // Global atomic transaction id
+    tx_id_local += 1;
+    uint64_t iter = tx_id_local;  // Global atomic transaction id
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
