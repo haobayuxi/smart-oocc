@@ -216,7 +216,7 @@ class DTX {
       }
 
       if (!is_ro_tx) {
-        if (OOCCCommit()) {
+        if (CoalescentCommit()) {
           context->EndTask();
           return true;
         } else {
