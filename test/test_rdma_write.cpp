@@ -76,7 +76,7 @@ void *test_thread_func(void *arg) {
   size_t kSegmentSize = MEM_POOL_SIZE / nr_threads;
   kSegmentSize &= ~4095ull;
   size_t align_size = block_size < 64 ? 64 : block_size;
-  char *buf = (char *)ctx->alloc_cache(align_size * 64);
+  char *buf = (char *)ctx->alloc_cache(10 * sizeof(uint64_t));
   uint64_t attempts = 0;
   depth = 1;
   pthread_barrier_wait(&barrier);
@@ -84,21 +84,36 @@ void *test_thread_func(void *arg) {
   std::mt19937 rnd;
   std::uniform_int_distribution<uint64_t> dist(0,
                                                kSegmentSize / block_size - 1);
-
+  GlobalAddress remote_addr(attempts % connections, 0);
   if (thread_id == 0) {
+    uint64_t id = 0;
+    uint64_t w_lock = 0;
     // write
     while (!stop_signal) {
       attempts++;
-      uint64_t offset = 0;
-      GlobalAddress remote_addr(attempts % connections, offset);
+      w_lock = 1;
+      // write lock
+
+      memcpy(buf + 3 * sizeof(uint64_t), (char *)&w_lock, sizeof(uint64_t));
+
       int rc = ctx->write(buf, remote_addr, block_size,
                           Initiator::Option::PostRequest);
       assert(!rc);
 
       rc = ctx->sync();
-
       assert(!rc);
-      --tokens;
+      // write data
+      w_lock = 0;
+      for (int i = 0; i < 3; ++) {
+        memcpy(buf + i * sizeof(uint64_t), (char *)&id, sizeof(uint64_t));
+      }
+      memcpy(buf + 3 * sizeof(uint64_t), (char *)&w_lock, sizeof(uint64_t));
+      int rc = ctx->write(buf, remote_addr, block_size,
+                          Initiator::Option::PostRequest);
+      assert(!rc);
+
+      rc = ctx->sync();
+      assert(!rc);
     }
   } else {
     while (!stop_signal) {
@@ -111,6 +126,16 @@ void *test_thread_func(void *arg) {
       rc = ctx->sync();
       assert(!rc);
       // check
+      uint64_t lock = 1;
+      memcpy((char *)&lock, buf + 3 * sizeof(uint64_t), sizeof(uint64_t));
+      if (lock == 0) {
+        uint64_t id[3] = {0};
+        memcpy((char *)id, buf, 3 * sizeof(uint64_t));
+        if (id[0] == id[1] && id[0] == id[2]) {
+        } else {
+          assert(false);
+        }
+      }
     }
   }
   pthread_barrier_wait(&barrier);
