@@ -329,7 +329,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
               if (it->lock % 2 == 1) {
                 re_validate = true;
               } else {
-                return false
+                return false;
               }
             }
           } else {
@@ -389,7 +389,7 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
             if (it->lock % 2 == 1) {
               re_validate = true;
             } else {
-              return false
+              return false;
             }
           }
         } else {
@@ -495,7 +495,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
             if (it->lock % 2 == 1) {
               re_validate = true;
             } else {
-              return false
+              return false;
             }
           }
         } else {
