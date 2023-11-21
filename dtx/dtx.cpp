@@ -223,7 +223,7 @@ bool DTX::IssueReadWrite(std::vector<CasRead> &pending_cas_rw,
                                           .data_buf = data_buf});
       context->CompareAndSwap(
           cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, tx_id);
+          STATE_CLEAN, tx_id << 1);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
@@ -317,6 +317,11 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         if (CheckReadWriteConflict) {
           if (unlikely((it->lock > 0))) {
             if (DelayLock) {
+              if (it->lock % 2 == 0) {
+                re_validate = true;
+              } else {
+                return false;
+              }
             } else {
               return false;
             }
@@ -374,6 +379,11 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
       if (CheckReadWriteConflict) {
         if (unlikely((it->lock > 0))) {
           if (DelayLock) {
+            if (it->lock % 2 == 0) {
+              re_validate = true;
+            } else {
+              return false;
+            }
           } else {
             return false;
           }
@@ -478,6 +488,11 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
       if (CheckReadWriteConflict) {
         if (unlikely((it->lock > 0))) {
           if (DelayLock) {
+            if (it->lock % 2 == 0) {
+              re_validate = true;
+            } else {
+              return false;
+            }
           } else {
             return false;
           }
@@ -588,7 +603,7 @@ int DTX::FindMatchSlot(HashRead &res, std::list<CasRead> &pending_next_cas_rw) {
       context->CompareAndSwap(
           cas_buf,
           GlobalAddress(res.node_id, it->GetRemoteLockAddr(it->remote_offset)),
-          STATE_CLEAN, tx_id);
+          STATE_CLEAN, tx_id << 1);
       context->read(data_buf, GlobalAddress(res.node_id, it->remote_offset),
                     DataItemSize);
       context->PostRequest();
