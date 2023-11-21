@@ -317,6 +317,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         if (CheckReadWriteConflict) {
           if (unlikely((it->lock > 0))) {
             if (DelayLock) {
+              SDS_INFO("delaylock");
               if (it->lock % 2 == 0) {
                 re_validate = true;
               } else {
