@@ -424,26 +424,26 @@ bool DTX::CheckNextCasRW(std::list<CasRead> &pending_next_cas_rw) {
   return true;
 }
 
-bool DTX::CheckNextDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
-  for (auto iter = pending_next_direct_ro.begin();
-       iter != pending_next_direct_ro.end();) {
-    auto res = *iter;
-    auto *it = res.item->item_ptr.get();
-    auto lock_value = *((lock_t *)res.buf);
-    if (lock_value > STATE_READ_LOCKED) {
-      context->read(
-          res.buf,
-          GlobalAddress(res.node_id, ((DataItem *)res.buf)->remote_offset),
-          sizeof(lock_t));
-      iter++;
-    } else {
-      auto *it = res.item->item_ptr.get();
-      it = (DataItem *)res.buf;
-      iter = pending_next_direct_ro.erase(iter);
-    }
-  }
-  return true;
-}
+// bool DTX::CheckNextDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
+//   for (auto iter = pending_next_direct_ro.begin();
+//        iter != pending_next_direct_ro.end();) {
+//     auto res = *iter;
+//     auto *it = res.item->item_ptr.get();
+//     auto lock_value = *((lock_t *)res.buf);
+//     if (lock_value > STATE_READ_LOCKED) {
+//       context->read(
+//           res.buf,
+//           GlobalAddress(res.node_id, ((DataItem *)res.buf)->remote_offset),
+//           sizeof(lock_t));
+//       iter++;
+//     } else {
+//       auto *it = res.item->item_ptr.get();
+//       it = (DataItem *)res.buf;
+//       iter = pending_next_direct_ro.erase(iter);
+//     }
+//   }
+//   return true;
+// }
 
 bool DTX::CheckInvisibleRO(std::list<InvisibleRead> &pending_invisible_ro) {
   for (auto iter = pending_invisible_ro.begin();
