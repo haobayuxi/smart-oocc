@@ -831,7 +831,7 @@ bool DTX::DSLRCommit() {
     memcpy(data_buf, (char *)it.get() + sizeof(lock_t),
            DataItemSize - sizeof(lock_t));
     // SDS_INFO("table id = %d", it->table_id);
-    node_id_t node_id = item.read_which_node;
+    node_id_t node_id = set_it.read_which_node;
 
     context->Write(data_buf,
                    GlobalAddress(node_id, it->remote_offset + sizeof(lock_t)),
@@ -843,7 +843,7 @@ bool DTX::DSLRCommit() {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
     auto it = set_it.item_ptr;
 
-    node_id_t node_id = item.read_which_node;
+    node_id_t node_id = set_it.read_which_node;
 
     context->FetchAndAdd(faa_buf,
                          GlobalAddress(node_id, it->GetRemoteLockAddr()),
