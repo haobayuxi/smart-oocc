@@ -841,8 +841,7 @@ bool DTX::DSLRAbort() {
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     // check backoff
     auto lock = it->lock;
-    auto maxs = get_max_s(lock);
-    if (maxs >= COUNT_MAX) {
+    if (item.prev_maxs >= COUNT_MAX || item.prev_maxx >= COUNT_MAX) {
       context->FetchAndAdd(faa_buf,
                            GlobalAddress(node_id, it->GetRemoteLockAddr()),
                            max_s_minus1);
@@ -863,7 +862,7 @@ bool DTX::DSLRAbort() {
     // check backoff
     auto lock = it->lock;
     auto maxx = get_max_x(lock);
-    if (maxx >= COUNT_MAX) {
+    if (item.prev_maxs >= COUNT_MAX || item.prev_maxx >= COUNT_MAX) {
       context->FetchAndAdd(faa_buf,
                            GlobalAddress(node_id, it->GetRemoteLockAddr()),
                            max_x_minus1);
