@@ -53,6 +53,8 @@ struct DirectRead {
   node_id_t node_id;
   DataSetItem *item;
   char *buf;
+  uint64_t prev_maxs;
+  uint64_t prev_maxx;
 };
 
 struct HashRead {

@@ -257,6 +257,10 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
+        auto maxs = get_max_s(it->lock);
+        auto maxx = get_max_x(it->lock);
+        res.item->prev_maxs = maxs;
+        res.item->prev_maxx = maxx;
         res.item->prev_maxs = get_max_s(it->lock);
         res.item->prev_maxx = get_max_x(it->lock);
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
@@ -347,8 +351,10 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        res.item->prev_maxs = get_max_s(it->lock);
-        res.item->prev_maxx = get_max_x(it->lock);
+        auto maxs = get_max_s(it->lock);
+        auto maxx = get_max_x(it->lock);
+        res.item->prev_maxs = maxs;
+        res.item->prev_maxx = maxx;
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           result = false;
         } else if (maxs == COUNT_MAX - 1) {
