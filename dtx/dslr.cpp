@@ -187,6 +187,7 @@ bool DTX::DSLRIssueReadWrite(
     std::vector<CasRead> &pending_cas_rw,
     std::vector<HashRead> &pending_hash_rw,
     std::vector<InsertOffRead> &pending_insert_off_rw) {
+  SDS_INFO("issue read write");
   for (size_t i = 0; i < read_write_set.size(); i++) {
     if (read_write_set[i].is_fetched) continue;
     auto it = read_write_set[i].item_ptr;
@@ -807,6 +808,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
 }
 
 bool DTX::DSLRCommit() {
+  SDS_INFO("commit");
   context->Sync();
   for (auto &item : read_only_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
