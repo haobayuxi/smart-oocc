@@ -16,7 +16,7 @@ using node_id_t = int;        // Machine id type
 using table_id_t = uint64_t;  // Table id type
 using itemkey_t = uint64_t;   // Data item key type, used in DB tables
 using offset_t =
-    int64_t;  // Offset type. Usually used in remote offset for RDMA
+    uint64_t;  // Offset type. Usually used in remote offset for RDMA
 using version_t = uint64_t;  // Version type, used in version checking
 using lock_t = uint64_t;     // Lock type, used in remote locking
 
