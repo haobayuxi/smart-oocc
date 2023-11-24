@@ -257,8 +257,8 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        auto maxs = get_max_s(it->lock);
-        auto maxx = get_max_x(it->lock);
+        uint64_t maxs = get_max_s(it->lock);
+        uint64_t maxx = get_max_x(it->lock);
         res.item->prev_maxs = maxs;
         res.item->prev_maxx = maxx;
         res.item->prev_maxs = get_max_s(it->lock);
@@ -266,7 +266,7 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           result = false;
         } else if (maxs == COUNT_MAX - 1) {
-          auto reset_lock = maxx << 16 + COUNT_MAX;
+          uint64_t reset_lock = maxx << 16 + COUNT_MAX;
           reset_lock = (reset_lock << 32) + reset_lock;
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));
@@ -351,14 +351,14 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        auto maxs = get_max_s(it->lock);
-        auto maxx = get_max_x(it->lock);
+        uint64_t maxs = get_max_s(it->lock);
+        uint64_t maxx = get_max_x(it->lock);
         res.item->prev_maxs = maxs;
         res.item->prev_maxx = maxx;
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           result = false;
         } else if (maxs == COUNT_MAX - 1) {
-          auto reset_lock = maxx << 16 + COUNT_MAX;
+          uint64_t reset_lock = maxx << 16 + COUNT_MAX;
           reset_lock = (reset_lock << 32) + reset_lock;
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));
