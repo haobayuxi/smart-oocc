@@ -327,6 +327,8 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
+        uint64_t maxs = get_max_s(it->lock);
+        uint64_t maxx = get_max_x(it->lock);
         res.item->prev_maxs = maxs;
         res.item->prev_maxx = maxx;
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
@@ -750,21 +752,21 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
           *it = *fetched_item;
           uint64_t maxs = get_max_s(it->lock);
           uint64_t maxx = get_max_x(it->lock);
-          res.item->prev_maxs = maxs;
-          res.item->prev_maxx = maxx;
+          re.item->prev_maxs = maxs;
+          re.item->prev_maxx = maxx;
           if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
             result = false;
           } else if (get_max_s(it->lock) != get_ns(it->lock)) {
             char *data_buf = AllocLocalBuffer(DataItemSize);
             pending_next_direct_rw.emplace_back(DirectRead{
-                .node_id = res.node_id,
-                .item = res.item,
+                .node_id = re.node_id,
+                .item = re.item,
                 .buf = data_buf,
                 .prev_maxs = maxs,
             });
             context->read(
                 data_buf,
-                GlobalAddress(res.node_id, fetched_item->remote_offset),
+                GlobalAddress(re.node_id, fetched_item->remote_offset),
                 DataItemSize);
             context->PostRequest();
           } else if (maxx == COUNT_MAX - 1) {
