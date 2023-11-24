@@ -7,7 +7,6 @@ enum DSLR_CHECK_LOCK : int {
   SUCCESS = 0,
   WAIT = 1,
   BACKOFF = 2,
-  RESET = 3,
 };
 
 // | max x| max s| n x| n s|  lock representation
@@ -67,8 +66,7 @@ int DTX::check_write_lock1(uint64_t lock, uint64_t offset) {
   return DSLR_CHECK_LOCK::WAIT;
 }
 bool check_write_lock(uint64_t lock) { return true; }
-bool check_read_lock(uint64_t lock) { return true; }
-int DTX::check_read_lock1(uint64_t lock, uint64_t offset) {
+int DTX::check_read_lock(uint64_t lock, uint64_t offset) {
   auto maxs = get_max_s(lock);
   auto maxx = get_max_x(lock);
   if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
@@ -258,7 +256,7 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        if (!check_read_lock(it->lock)) {
+        if (check_read_lock(it->lock) == DSLR_CHECK_LOCK::WAIT) {
           char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
@@ -269,6 +267,9 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
                         GlobalAddress(res.node_id, fetched_item->remote_offset),
                         DataItemSize);
           context->PostRequest();
+        } else if (check_read_lock(it->lock) == DSLR_CHECK_LOCK::BACKOFF) {
+          //
+          return false;
         }
 
         iter = pending_next_cas_ro.erase(iter);
@@ -331,8 +332,7 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        if (!check_read_lock(it->lock)) {
-          // write locked
+        if (check_read_lock(it->lock) == DSLR_CHECK_LOCK::WAIT) {
           char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
@@ -343,6 +343,9 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
                         GlobalAddress(res.node_id, fetched_item->remote_offset),
                         DataItemSize);
           context->PostRequest();
+        } else if (check_read_lock(it->lock) == DSLR_CHECK_LOCK::BACKOFF) {
+          //
+          return false;
         }
       } else {
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
@@ -373,8 +376,7 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
 
     auto *it = res.item->item_ptr.get();
     *it = *fetched_item;
-    if (!check_read_lock(fetched_item->lock)) {
-      // write locked
+    if (check_read_lock(it->lock) == DSLR_CHECK_LOCK::WAIT) {
       char *data_buf = AllocLocalBuffer(DataItemSize);
       pending_next_direct_ro.emplace_back(DirectRead{
           .node_id = res.node_id,
@@ -385,6 +387,9 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
                     GlobalAddress(res.node_id, fetched_item->remote_offset),
                     DataItemSize);
       context->PostRequest();
+    } else if (check_read_lock(it->lock) == DSLR_CHECK_LOCK::BACKOFF) {
+      //
+      return false;
     }
 
     iter = pending_next_direct_ro.erase(iter);
@@ -795,5 +800,51 @@ bool DTX::CheckReset() {
       iter = reset.erase(iter);
     }
   }
+  return true;
+}
+
+bool DTX::DSLRAbort() {
+  // release read lock
+  for (auto &item : read_only_set) {
+    char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
+    auto *it = item.item_ptr.get();
+    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+    // check backoff
+    auto lock = it->lock;
+    auto maxs = get_max_s(lock);
+    if (maxs >= COUNT_MAX) {
+      context->FetchAndAdd(faa_buf,
+                           GlobalAddress(node_id, it->GetRemoteLockAddr()),
+                           max_s_minus1);
+    } else {
+      context->FetchAndAdd(faa_buf,
+                           GlobalAddress(node_id, it->GetRemoteLockAddr()),
+                           release_read_lock);
+    }
+
+    context->PostRequest();
+  }
+  // release write lock
+  for (auto &set_it : read_write_set) {
+    char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
+    auto it = set_it.item_ptr;
+
+    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+    // check backoff
+    auto lock = it->lock;
+    auto maxx = get_max_x(lock);
+    if (maxx >= COUNT_MAX) {
+      context->FetchAndAdd(faa_buf,
+                           GlobalAddress(node_id, it->GetRemoteLockAddr()),
+                           max_x_minus1);
+    } else {
+      context->FetchAndAdd(faa_buf,
+                           GlobalAddress(node_id, it->GetRemoteLockAddr()),
+                           release_write_lock);
+    }
+
+    context->PostRequest();
+  }
+  context->Sync();
   return true;
 }

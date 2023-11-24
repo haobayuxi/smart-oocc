@@ -169,13 +169,15 @@ class DTX {
         if (DSLRExeRO()) {
           return true;
         } else {
-          goto ABORT;
+          DSLRAbort();
+          return false;
         }
       } else {
         if (DSLRExeRW()) {
           return true;
         } else {
-          goto ABORT;
+          DSLRAbort();
+          return false;
         }
       }
     }
@@ -372,6 +374,7 @@ class DTX {
   bool DSLRExeRO();
   bool DSLRExeRW();
   bool DSLRCommit();
+  bool DSLRAbort();
   bool CheckReset();
   bool DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro);
   bool DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw);
@@ -401,7 +404,7 @@ class DTX {
                       std::list<InsertOffRead> &pending_next_off_rw);
   bool DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
                           std::list<DirectRead> pending_next_direct_rw);
-  int check_read_lock1(uint64_t lock, uint64_t offset);
+  int check_read_lock(uint64_t lock, uint64_t offset);
   int check_write_lock1(uint64_t lock, uint64_t offset);
 
  private:
