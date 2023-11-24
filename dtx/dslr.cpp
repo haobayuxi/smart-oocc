@@ -854,9 +854,9 @@ bool DTX::DSLRAbort() {
     context->PostRequest();
   }
   // release write lock
-  for (auto &set_it : read_write_set) {
+  for (auto &item : read_write_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
-    auto it = set_it.item_ptr;
+    auto it = item.item_ptr;
 
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     // check backoff
