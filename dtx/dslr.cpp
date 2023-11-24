@@ -333,7 +333,7 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
           result = false;
         } else if (get_max_s(it->lock) != get_ns(it->lock)) {
           char *data_buf = AllocLocalBuffer(DataItemSize);
-          pending_next_direct_ro.emplace_back(DirectRead{
+          pending_next_direct_rw.emplace_back(DirectRead{
               .node_id = res.node_id,
               .item = res.item,
               .buf = data_buf,
@@ -748,13 +748,15 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
         if (likely(fetched_item->valid)) {
           assert(fetched_item->remote_offset == it->remote_offset);
           *it = *fetched_item;
+          uint64_t maxs = get_max_s(it->lock);
+          uint64_t maxx = get_max_x(it->lock);
           res.item->prev_maxs = maxs;
           res.item->prev_maxx = maxx;
           if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
             result = false;
           } else if (get_max_s(it->lock) != get_ns(it->lock)) {
             char *data_buf = AllocLocalBuffer(DataItemSize);
-            pending_next_direct_ro.emplace_back(DirectRead{
+            pending_next_direct_rw.emplace_back(DirectRead{
                 .node_id = res.node_id,
                 .item = res.item,
                 .buf = data_buf,
