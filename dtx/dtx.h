@@ -179,6 +179,8 @@ class DTX {
           return true;
         } else {
           DSLRAbort();
+          context->RetryTask();
+          context->EndTask();
           return false;
         }
       }

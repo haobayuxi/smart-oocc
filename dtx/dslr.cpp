@@ -12,6 +12,15 @@ enum DSLR_CHECK_LOCK : int {
 // | max x| max s| n x| n s|  lock representation
 // reset read lock |prev maxx|count max| prev maxx| count max
 // reset write lock |count max|prev maxs|count max| prev maxs
+uint64_t reset_write_lock(uint64_t maxs) {
+  uint64_t lock = COUNT_MAX << 16 + maxs;
+  return (lock << 32) + lock;
+}
+
+uint64_t reset_read_lock(uint64_t maxx) {
+  uint64_t lock = maxs << 16 + COUNT_MAX;
+  return (lock << 32) + lock;
+}
 
 #define nx_mask 0x00F0
 #define ns_mask 0x000F
@@ -108,11 +117,11 @@ bool DTX::DSLRExeRO() {
     context->Sync();
     if (!pending_next_direct_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
+      if (!DSLRCheckNextCasRO(pending_next_cas_ro, pending_next_direct_ro))
+        return false;
       if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
         return false;
       if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
-      if (!DSLRCheckNextCasRO(pending_next_cas_ro, pending_next_direct_ro))
-        return false;
 
     } else {
       break;
@@ -139,9 +148,14 @@ bool DTX::DSLRExeRW() {
   DSLRIssueReadOnly(pending_cas_ro, pending_hash_ro);
   DSLRIssueReadWrite(pending_cas_rw, pending_hash_rw, pending_insert_off_rw);
   context->Sync();
+  bool result = true;
   if (!DSLRCheckCasRO(pending_cas_ro, pending_next_direct_ro,
                       pending_next_hash_ro))
-    return false;
+    result = false;
+  if (!DSLRCheckCasRW(pending_cas_rw, pending_next_hash_rw,
+                      pending_next_direct_rw, pending_next_off_rw))
+    result = false;
+  if (!result) return false;
   if (!DSLRCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
@@ -151,26 +165,24 @@ bool DTX::DSLRExeRW() {
   if (!CheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
                         pending_next_off_rw))
     return false;
-  if (!DSLRCheckCasRW(pending_cas_rw, pending_next_hash_rw,
-                      pending_next_direct_rw, pending_next_off_rw))
-    return false;
+
   for (int i = 0; i < 100; i++) {
     context->Sync();
     if (!pending_next_direct_ro.empty() || !pending_next_direct_rw.empty() ||
         !pending_next_hash_ro.empty() || !pending_next_hash_rw.empty() ||
         !pending_next_off_rw.empty() || !pending_next_cas_rw.empty() ||
         !pending_next_cas_ro.empty()) {
+      if (!DSLRCheckNextCasRO(pending_next_cas_ro, pending_next_direct_ro))
+        result = false;
+      if (!DSLRCheckNextCasRW(pending_next_cas_rw, pending_next_direct_rw))
+        result = false;
+      if (!result) return false;
       if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
         return false;
       if (!DSLRCheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
         return false;
       if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
       if (!DSLRCheckDirectRW(pending_next_direct_rw)) return false;
-
-      if (!DSLRCheckNextCasRO(pending_next_cas_ro, pending_next_direct_ro))
-        return false;
-      if (!DSLRCheckNextCasRW(pending_next_cas_rw, pending_next_direct_rw))
-        return false;
 
       if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
         return false;
@@ -265,9 +277,20 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
         res.item->prev_maxx = get_max_x(it->lock);
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           result = false;
+        } else if (get_max_x(it->lock) != get_nx(it->lock)) {
+          char *data_buf = AllocLocalBuffer(DataItemSize);
+          pending_next_direct_ro.emplace_back(DirectRead{
+              .node_id = res.node_id,
+              .item = res.item,
+              .buf = data_buf,
+              .prev_maxx = maxx,
+          });
+          context->read(data_buf,
+                        GlobalAddress(res.node_id, fetched_item->remote_offset),
+                        DataItemSize);
+          context->PostRequest();
         } else if (maxs == COUNT_MAX - 1) {
-          uint64_t reset_lock = maxx << 16 + COUNT_MAX;
-          reset_lock = (reset_lock << 32) + reset_lock;
+          auto reset_lock = reset_read_lock(maxx);
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));
           reset.emplace_back(ResetLock{
@@ -275,17 +298,6 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
               .lock = reset_lock,
               .cas_buf = cas_buf,
           });
-        } else if (get_max_x(it->lock) != get_nx(it->lock)) {
-          char *data_buf = AllocLocalBuffer(DataItemSize);
-          pending_next_direct_ro.emplace_back(DirectRead{
-              .node_id = res.node_id,
-              .item = res.item,
-              .buf = data_buf,
-          });
-          context->read(data_buf,
-                        GlobalAddress(res.node_id, fetched_item->remote_offset),
-                        DataItemSize);
-          context->PostRequest();
         }
 
         iter = pending_next_cas_ro.erase(iter);
@@ -304,6 +316,7 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
 
 bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
                              std::list<DirectRead> pending_next_direct_rw) {
+  bool result = true;
   for (auto iter = pending_next_cas_rw.begin();
        iter != pending_next_cas_rw.end(); iter++) {
     auto res = *iter;
@@ -314,29 +327,43 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        if (!check_write_lock(it->lock)) {
+        res.item->prev_maxs = maxs;
+        res.item->prev_maxx = maxx;
+        if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
+          result = false;
+        } else if (get_max_s(it->lock) != get_ns(it->lock)) {
           char *data_buf = AllocLocalBuffer(DataItemSize);
-          pending_next_direct_rw.emplace_back(DirectRead{
+          pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
               .item = res.item,
               .buf = data_buf,
+              .prev_maxs = maxs,
           });
           context->read(data_buf,
                         GlobalAddress(res.node_id, fetched_item->remote_offset),
                         DataItemSize);
           context->PostRequest();
+        } else if (maxx == COUNT_MAX - 1) {
+          auto reset_lock = reset_write_lock(maxs);
+          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          memset(cas_buf, 0, sizeof(lock_t));
+          reset.emplace_back(ResetLock{
+              .offset = it->remote_offset,
+              .lock = reset_lock,
+              .cas_buf = cas_buf,
+          });
         }
 
         iter = pending_next_cas_rw.erase(iter);
       } else {
-        return false;
+        result = false;
       }
     } else {
-      return false;
+      result = false;
     }
   }
 
-  return true;
+  return result;
 }
 
 bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
@@ -357,9 +384,20 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
         res.item->prev_maxx = maxx;
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           result = false;
+        } else if (get_max_x(it->lock) != get_nx(it->lock)) {
+          char *data_buf = AllocLocalBuffer(DataItemSize);
+          pending_next_direct_ro.emplace_back(DirectRead{
+              .node_id = res.node_id,
+              .item = res.item,
+              .buf = data_buf,
+              .prev_maxx = maxx,
+          });
+          context->read(data_buf,
+                        GlobalAddress(res.node_id, fetched_item->remote_offset),
+                        DataItemSize);
+          context->PostRequest();
         } else if (maxs == COUNT_MAX - 1) {
-          uint64_t reset_lock = maxx << 16 + COUNT_MAX;
-          reset_lock = (reset_lock << 32) + reset_lock;
+          auto reset_lock = reset_read_lock(maxx);
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));
           reset.emplace_back(ResetLock{
@@ -367,17 +405,6 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
               .lock = reset_lock,
               .cas_buf = cas_buf,
           });
-        } else if (get_max_x(it->lock) != get_nx(it->lock)) {
-          char *data_buf = AllocLocalBuffer(DataItemSize);
-          pending_next_direct_ro.emplace_back(DirectRead{
-              .node_id = res.node_id,
-              .item = res.item,
-              .buf = data_buf,
-          });
-          context->read(data_buf,
-                        GlobalAddress(res.node_id, fetched_item->remote_offset),
-                        DataItemSize);
-          context->PostRequest();
         }
 
       } else {
@@ -434,7 +461,7 @@ bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
     auto *fetched_item = (DataItem *)res.buf;
     auto *it = res.item->item_ptr.get();
     *it = *fetched_item;
-    if (!check_write_lock(fetched_item->lock)) {
+    if (it->lock != res.prev_maxs) {
       // read locked
       char *data_buf = AllocLocalBuffer(DataItemSize);
       pending_next_direct_rw.emplace_back(DirectRead{
@@ -705,6 +732,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                          std::list<HashRead> &pending_next_hash_rw,
                          std::list<DirectRead> &pending_next_direct_rw,
                          std::list<InsertOffRead> &pending_next_off_rw) {
+  bool result = true;
   for (auto &re : pending_cas_rw) {
     auto it = re.item->item_ptr;
     auto *fetched_item = (DataItem *)(re.data_buf);
@@ -720,21 +748,48 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
         if (likely(fetched_item->valid)) {
           assert(fetched_item->remote_offset == it->remote_offset);
           *it = *fetched_item;
-          if (!check_write_lock(it->lock)) {
+          res.item->prev_maxs = maxs;
+          res.item->prev_maxx = maxx;
+          if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
+            result = false;
+          } else if (get_max_s(it->lock) != get_ns(it->lock)) {
             char *data_buf = AllocLocalBuffer(DataItemSize);
-            pending_next_direct_rw.emplace_back(DirectRead{
-                .node_id = re.node_id,
-                .item = re.item,
+            pending_next_direct_ro.emplace_back(DirectRead{
+                .node_id = res.node_id,
+                .item = res.item,
                 .buf = data_buf,
+                .prev_maxs = maxs,
             });
-            context->read(data_buf,
-                          GlobalAddress(re.node_id, it->remote_offset),
-                          DataItemSize);
+            context->read(
+                data_buf,
+                GlobalAddress(res.node_id, fetched_item->remote_offset),
+                DataItemSize);
             context->PostRequest();
+          } else if (maxx == COUNT_MAX - 1) {
+            auto reset_lock = reset_write_lock(maxs);
+            char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+            memset(cas_buf, 0, sizeof(lock_t));
+            reset.emplace_back(ResetLock{
+                .offset = it->remote_offset,
+                .lock = reset_lock,
+                .cas_buf = cas_buf,
+            });
           }
+          // if (!check_write_lock(it->lock)) {
+          //   char *data_buf = AllocLocalBuffer(DataItemSize);
+          //   pending_next_direct_rw.emplace_back(DirectRead{
+          //       .node_id = re.node_id,
+          //       .item = re.item,
+          //       .buf = data_buf,
+          //   });
+          //   context->read(data_buf,
+          //                 GlobalAddress(re.node_id, it->remote_offset),
+          //                 DataItemSize);
+          //   context->PostRequest();
+          // }
         } else {
           addr_cache->Insert(re.node_id, it->table_id, it->key, NOT_FOUND);
-          return false;
+          result = false;
         }
       }
       re.item->is_fetched = true;
@@ -766,7 +821,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
       context->PostRequest();
     }
   }
-  return true;
+  return result;
 }
 
 bool DTX::DSLRCommit() {
