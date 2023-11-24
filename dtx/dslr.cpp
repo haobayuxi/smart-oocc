@@ -187,7 +187,7 @@ bool DTX::DSLRIssueReadWrite(
     std::vector<CasRead> &pending_cas_rw,
     std::vector<HashRead> &pending_hash_rw,
     std::vector<InsertOffRead> &pending_insert_off_rw) {
-  SDS_INFO("issue read write %ld", tx_id);
+  // SDS_INFO("issue read write %ld", tx_id);
   for (size_t i = 0; i < read_write_set.size(); i++) {
     if (read_write_set[i].is_fetched) continue;
     auto it = read_write_set[i].item_ptr;
@@ -808,12 +808,12 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
 }
 
 bool DTX::DSLRCommit() {
-  SDS_INFO("commit %ld", tx_id);
+  // SDS_INFO("commit %ld", tx_id);
   context->Sync();
   for (auto &item : read_only_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
     auto *it = item.item_ptr.get();
-    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+    node_id_t node_id = item.read_which_node;
 
     context->FetchAndAdd(faa_buf,
                          GlobalAddress(node_id, it->GetRemoteLockAddr()),
@@ -830,8 +830,8 @@ bool DTX::DSLRCommit() {
 
     memcpy(data_buf, (char *)it.get() + sizeof(lock_t),
            DataItemSize - sizeof(lock_t));
-    SDS_INFO("table id = %d", it->table_id);
-    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+    // SDS_INFO("table id = %d", it->table_id);
+    node_id_t node_id = item.read_which_node;
 
     context->Write(data_buf,
                    GlobalAddress(node_id, it->remote_offset + sizeof(lock_t)),
@@ -843,7 +843,7 @@ bool DTX::DSLRCommit() {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
     auto it = set_it.item_ptr;
 
-    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+    node_id_t node_id = item.read_which_node;
 
     context->FetchAndAdd(faa_buf,
                          GlobalAddress(node_id, it->GetRemoteLockAddr()),
@@ -878,7 +878,7 @@ bool DTX::DSLRAbort() {
   for (auto &item : read_only_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
     auto *it = item.item_ptr.get();
-    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+    node_id_t node_id = item.read_which_node;
     // check backoff
     auto lock = it->lock;
     if (item.prev_maxs >= COUNT_MAX || item.prev_maxx >= COUNT_MAX) {
@@ -898,7 +898,7 @@ bool DTX::DSLRAbort() {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
     auto it = item.item_ptr;
 
-    node_id_t node_id = GetPrimaryNodeID(it->table_id);
+    node_id_t node_id = item.read_which_node;
     // check backoff
     auto lock = it->lock;
     auto maxx = get_max_x(lock);
