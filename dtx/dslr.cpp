@@ -830,6 +830,7 @@ bool DTX::DSLRCommit() {
 
     memcpy(data_buf, (char *)it.get() + sizeof(lock_t),
            DataItemSize - sizeof(lock_t));
+    SDS_INFO("table id = %d", it->table_id);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
 
     context->Write(data_buf,
