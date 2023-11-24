@@ -408,8 +408,8 @@ class DTX {
                       std::list<InsertOffRead> &pending_next_off_rw);
   bool DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
                           std::list<DirectRead> pending_next_direct_rw);
-  int check_read_lock(uint64_t lock, uint64_t offset);
-  int check_write_lock1(uint64_t lock, uint64_t offset);
+  // int check_read_lock(uint64_t lock, uint64_t offset);
+  // int check_write_lock1(uint64_t lock, uint64_t offset);
 
  private:
   char *AllocLocalBuffer(size_t size) { return context->Alloc(size); }
