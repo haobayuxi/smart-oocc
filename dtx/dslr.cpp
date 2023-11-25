@@ -392,12 +392,13 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
 
     auto *it = res.item->item_ptr.get();
     *it = *fetched_item;
-    if (get_nx(res.prev_maxx) != get_nx(it->lock)) {
+    if (res.prev_maxx != get_nx(it->lock)) {
       char *data_buf = AllocLocalBuffer(DataItemSize);
       pending_next_direct_ro.emplace_back(DirectRead{
           .node_id = res.node_id,
           .item = res.item,
           .buf = data_buf,
+          .prev_maxx = res.prev_maxx,
       });
       context->read(data_buf,
                     GlobalAddress(res.node_id, fetched_item->remote_offset),
@@ -427,6 +428,7 @@ bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
               .node_id = res.node_id,
               .item = res.item,
               .buf = data_buf,
+              .prev_maxs = res.prev_maxs,
           });
           context->read(data_buf,
                         GlobalAddress(res.node_id, fetched_item->remote_offset),
