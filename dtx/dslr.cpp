@@ -737,13 +737,14 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
         if (likely(fetched_item->valid)) {
           assert(fetched_item->remote_offset == it->remote_offset);
           *it = *fetched_item;
-          uint64_t maxs = get_max_s(it->lock);
-          uint64_t maxx = get_max_x(it->lock);
+          auto lock = *(lock_t *)re.cas_buf;
+          uint64_t maxs = get_max_s(lock);
+          uint64_t maxx = get_max_x(lock);
           re.item->prev_maxs = maxs;
           re.item->prev_maxx = maxx;
           if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
             result = false;
-          } else if (get_max_s(it->lock) != get_ns(it->lock)) {
+          } else if (prev_maxs != get_ns(it->lock)) {
             char *data_buf = AllocLocalBuffer(DataItemSize);
             pending_next_direct_rw.emplace_back(DirectRead{
                 .node_id = re.node_id,
@@ -766,6 +767,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                 .cas_buf = cas_buf,
             });
           }
+          SDS_INFO("it->lock")
           // if (!check_write_lock(it->lock)) {
           //   char *data_buf = AllocLocalBuffer(DataItemSize);
           //   pending_next_direct_rw.emplace_back(DirectRead{
@@ -860,7 +862,6 @@ bool DTX::DSLRCommit() {
   }
   context->Sync();
 
-  SDS_INFO("commit complete");
   while (!reset.empty()) {
     CheckReset();
     context->Sync();
