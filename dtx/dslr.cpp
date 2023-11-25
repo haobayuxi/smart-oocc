@@ -858,6 +858,7 @@ bool DTX::DSLRCommit() {
                          release_write_lock);
     context->PostRequest();
   }
+  SDS_INFO("commit complete");
   context->Sync();
   while (!reset.empty()) {
     CheckReset();
