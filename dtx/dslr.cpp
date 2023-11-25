@@ -68,7 +68,7 @@ bool DTX::DSLRExeRO() {
   if (!DSLRCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
-  for (int i = 0; i < 500; i++) {
+  for (int i = 0; i < 100; i++) {
     context->Sync();
     if (!pending_next_direct_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
@@ -121,7 +121,6 @@ bool DTX::DSLRExeRW() {
   if (!CheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
                         pending_next_off_rw))
     return false;
-  // SDS_INFO("rw %ld", tx_id);
   for (int i = 0; i < 100; i++) {
     context->Sync();
     if (!pending_next_direct_ro.empty() || !pending_next_direct_rw.empty() ||
