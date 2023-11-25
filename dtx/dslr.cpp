@@ -68,7 +68,7 @@ bool DTX::DSLRExeRO() {
   if (!DSLRCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 50; i++) {
     context->Sync();
     if (!pending_next_direct_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
@@ -121,7 +121,7 @@ bool DTX::DSLRExeRW() {
   if (!CheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
                         pending_next_off_rw))
     return false;
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 50; i++) {
     context->Sync();
     if (!pending_next_direct_ro.empty() || !pending_next_direct_rw.empty() ||
         !pending_next_hash_ro.empty() || !pending_next_hash_rw.empty() ||
@@ -250,7 +250,7 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));
           reset.emplace_back(ResetLock{
-              .offset = it->remote_offset,
+              .offset = it->GetRemoteLockAddr(),
               .lock = reset_lock,
               .cas_buf = cas_buf,
           });

@@ -43,29 +43,33 @@ class DTXContext {
 
   DTXContext &operator=(const DTXContext &) = delete;
 
-  void Write(const void *local, GlobalAddress remote, size_t length) {
+  int Write(const void *local, GlobalAddress remote, size_t length) {
     int rc = node_.write(local, remote, length);
-    assert(!rc);
+    // assert(!rc);
     rdma_cnt++;
+    return rc;
   }
 
-  void read(const void *local, GlobalAddress remote, size_t length) {
+  int read(const void *local, GlobalAddress remote, size_t length) {
     int rc = node_.read(local, remote, length);
-    assert(!rc);
+    // assert(!rc);
     rdma_cnt++;
+    return rc;
   }
 
-  void CompareAndSwap(const void *local, GlobalAddress remote,
-                      uint64_t compare_val, uint64_t swap_val) {
+  int CompareAndSwap(const void *local, GlobalAddress remote,
+                     uint64_t compare_val, uint64_t swap_val) {
     int rc = node_.compare_and_swap(local, remote, compare_val, swap_val);
-    assert(!rc);
+    // assert(!rc);
     rdma_cnt++;
+    return rc;
   }
 
-  void FetchAndAdd(const void *local, GlobalAddress remote, uint64_t add_val) {
+  int FetchAndAdd(const void *local, GlobalAddress remote, uint64_t add_val) {
     int rc = node_.fetch_and_add(local, remote, add_val);
-    assert(!rc);
+    // assert(!rc);
     rdma_cnt++;
+    return rc;
   }
 
   void PostRequest() {
