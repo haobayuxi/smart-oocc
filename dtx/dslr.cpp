@@ -902,5 +902,9 @@ bool DTX::DSLRAbort() {
     context->PostRequest();
   }
   context->Sync();
+  while (reset.size() > 0) {
+    CheckReset();
+    context->Sync();
+  }
   return true;
 }

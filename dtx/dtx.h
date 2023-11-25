@@ -112,6 +112,7 @@ class DTX {
     read_only_set.clear();
     read_write_set.clear();
     Clean();
+    reset.clear();
     is_ro_tx = true;
     tx_id = txid;
     re_validate = false;
