@@ -533,6 +533,7 @@ bool DTX::DSLRCheckNextHashRO(std::list<CasRead> &pending_next_cas_ro,
       context->PostRequest();
 
     } else {
+      return false;
       auto *local_hash_node = (HashNode *)res.buf;
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
