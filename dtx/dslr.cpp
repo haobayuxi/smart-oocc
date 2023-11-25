@@ -743,7 +743,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                 .cas_buf = cas_buf,
             });
           }
-          // SDS_INFO("nslock = %ld, maxs %ld", get_ns(it->lock), maxs);
+          SDS_INFO("nslock = %ld, maxs %ld", get_ns(it->lock), maxs);
           // if (!check_write_lock(it->lock)) {
           //   char *data_buf = AllocLocalBuffer(DataItemSize);
           //   pending_next_direct_rw.emplace_back(DirectRead{
@@ -763,10 +763,10 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
       }
       re.item->is_fetched = true;
     } else {
-      *((lock_t *)re.cas_buf) = STATE_CLEAN;
-      context->Write(re.cas_buf,
-                     GlobalAddress(re.node_id, it->GetRemoteLockAddr()),
-                     sizeof(lock_t));
+      // *((lock_t *)re.cas_buf) = STATE_CLEAN;
+      // context->Write(re.cas_buf,
+      //                GlobalAddress(re.node_id, it->GetRemoteLockAddr()),
+      //                sizeof(lock_t));
       const HashMeta &meta = GetPrimaryHashMetaWithTableID(it->table_id);
       uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
       offset_t node_off = idx * meta.node_size + meta.base_off;
