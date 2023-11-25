@@ -868,8 +868,6 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
   // Iterate over [o_id-20, o_id)
   for (int order_id = o_id - tpcc_stock_val_t::STOCK_LEVEL_ORDERS;
        order_id < o_id; ++order_id) {
-    SDS_INFO("order id = %d, read only set size = %d", order_id,
-             dtx->read_only_set.size());
     // Populate line_numer is random: [Min_OL_CNT, MAX_OL_CNT)
     for (int line_number = 1; line_number <= tpcc_order_line_val_t::MAX_OL_CNT;
          ++line_number) {

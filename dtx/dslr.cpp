@@ -2,6 +2,7 @@
 #include "dtx.h"
 
 const uint64_t COUNT_MAX = 32768;
+const int max_op = 100;
 
 enum DSLR_CHECK_LOCK : int {
   SUCCESS = 0,
@@ -224,7 +225,6 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
                fetched_item->table_id == it->table_id)) {
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
-        SDS_INFO("fetched");
         res.item->is_fetched = true;
         uint64_t maxs = get_max_s(it->lock);
         uint64_t maxx = get_max_x(it->lock);
@@ -335,7 +335,6 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
                fetched_item->table_id == it->table_id)) {
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
-        SDS_INFO("fetched");
         res.item->is_fetched = true;
         uint64_t maxs = get_max_s(it->lock);
         uint64_t maxx = get_max_x(it->lock);
@@ -671,7 +670,6 @@ bool DTX::DSLRIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
                             std::vector<HashRead> &pending_hash_ro) {
   for (auto &item : read_only_set) {
     if (item.is_fetched) continue;
-    SDS_INFO("get data");
     auto it = item.item_ptr;
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     item.read_which_node = node_id;
@@ -809,17 +807,25 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
 }
 
 bool DTX::DSLRCommit() {
-  SDS_INFO("commit %ld", tx_id);
   context->Sync();
-  for (auto &item : read_only_set) {
-    char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
-    auto *it = item.item_ptr.get();
-    node_id_t node_id = item.read_which_node;
+  int index = 0;
+  while (index < read_only_set.size()) {
+    for (int j = 0; j < max_op; j++) {
+      auto item = read_only_set[index];
+      char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
+      auto *it = item.item_ptr.get();
+      node_id_t node_id = item.read_which_node;
 
-    context->FetchAndAdd(faa_buf,
-                         GlobalAddress(node_id, it->GetRemoteLockAddr()),
-                         release_read_lock);
-    context->PostRequest();
+      context->FetchAndAdd(faa_buf,
+                           GlobalAddress(node_id, it->GetRemoteLockAddr()),
+                           release_read_lock);
+      context->PostRequest();
+      index++;
+      if (index == read_only_set.size()) {
+        break;
+      }
+    }
+    context->Sync();
   }
 
   for (auto &set_it : read_write_set) {
