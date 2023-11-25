@@ -224,6 +224,7 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
                fetched_item->table_id == it->table_id)) {
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
+        SDS_INFO("fetched");
         res.item->is_fetched = true;
         uint64_t maxs = get_max_s(it->lock);
         uint64_t maxx = get_max_x(it->lock);
@@ -334,6 +335,7 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
                fetched_item->table_id == it->table_id)) {
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
+        SDS_INFO("fetched");
         res.item->is_fetched = true;
         uint64_t maxs = get_max_s(it->lock);
         uint64_t maxx = get_max_x(it->lock);
@@ -723,6 +725,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
         if (likely(fetched_item->valid)) {
           assert(fetched_item->remote_offset == it->remote_offset);
           *it = *fetched_item;
+          re.item->is_fetched = true;
           auto lock = *(lock_t *)re.cas_buf;
           uint64_t maxs = get_max_s(lock);
           uint64_t maxx = get_max_x(lock);
