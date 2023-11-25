@@ -33,7 +33,7 @@
 #include <random>
 
 using namespace std;
-
+// | max x| max s| n x| n s|  lock representation
 #define nx_mask 0x00F0
 #define ns_mask 0x000F
 #define max_x_mask 0xF000
@@ -67,7 +67,10 @@ uint64_t get_ns(uint64_t lock) { return lock | ns_mask; }
 int main(int argc, char **argv) {
   uint64_t t = 0;
   auto re = t + acquire_write_lock;
-  cout << re << endl;
+  for (int i = 63; i >= 0; i--) {
+    cout << ((re >> i) & 1);
+  }
+  cout << endl;
   cout << get_ns(re) << "  " << get_max_s(re) << endl;
 
   return 0;
