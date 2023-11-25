@@ -743,7 +743,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                 .cas_buf = cas_buf,
             });
           }
-          SDS_INFO("nslock = %ld, maxs %ld", get_ns(it->lock), maxs);
+          // SDS_INFO("nslock = %ld, maxs %ld", get_ns(it->lock), maxs);
           // if (!check_write_lock(it->lock)) {
           //   char *data_buf = AllocLocalBuffer(DataItemSize);
           //   pending_next_direct_rw.emplace_back(DirectRead{
