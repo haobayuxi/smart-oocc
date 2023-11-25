@@ -850,7 +850,8 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
   dtx->AddToReadOnlySet(dist_obj);
 
   if (!dtx->TxExe()) return false;
-  SDS_INFO("get district done");
+  SDS_INFO("get district done, read only set size = %d",
+           dtx->read_only_set.size());
   tpcc_district_val_t* dist_val = (tpcc_district_val_t*)dist_obj->value;
   std::string check = std::string(dist_val->d_zip);
   if (check != tpcc_zip_magic) {
@@ -867,7 +868,8 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
   // Iterate over [o_id-20, o_id)
   for (int order_id = o_id - tpcc_stock_val_t::STOCK_LEVEL_ORDERS;
        order_id < o_id; ++order_id) {
-    SDS_INFO("order id = %ld", order_id);
+    SDS_INFO("order id = %d, read only set size = %d", order_id,
+             dtx->read_only_set.size());
     // Populate line_numer is random: [Min_OL_CNT, MAX_OL_CNT)
     for (int line_number = 1; line_number <= tpcc_order_line_val_t::MAX_OL_CNT;
          ++line_number) {
