@@ -944,21 +944,21 @@ void WarmUp(DTXContext* context) {
         TxNewOrder(iter, dtx);
         break;
       case TPCCTxType::kDelivery:
-        TxDelivery(iter, dtx);
         SDS_INFO("delivery");
+        TxDelivery(iter, dtx);
         break;
       case TPCCTxType::kOrderStatus:
-        TxOrderStatus(iter, dtx);
         SDS_INFO("order status");
+        TxOrderStatus(iter, dtx);
         break;
       case TPCCTxType::kPayment:
-        TxPayment(iter, dtx);
         SDS_INFO("payment");
+        TxPayment(iter, dtx);
         break;
       case TPCCTxType::kStockLevel:
-        TxStockLevel(iter, dtx);
         SDS_INFO("stock level");
-        break;
+        TxStockLevel(iter, dtx);
+        x break;
       default:
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
         abort();
