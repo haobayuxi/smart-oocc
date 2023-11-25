@@ -365,21 +365,27 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
         }
 
       } else {
+        res.item->is_fetched = true;
         addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
         result = false;
       }
     } else {
-      node_id_t remote_node_id = GetPrimaryNodeID(it->table_id);
-      const HashMeta &meta = GetPrimaryHashMetaWithTableID(it->table_id);
-      uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
-      offset_t node_off = idx * meta.node_size + meta.base_off;
-      auto *local_hash_node = (HashNode *)AllocLocalBuffer(sizeof(HashNode));
-      pending_next_hash_ro.emplace_back(HashRead{.node_id = remote_node_id,
-                                                 .item = res.item,
-                                                 .buf = (char *)local_hash_node,
-                                                 .meta = meta});
-      context->read((char *)local_hash_node,
-                    GlobalAddress(remote_node_id, node_off), sizeof(HashNode));
+      res.item->is_fetched = true;
+      addr_cache->Insert(res.node_id, it->table_id, it->key, NOT_FOUND);
+      result = false;
+      // node_id_t remote_node_id = GetPrimaryNodeID(it->table_id);
+      // const HashMeta &meta = GetPrimaryHashMetaWithTableID(it->table_id);
+      // uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
+      // offset_t node_off = idx * meta.node_size + meta.base_off;
+      // auto *local_hash_node = (HashNode *)AllocLocalBuffer(sizeof(HashNode));
+      // pending_next_hash_ro.emplace_back(HashRead{.node_id = remote_node_id,
+      //                                            .item = res.item,
+      //                                            .buf = (char
+      //                                            *)local_hash_node, .meta =
+      //                                            meta});
+      // context->read((char *)local_hash_node,
+      //               GlobalAddress(remote_node_id, node_off),
+      //               sizeof(HashNode));
     }
   }
   return result;
