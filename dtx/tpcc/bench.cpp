@@ -850,8 +850,8 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
   dtx->AddToReadOnlySet(dist_obj);
 
   if (!dtx->TxExe()) return false;
-  SDS_INFO("get district done, read only set size = %d",
-           dtx->read_only_set.size());
+  // SDS_INFO("get district done, read only set size = %d",
+  //          dtx->read_only_set.size());
   tpcc_district_val_t* dist_val = (tpcc_district_val_t*)dist_obj->value;
   std::string check = std::string(dist_val->d_zip);
   if (check != tpcc_zip_magic) {

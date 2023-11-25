@@ -884,24 +884,34 @@ bool DTX::CheckReset() {
 bool DTX::DSLRAbort() {
   // release read lock
   context->Sync();
-  for (auto &item : read_only_set) {
-    char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
-    auto *it = item.item_ptr.get();
-    node_id_t node_id = item.read_which_node;
-    // check backoff
-    auto lock = it->lock;
-    if (item.prev_maxs >= COUNT_MAX || item.prev_maxx >= COUNT_MAX) {
-      context->FetchAndAdd(faa_buf,
-                           GlobalAddress(node_id, it->GetRemoteLockAddr()),
-                           max_s_minus1);
-    } else {
-      context->FetchAndAdd(faa_buf,
-                           GlobalAddress(node_id, it->GetRemoteLockAddr()),
-                           release_read_lock);
-    }
+  int index = 0;
+  while (index < read_only_set.size()) {
+    for (int j = 0; j < max_op; j++) {
+      auto item = read_only_set[index];
+      char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
+      auto *it = item.item_ptr.get();
+      node_id_t node_id = item.read_which_node;
+      // check backoff
+      auto lock = it->lock;
+      if (item.prev_maxs >= COUNT_MAX || item.prev_maxx >= COUNT_MAX) {
+        context->FetchAndAdd(faa_buf,
+                             GlobalAddress(node_id, it->GetRemoteLockAddr()),
+                             max_s_minus1);
+      } else {
+        context->FetchAndAdd(faa_buf,
+                             GlobalAddress(node_id, it->GetRemoteLockAddr()),
+                             release_read_lock);
+      }
 
-    context->PostRequest();
+      context->PostRequest();
+      index++;
+      if (index == read_only_set.size()) {
+        break;
+      }
+    }
+    context->Sync();
   }
+
   // release write lock
   for (auto &item : read_write_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
