@@ -764,31 +764,33 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
       }
       re.item->is_fetched = true;
     } else {
+      addr_cache->Insert(re.node_id, it->table_id, it->key, NOT_FOUND);
+      result = false;
       // *((lock_t *)re.cas_buf) = STATE_CLEAN;
       // context->Write(re.cas_buf,
       //                GlobalAddress(re.node_id, it->GetRemoteLockAddr()),
       //                sizeof(lock_t));
-      const HashMeta &meta = GetPrimaryHashMetaWithTableID(it->table_id);
-      uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
-      offset_t node_off = idx * meta.node_size + meta.base_off;
-      auto *local_hash_node = (HashNode *)AllocLocalBuffer(sizeof(HashNode));
-      if (it->user_insert) {
-        pending_next_off_rw.emplace_back(
-            InsertOffRead{.node_id = re.node_id,
-                          .item = re.item,
-                          .buf = (char *)local_hash_node,
-                          .meta = meta,
-                          .node_off = node_off});
-      } else {
-        pending_next_hash_rw.emplace_back(
-            HashRead{.node_id = re.node_id,
-                     .item = re.item,
-                     .buf = (char *)local_hash_node,
-                     .meta = meta});
-      }
-      context->read(local_hash_node, GlobalAddress(re.node_id, node_off),
-                    sizeof(HashNode));
-      context->PostRequest();
+      // const HashMeta &meta = GetPrimaryHashMetaWithTableID(it->table_id);
+      // uint64_t idx = MurmurHash64A(it->key, 0xdeadbeef) % meta.bucket_num;
+      // offset_t node_off = idx * meta.node_size + meta.base_off;
+      // auto *local_hash_node = (HashNode *)AllocLocalBuffer(sizeof(HashNode));
+      // if (it->user_insert) {
+      //   pending_next_off_rw.emplace_back(
+      //       InsertOffRead{.node_id = re.node_id,
+      //                     .item = re.item,
+      //                     .buf = (char *)local_hash_node,
+      //                     .meta = meta,
+      //                     .node_off = node_off});
+      // } else {
+      //   pending_next_hash_rw.emplace_back(
+      //       HashRead{.node_id = re.node_id,
+      //                .item = re.item,
+      //                .buf = (char *)local_hash_node,
+      //                .meta = meta});
+      // }
+      // context->read(local_hash_node, GlobalAddress(re.node_id, node_off),
+      //               sizeof(HashNode));
+      // context->PostRequest();
     }
   }
   return result;
