@@ -67,6 +67,7 @@ uint64_t get_ns(uint64_t lock) { return lock | ns_mask; }
 int main(int argc, char **argv) {
   uint64_t t = 0;
   auto re = t + acquire_write_lock;
+  cout << re << endl;
   cout << get_ns(re) << "  " << get_max_s(re) << endl;
 
   return 0;
