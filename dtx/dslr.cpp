@@ -743,7 +743,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                 .cas_buf = cas_buf,
             });
           }
-          SDS_INFO("nslock = %ld, maxs %ld", get_ns(it->lock), maxs);
+          // SDS_INFO("nslock = %ld, maxs %ld", get_ns(it->lock), maxs);
           // if (!check_write_lock(it->lock)) {
           //   char *data_buf = AllocLocalBuffer(DataItemSize);
           //   pending_next_direct_rw.emplace_back(DirectRead{
@@ -794,7 +794,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
 }
 
 bool DTX::DSLRCommit() {
-  SDS_INFO("commit %ld", tx_id);
+  // SDS_INFO("commit %ld", tx_id);
   context->Sync();
   for (auto &item : read_only_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
@@ -816,7 +816,7 @@ bool DTX::DSLRCommit() {
 
     memcpy(data_buf, (char *)it.get() + sizeof(lock_t),
            DataItemSize - sizeof(lock_t));
-    SDS_INFO("table id = %d", it->table_id);
+    // SDS_INFO("table id = %d", it->table_id);
     node_id_t node_id = set_it.read_which_node;
 
     context->Write(data_buf,
