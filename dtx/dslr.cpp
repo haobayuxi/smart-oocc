@@ -305,7 +305,7 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));
           reset.emplace_back(ResetLock{
-              .offset = it->remote_offset,
+              .offset = it->GetRemoteLockAddr(),
               .lock = reset_lock,
               .cas_buf = cas_buf,
           });
@@ -738,7 +738,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
             char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
             memset(cas_buf, 0, sizeof(lock_t));
             reset.emplace_back(ResetLock{
-                .offset = it->remote_offset,
+                .offset = it->GetRemoteLockAddr(),
                 .lock = reset_lock,
                 .cas_buf = cas_buf,
             });
@@ -838,7 +838,7 @@ bool DTX::DSLRCommit() {
   }
   context->Sync();
 
-  while (!reset.empty()) {
+  while (reset.size() > 0) {
     CheckReset();
     context->Sync();
   }
