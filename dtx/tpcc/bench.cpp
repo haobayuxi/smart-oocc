@@ -938,26 +938,26 @@ void WarmUp(DTXContext* context) {
     TPCCTxType tx_type = workgen_arr[FastRand(&seed) % 100];
     uint64_t iter = ++tx_id_local;
     // Global atomic transaction id
-    SDS_INFO("txid %ld", iter);
+    // SDS_INFO("txid %ld", iter);
     switch (tx_type) {
       case TPCCTxType::kNewOrder:
-        SDS_INFO("new order");
+        // SDS_INFO("new order");
         TxNewOrder(iter, dtx);
         break;
       case TPCCTxType::kDelivery:
-        SDS_INFO("delivery");
+        // SDS_INFO("delivery");
         TxDelivery(iter, dtx);
         break;
       case TPCCTxType::kOrderStatus:
-        SDS_INFO("order status");
+        // SDS_INFO("order status");
         TxOrderStatus(iter, dtx);
         break;
       case TPCCTxType::kPayment:
-        SDS_INFO("payment");
+        // SDS_INFO("payment");
         TxPayment(iter, dtx);
         break;
       case TPCCTxType::kStockLevel:
-        SDS_INFO("stock level");
+        // SDS_INFO("stock level");
         TxStockLevel(iter, dtx);
         break;
       default:
