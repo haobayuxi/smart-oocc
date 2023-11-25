@@ -399,21 +399,27 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
 
     auto *it = res.item->item_ptr.get();
     *it = *fetched_item;
-    if (res.prev_maxx != get_nx(it->lock)) {
-      char *data_buf = AllocLocalBuffer(DataItemSize);
-      pending_next_direct_ro.emplace_back(DirectRead{
-          .node_id = res.node_id,
-          .item = res.item,
-          .buf = data_buf,
-          .prev_maxx = res.prev_maxx,
-      });
-      context->read(data_buf,
-                    GlobalAddress(res.node_id, fetched_item->remote_offset),
-                    DataItemSize);
-      context->PostRequest();
+    if (likely(fetched_item->key == it->key &&
+               fetched_item->table_id == it->table_id)) {
+      if (likely(fetched_item->valid)) {
+        if (res.prev_maxx != get_nx(it->lock)) {
+          char *data_buf = AllocLocalBuffer(DataItemSize);
+          pending_next_direct_ro.emplace_back(DirectRead{
+              .node_id = res.node_id,
+              .item = res.item,
+              .buf = data_buf,
+              .prev_maxx = res.prev_maxx,
+          });
+          context->read(data_buf,
+                        GlobalAddress(res.node_id, fetched_item->remote_offset),
+                        DataItemSize);
+          context->PostRequest();
+        }
+        iter = pending_next_direct_rw.erase(iter);
+      } else {
+        return false;
+      }
     }
-
-    iter = pending_next_direct_ro.erase(iter);
   }
   return true;
 }
