@@ -798,7 +798,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
 }
 
 bool DTX::DSLRCommit() {
-  // SDS_INFO("commit %ld", tx_id);
+  SDS_INFO("commit %ld", tx_id);
   context->Sync();
   for (auto &item : read_only_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
