@@ -415,7 +415,7 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
                         DataItemSize);
           context->PostRequest();
         }
-        iter = pending_next_direct_rw.erase(iter);
+        iter = pending_next_direct_ro.erase(iter);
       } else {
         return false;
       }
