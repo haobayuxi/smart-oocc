@@ -257,11 +257,9 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
 
         iter = pending_next_cas_ro.erase(iter);
       } else {
-        // return false;
         result = false;
       }
     } else {
-      // return false;
       result = false;
     }
   }
@@ -282,8 +280,9 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        uint64_t maxs = get_max_s(it->lock);
-        uint64_t maxx = get_max_x(it->lock);
+        auto lock = *(lock_t *)res.cas_buf;
+        uint64_t maxs = get_max_s(lock);
+        uint64_t maxx = get_max_x(lock);
         res.item->prev_maxs = maxs;
         res.item->prev_maxx = maxx;
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
@@ -865,6 +864,7 @@ bool DTX::CheckReset() {
 
 bool DTX::DSLRAbort() {
   // release read lock
+  context->Sync();
   for (auto &item : read_only_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
     auto *it = item.item_ptr.get();
