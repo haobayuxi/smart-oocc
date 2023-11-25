@@ -958,7 +958,7 @@ void WarmUp(DTXContext* context) {
       case TPCCTxType::kStockLevel:
         SDS_INFO("stock level");
         TxStockLevel(iter, dtx);
-        x break;
+        break;
       default:
         printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
         abort();
