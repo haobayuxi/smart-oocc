@@ -22,35 +22,35 @@ uint64_t reset_read_lock(uint64_t maxx) {
   return (lock << 32) + lock;
 }
 
-#define nx_mask 0x00F0
-#define ns_mask 0x000F
-#define max_x_mask 0xF000
-#define max_s_mask 0x0F00
+#define nx_mask 0x00000000FFFF0000
+#define ns_mask 0x000000000000FFFF
+#define max_x_mask 0xFFFF000000000000
+#define max_s_mask 0x0000FFFF00000000
 
-#define acquire_read_lock 0x0100
-#define acquire_write_lock 0x1000
-#define release_read_lock 0x0001
-#define release_write_lock 0x0010
+#define acquire_read_lock 0x0000000100000000
+#define acquire_write_lock 0x0001000000000000
+#define release_read_lock 0x0000000000000001
+#define release_write_lock 0x0000000000010000
 
-#define max_s_minus1 0xFF00
-#define max_x_minus1 0xF000
+#define max_s_minus1 0xFFFFFFFF00000000
+#define max_x_minus1 0xFFFF000000000000
 
 uint64_t get_max_x(uint64_t lock) {
-  auto maxx = lock | max_x_mask;
+  auto maxx = lock & max_x_mask;
   return maxx >> 48;
 }
 
 uint64_t get_max_s(uint64_t lock) {
-  auto maxs = lock | max_s_mask;
+  auto maxs = lock & max_s_mask;
   return maxs >> 32;
 }
 
 uint64_t get_nx(uint64_t lock) {
-  auto nx = lock | nx_mask;
+  auto nx = lock & nx_mask;
   return nx >> 16;
 }
 
-uint64_t get_ns(uint64_t lock) { return lock | ns_mask; }
+uint64_t get_ns(uint64_t lock) { return lock & ns_mask; }
 
 bool DTX::DSLRExeRO() {
   std::vector<CasRead> pending_cas_ro;
