@@ -669,6 +669,7 @@ bool DTX::DSLRIssueReadOnly(std::vector<CasRead> &pending_cas_ro,
                             std::vector<HashRead> &pending_hash_ro) {
   for (auto &item : read_only_set) {
     if (item.is_fetched) continue;
+    SDS_INFO("get data");
     auto it = item.item_ptr;
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     item.read_which_node = node_id;
