@@ -660,7 +660,7 @@ bool DTX::DSLRCheckNextHashRW(std::list<CasRead> &pending_next_cas_rw,
                     DataItemSize);
       context->PostRequest();
     } else {
-      return false;
+      // return false;
       auto *local_hash_node = (HashNode *)res.buf;
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
@@ -816,7 +816,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
 }
 
 bool DTX::DSLRCommit() {
-  // SDS_INFO("commit %ld", tx_id);
+  SDS_INFO("commit %ld", tx_id);
   context->Sync();
   for (auto &item : read_only_set) {
     char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
@@ -838,7 +838,7 @@ bool DTX::DSLRCommit() {
 
     memcpy(data_buf, (char *)it.get() + sizeof(lock_t),
            DataItemSize - sizeof(lock_t));
-    // SDS_INFO("table id = %d", it->table_id);
+    SDS_INFO("table id = %d", it->table_id);
     node_id_t node_id = set_it.read_which_node;
 
     context->Write(data_buf,
