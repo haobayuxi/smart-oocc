@@ -66,7 +66,8 @@ uint64_t get_ns(uint64_t lock) { return lock | ns_mask; }
 
 int main(int argc, char **argv) {
   uint64_t t = 1;
-  cout << t << 1;
+  auto re = t << 1;
+  cout << re << endl;
 
   return 0;
 }
