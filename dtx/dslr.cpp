@@ -417,7 +417,7 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
 
     auto *it = res.item->item_ptr.get();
     *it = *fetched_item;
-    if (res.prev_maxx != get_nx(it->lock)) {
+    if (get_nx(res.prev_maxx) != get_nx(it->lock)) {
       char *data_buf = AllocLocalBuffer(DataItemSize);
       pending_next_direct_ro.emplace_back(DirectRead{
           .node_id = res.node_id,
@@ -442,7 +442,7 @@ bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
     auto *fetched_item = (DataItem *)res.buf;
     auto *it = res.item->item_ptr.get();
     *it = *fetched_item;
-    if (it->lock != res.prev_maxs) {
+    if (get_ns(it->lock) != res.prev_maxs) {
       // read locked
       char *data_buf = AllocLocalBuffer(DataItemSize);
       pending_next_direct_rw.emplace_back(DirectRead{
