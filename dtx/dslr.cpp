@@ -36,45 +36,21 @@ uint64_t reset_read_lock(uint64_t maxx) {
 #define max_x_minus1 0xF000
 
 uint64_t get_max_x(uint64_t lock) {
-  auto nx = lock | nx_mask;
-  return nx >> 48;
+  auto maxx = lock | max_x_mask;
+  return maxx >> 48;
 }
 
 uint64_t get_max_s(uint64_t lock) {
-  auto ns = lock | ns_mask;
-  return ns >> 32;
+  auto maxs = lock | max_s_mask;
+  return maxs >> 32;
 }
 
 uint64_t get_nx(uint64_t lock) {
-  auto max_x = lock | max_x_mask;
-  return max_x >> 16;
+  auto nx = lock | nx_mask;
+  return nx >> 16;
 }
 
-uint64_t get_ns(uint64_t lock) { return lock | max_s_mask; }
-
-// int DTX::check_write_lock1(uint64_t lock, uint64_t offset) {
-//   auto maxs = get_max_s(lock);
-//   auto maxx = get_max_x(lock);
-//   if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
-//     return DSLR_CHECK_LOCK::BACKOFF;
-//   } else if (maxx == COUNT_MAX - 1) {
-//     auto reset_lock = maxs << 16 + COUNT_MAX;
-//     reset_lock = (reset_lock << 32) + reset_lock;
-//     char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-//     memset(cas_buf, 0, sizeof(lock_t));
-//     reset.emplace_back(ResetLock{
-//         .offset = offset,
-//         .lock = reset_lock,
-//         .cas_buf = cas_buf,
-//     });
-//   }
-
-//   if (get_nx(lock) == maxx) {
-//     return DSLR_CHECK_LOCK::SUCCESS;
-//   }
-//   return DSLR_CHECK_LOCK::WAIT;
-// }
-// bool check_write_lock(uint64_t lock) { return true; }
+uint64_t get_ns(uint64_t lock) { return lock | ns_mask; }
 
 bool DTX::DSLRExeRO() {
   std::vector<CasRead> pending_cas_ro;
@@ -197,15 +173,15 @@ bool DTX::DSLRIssueReadWrite(
     if (offset != NOT_FOUND) {
       it->remote_offset = offset;
       locked_rw_set.emplace_back(i);
-      char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+      char *faa_buf = AllocLocalBuffer(sizeof(lock_t));
       char *data_buf = AllocLocalBuffer(DataItemSize);
       pending_cas_rw.emplace_back(CasRead{.node_id = node_id,
                                           .item = &read_write_set[i],
-                                          .cas_buf = cas_buf,
+                                          .cas_buf = faa_buf,
                                           .data_buf = data_buf});
-      context->CompareAndSwap(
-          cas_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
-          STATE_CLEAN, STATE_LOCKED);
+      context->FetchAndAdd(
+          faa_buf, GlobalAddress(node_id, it->GetRemoteLockAddr(offset)),
+          acquire_write_lock);
       context->read(data_buf, GlobalAddress(node_id, offset), DataItemSize);
       context->PostRequest();
     } else {
