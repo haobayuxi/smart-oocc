@@ -86,6 +86,7 @@ bool DTX::DSLRExeRO() {
 
 bool DTX::DSLRExeRW() {
   is_ro_tx = false;
+  context->Sync();
   std::vector<CasRead> pending_cas_ro;
   std::vector<HashRead> pending_hash_ro;
   std::vector<CasRead> pending_cas_rw;
@@ -119,7 +120,7 @@ bool DTX::DSLRExeRW() {
   if (!CheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
                         pending_next_off_rw))
     return false;
-  SDS_INFO("rw %ld", tx_id);
+  // SDS_INFO("rw %ld", tx_id);
   for (int i = 0; i < 100; i++) {
     context->Sync();
     if (!pending_next_direct_ro.empty() || !pending_next_direct_rw.empty() ||

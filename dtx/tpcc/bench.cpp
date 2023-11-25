@@ -937,6 +937,7 @@ void WarmUp(DTXContext* context) {
     TPCCTxType tx_type = workgen_arr[FastRand(&seed) % 100];
     uint64_t iter = ++tx_id_local;
     // Global atomic transaction id
+    SDS_INFO("txid %ld", iter);
     switch (tx_type) {
       case TPCCTxType::kNewOrder:
         SDS_INFO("new order");
