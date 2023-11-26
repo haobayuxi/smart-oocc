@@ -623,7 +623,7 @@ int ResourceManager::enable_queue_pair(QueuePair *qp, uint16_t lid,
     attr.ah_attr.port_num = ib_port_;
     attr.dest_qp_num = qp_num;
     attr.rq_psn = psn;  // match remote sq_psn
-    attr.max_dest_rd_atomic = 32;
+    attr.max_dest_rd_atomic = 31;
     attr.min_rnr_timer = 12;
   }
 
