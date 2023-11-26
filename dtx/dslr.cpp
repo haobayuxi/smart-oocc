@@ -433,15 +433,15 @@ bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
       if (likely(fetched_item->valid)) {
         if (get_ns(it->lock) != res.prev_maxs) {
           // read locked
-          char *data_buf = AllocLocalBuffer(DataItemSize);
+          // char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_direct_rw.emplace_back(DirectRead{
               .node_id = res.node_id,
               .item = res.item,
-              .buf = data_buf,
+              .buf = res.buf,
               .prev_maxs = res.prev_maxs,
           });
           auto offset = addr_cache->Search(res.node_id, it->table_id, it->key);
-          auto ret = context->read(data_buf, GlobalAddress(res.node_id, offset),
+          auto ret = context->read(res.buf, GlobalAddress(res.node_id, offset),
                                    DataItemSize);
           if (ret != 0) {
             return false;
