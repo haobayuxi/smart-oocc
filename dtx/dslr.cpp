@@ -440,9 +440,9 @@ bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
               .buf = data_buf,
               .prev_maxs = res.prev_maxs,
           });
-          auto ret = context->read(
-              data_buf, GlobalAddress(res.node_id, fetched_item->remote_offset),
-              DataItemSize);
+          auto offset = addr_cache->Search(res.node_id, it->table_id, it->key);
+          auto ret = context->read(data_buf, GlobalAddress(res.node_id, offset),
+                                   DataItemSize);
           if (ret != 0) {
             return false;
           }
