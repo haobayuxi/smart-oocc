@@ -132,19 +132,16 @@ bool DTX::DSLRExeRW() {
       if (!DSLRCheckNextCasRW(pending_next_cas_rw, pending_next_direct_rw))
         result = false;
       if (!result) return false;
-      context->Sync();
-      SDS_INFO("check next done %ld %d", tx_id, t_id);
+      // context->Sync();
       if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
         return false;
       if (!DSLRCheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
         return false;
-      context->Sync();
-      SDS_INFO("check next hash done %ld", tx_id);
+      // context->Sync();
       if (!DSLRCheckDirectRO(pending_next_direct_ro)) return false;
       if (!DSLRCheckDirectRW(pending_next_direct_rw)) return false;
 
-      context->Sync();
-      SDS_INFO("check direct done %ld", tx_id);
+      // context->Sync();
       if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
         return false;
     } else {
