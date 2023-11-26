@@ -252,6 +252,8 @@ int ResourceManager::do_poll(node_t node_id, int qp_idx,
     if (wc_list[i].status != IBV_WC_SUCCESS) {
       SDS_WARN("detected wc status error: %s, vendor error %x",
                ibv_wc_status_str(wc_list[i].status), wc_list[i].vendor_err);
+      SDS_INFO("opcode = %d, byte len = %d", wc_list[i].opcode,
+               wc_list[i].byte_len);
       has_failed = true;
     }
     wr_id_list.push_back(wc_list[i].wr_id);
@@ -623,7 +625,7 @@ int ResourceManager::enable_queue_pair(QueuePair *qp, uint16_t lid,
     attr.ah_attr.port_num = ib_port_;
     attr.dest_qp_num = qp_num;
     attr.rq_psn = psn;  // match remote sq_psn
-    attr.max_dest_rd_atomic = 1;
+    attr.max_dest_rd_atomic = 16;
     attr.min_rnr_timer = 12;
   }
 
