@@ -383,7 +383,6 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
 }
 
 bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
-  SDS_INFO("ro size = %d", pending_next_direct_ro.size());
   for (auto iter = pending_next_direct_ro.begin();
        iter != pending_next_direct_ro.end(); iter++) {
     auto res = *iter;
@@ -420,7 +419,6 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
 }
 
 bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
-  SDS_INFO("rw size = %d", pending_next_direct_rw.size());
   for (auto iter = pending_next_direct_rw.begin();
        iter != pending_next_direct_rw.end(); iter++) {
     auto res = *iter;
