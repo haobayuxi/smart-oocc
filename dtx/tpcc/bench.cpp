@@ -1023,6 +1023,9 @@ void RunTx(DTXContext* context) {
       double tx_usec =
           (tx_end_time.tv_sec - tx_start_time.tv_sec) * 1000000 +
           (double)(tx_end_time.tv_nsec - tx_start_time.tv_nsec) / 1000;
+      if (tx_usec > 10000) {
+        SDS_INFO("tx type = %d", tx_type);
+      }
       timer[timer_idx] = tx_usec;
       timer_idx += threads * coroutines;
       commit_tx++;
