@@ -401,12 +401,11 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
           pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
               .item = res.item,
-              .buf = res.data_buf,
+              .buf = res.buf,
               .prev_maxx = res.prev_maxx,
           });
           auto ret = context->read(
-              res.data_buf,
-              GlobalAddress(res.node_id, fetched_item->remote_offset),
+              res.buf, GlobalAddress(res.node_id, fetched_item->remote_offset),
               DataItemSize);
           if (ret != 0) {
             return false;
