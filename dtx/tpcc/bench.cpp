@@ -970,7 +970,7 @@ void WarmUp(DTXContext* context) {
 }
 
 const static uint64_t kCpuFrequency = 2400;
-uint64_t g_idle_cycles = 0;
+uint64_t g_idle_cycles = 100;
 
 static void IdleExecution() {
   if (g_idle_cycles) {
@@ -1023,9 +1023,7 @@ void RunTx(DTXContext* context) {
       double tx_usec =
           (tx_end_time.tv_sec - tx_start_time.tv_sec) * 1000000 +
           (double)(tx_end_time.tv_nsec - tx_start_time.tv_nsec) / 1000;
-      if (tx_usec > 10000) {
-        SDS_INFO("tx type = %d", tx_type);
-      }
+
       timer[timer_idx] = tx_usec;
       timer_idx += threads * coroutines;
       commit_tx++;
