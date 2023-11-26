@@ -428,6 +428,7 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
 }
 
 bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
+  context->Sync();
   for (auto iter = pending_next_direct_rw.begin();
        iter != pending_next_direct_rw.end(); iter++) {
     auto res = *iter;
