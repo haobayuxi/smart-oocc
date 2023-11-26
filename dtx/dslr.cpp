@@ -147,17 +147,6 @@ bool DTX::DSLRExeRW() {
       break;
     }
   }
-  //   while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty() ||
-  //          !pending_next_hash_rw.empty() || !pending_next_off_rw.empty()) {
-  //     context->Sync();
-  //     if (!CheckInvisibleRO(pending_invisible_ro)) return false;
-  //     if (!CheckNextHashRO(pending_invisible_ro, pending_next_hash_ro))
-  //       return false;
-  //     if (!DrTMCheckNextHashRW(pending_invisible_ro, pending_next_hash_rw))
-  //       return false;
-  //     if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
-  //       return false;
-  //   }
   ParallelUndoLog();
   return true;
 }
@@ -394,6 +383,7 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
 }
 
 bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
+  SDS_INFO("ro size = %d", pending_next_direct_ro.size());
   for (auto iter = pending_next_direct_ro.begin();
        iter != pending_next_direct_ro.end(); iter++) {
     auto res = *iter;
@@ -430,7 +420,7 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
 }
 
 bool DTX::DSLRCheckDirectRW(std::list<DirectRead> &pending_next_direct_rw) {
-  context->Sync();
+  SDS_INFO("rw size = %d", pending_next_direct_rw.size());
   for (auto iter = pending_next_direct_rw.begin();
        iter != pending_next_direct_rw.end(); iter++) {
     auto res = *iter;
