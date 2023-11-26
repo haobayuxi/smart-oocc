@@ -216,15 +216,14 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        uint64_t maxs = get_max_s(it->lock);
-        uint64_t maxx = get_max_x(it->lock);
+        auto lock = *(lock_t *)res.cas_buf;
+        uint64_t maxs = get_max_s(lock);
+        uint64_t maxx = get_max_x(lock);
         res.item->prev_maxs = maxs;
         res.item->prev_maxx = maxx;
-        res.item->prev_maxs = get_max_s(it->lock);
-        res.item->prev_maxx = get_max_x(it->lock);
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           result = false;
-        } else if (get_max_x(it->lock) != get_nx(it->lock)) {
+        } else if (maxx != get_nx(it->lock)) {
           char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
@@ -279,7 +278,7 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
         res.item->prev_maxx = maxx;
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           result = false;
-        } else if (get_max_s(it->lock) != get_ns(it->lock)) {
+        } else if (maxs != get_ns(it->lock)) {
           char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_direct_rw.emplace_back(DirectRead{
               .node_id = res.node_id,
