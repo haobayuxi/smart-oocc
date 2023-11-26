@@ -133,7 +133,7 @@ bool DTX::DSLRExeRW() {
         result = false;
       if (!result) return false;
       context->Sync();
-      SDS_INFO("check next done %ld", tx_id);
+      SDS_INFO("check next done %ld %d", tx_id, t_id);
       if (!DSLRCheckNextHashRO(pending_next_cas_ro, pending_next_hash_ro))
         return false;
       if (!DSLRCheckNextHashRW(pending_next_cas_rw, pending_next_hash_rw))
@@ -397,15 +397,16 @@ bool DTX::DSLRCheckDirectRO(std::list<DirectRead> &pending_next_direct_ro) {
                fetched_item->table_id == it->table_id)) {
       if (likely(fetched_item->valid)) {
         if (res.prev_maxx != get_nx(it->lock)) {
-          char *data_buf = AllocLocalBuffer(DataItemSize);
+          // char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
               .item = res.item,
-              .buf = data_buf,
+              .buf = res.data_buf,
               .prev_maxx = res.prev_maxx,
           });
           auto ret = context->read(
-              data_buf, GlobalAddress(res.node_id, fetched_item->remote_offset),
+              res.data_buf,
+              GlobalAddress(res.node_id, fetched_item->remote_offset),
               DataItemSize);
           if (ret != 0) {
             return false;
