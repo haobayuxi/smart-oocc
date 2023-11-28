@@ -326,7 +326,9 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         // SDS_INFO("lock state %ld, txid = %ld", it->lock, tx_id);
         if (CheckReadWriteConflict) {
           if (unlikely((it->lock > 0))) {
-            if (DelayLock) {
+            if (txn_sys == DTX_SYS::OCC) {
+              return false;
+            } else if (DelayLock) {
               if (it->lock % 2 == 0) {
                 re_validate = true;
               } else {
@@ -383,7 +385,9 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     if (likely(find)) {
       if (CheckReadWriteConflict) {
         if (unlikely((it->lock > 0))) {
-          if (DelayLock) {
+          if (txn_sys == DTX_SYS::OCC) {
+            return false;
+          } else if (DelayLock) {
             if (it->lock % 2 == 0) {
               re_validate = true;
             } else {
@@ -492,7 +496,9 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
     if (likely(find)) {
       if (CheckReadWriteConflict) {
         if (unlikely((it->lock > 0))) {
-          if (DelayLock) {
+          if (txn_sys == DTX_SYS::OCC) {
+            return false;
+          } else if (DelayLock) {
             if (it->lock % 2 == 0) {
               re_validate = true;
             } else {
@@ -763,7 +769,7 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
 
 bool DTX::OOCCCommit() {
   ParallelUndoLog();
-  if (DelayLock) {
+  if (DelayLock && txn_sys == DTX_SYS::OOCC) {
     for (auto &set_it : read_write_set) {
       char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
       auto it = set_it.item_ptr;
