@@ -1,6 +1,6 @@
 #include "dtx.h"
 
-uint64_t DrTMLease = 400;
+uint64_t DrTMLease = 1000;
 
 ALWAYS_INLINE
 uint64_t next_lease() { return (get_clock_sys_time_us() + DrTMLease) << 1; }
@@ -26,7 +26,7 @@ bool DTX::DrTMExeRO() {
   if (!DrTMCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
-  for (int i = 0; i < 200; i++) {
+  for (int i = 0; i < 100; i++) {
     context->Sync();
     if (!pending_next_cas_ro.empty() || !pending_next_hash_ro.empty()) {
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
