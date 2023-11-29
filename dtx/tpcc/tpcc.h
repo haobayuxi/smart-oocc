@@ -398,7 +398,7 @@ const int64_t tpcc_add_magic =
 #define FREQUENCY_NEW_ORDER 45
 #define FREQUENCY_PAYMENT 43
 #define FREQUENCY_ORDER_STATUS 4
-#define FREQUENCY_DELIVERY 4
+#define FREQUENCY_DELIVERY 8
 #define FREQUENCY_STOCK_LEVEL 4
 
 // Transaction workload type
@@ -522,8 +522,8 @@ class TPCC {
     j += FREQUENCY_DELIVERY;
     for (; i < j; i++) workgen_arr[i] = TPCCTxType::kDelivery;
 
-    j += FREQUENCY_STOCK_LEVEL;
-    for (; i < j; i++) workgen_arr[i] = TPCCTxType::kStockLevel;
+    // j += FREQUENCY_STOCK_LEVEL;
+    // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kStockLevel;
 
     assert(i == 100 && j == 100);
     return workgen_arr;
