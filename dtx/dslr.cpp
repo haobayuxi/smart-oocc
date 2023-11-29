@@ -20,15 +20,13 @@ enum DSLR_CHECK_LOCK : int {
 uint64_t reset_write_lock(uint64_t maxs) {
   uint64_t lock = COUNT_MAX << 16;
   lock += maxs;
-  uint64_t result = lock << 32;
-  return result + lock;
+  return lock << 32 + lock;
 }
 // 0101110011110111100000000000000001011100111101111000000000000000
 uint64_t reset_read_lock(uint64_t maxx) {
   uint64_t lock = maxx << 16;
   lock += COUNT_MAX;
-  uint64_t result = lock << 32;
-  return result + lock;
+  return lock << 32 + lock;
 }
 
 #define nx_mask 0x00000000FFFF0000
@@ -296,6 +294,10 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
           result = false;
         } else if (maxs == get_ns(lock) && maxx == get_nx(lock)) {
           if (maxx == COUNT_MAX - 1) {
+            for (int i = 63; i >= 0; i--) {
+              cout << ((lock >> i) & 1);
+            }
+            cout << endl;
             auto reset_lock = reset_write_lock(maxs);
             char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
             memset(cas_buf, 0, sizeof(lock_t));
