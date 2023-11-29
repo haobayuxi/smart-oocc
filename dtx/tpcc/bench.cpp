@@ -791,14 +791,6 @@ bool TxOrderStatus(tx_id_t tx_id, DTX* dtx) {
     // SDS_PERROR << "[FATAL] Read order unmatch, tid-cid-txid: " << dtx->t_id
     //            << "-" << dtx->coro_id << "-" << tx_id;
   }
-  // for (auto& item : dtx->read_only_set) {
-  //   uint64_t read_lease = item.item_ptr.get()->lock;
-  //   if (read_lease == 0) {
-  //     SDS_INFO("commit lease expired, %ld , key%ld", read_lease,
-  //              item.item_ptr.get()->key);
-  //     sleep(1);
-  //   }
-  // }
   for (int i = 1; i <= order_val->o_ol_cnt; i++) {
     int64_t ol_key =
         tpcc_client->MakeOrderLineKey(warehouse_id, district_id, order_id, i);
@@ -997,26 +989,34 @@ void RunTx(DTXContext* context) {
 
     TPCCTxType tx_type = workgen_arr[iter % 100];
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
-    switch (tx_type) {
-      case TPCCTxType::kNewOrder:
-        tx_committed = TxNewOrder(iter, dtx);
+    for (int i = 0; i < 30; i++) {
+      switch (tx_type) {
+        case TPCCTxType::kNewOrder:
+          tx_committed = TxNewOrder(iter, dtx);
+          break;
+        case TPCCTxType::kDelivery:
+          tx_committed = TxDelivery(iter, dtx);
+          break;
+        case TPCCTxType::kOrderStatus:
+          tx_committed = TxOrderStatus(iter, dtx);
+          break;
+        case TPCCTxType::kPayment:
+          tx_committed = TxPayment(iter, dtx);
+          break;
+        case TPCCTxType::kStockLevel:
+          tx_committed = TxStockLevel(iter, dtx);
+          break;
+        default:
+          printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
+          abort();
+      }
+      if (!tx_committed) {
+        continue;
+      } else {
         break;
-      case TPCCTxType::kDelivery:
-        tx_committed = TxDelivery(iter, dtx);
-        break;
-      case TPCCTxType::kOrderStatus:
-        tx_committed = TxOrderStatus(iter, dtx);
-        break;
-      case TPCCTxType::kPayment:
-        tx_committed = TxPayment(iter, dtx);
-        break;
-      case TPCCTxType::kStockLevel:
-        tx_committed = TxStockLevel(iter, dtx);
-        break;
-      default:
-        printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
-        abort();
+      }
     }
+
     // Stat after one transaction finishes
     if (tx_committed) {
       clock_gettime(CLOCK_REALTIME, &tx_end_time);
