@@ -51,6 +51,10 @@ const uint64_t COUNT_MAX = 32768;
 
 uint64_t reset_write_lock(uint64_t maxs) {
   uint64_t lock = COUNT_MAX << 16 + maxs;
+  for (int i = 63; i >= 0; i--) {
+    cout << ((lock >> i) & 1);
+  }
+  cout << endl;
   return (lock << 32) + lock;
 }
 
@@ -73,7 +77,7 @@ uint64_t get_ns(uint64_t lock) { return lock & ns_mask; }
 
 int main(int argc, char **argv) {
   uint64_t t = 0;
-  auto re = reset_write_lock(0);
+  auto re = reset_write_lock(COUNT_MAX - 1);
   for (int i = 63; i >= 0; i--) {
     cout << ((re >> i) & 1);
   }
