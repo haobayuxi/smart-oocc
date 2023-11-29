@@ -1,5 +1,9 @@
 
+#include <iostream>
+
 #include "dtx.h"
+
+using namespace std;
 
 const uint64_t COUNT_MAX = 32768;
 const int max_op = 100;
@@ -889,7 +893,12 @@ bool DTX::CheckReset() {
     auto res = *iter;
 
     if (*((uint64_t *)res.cas_buf) != res.lock) {
+      auto cas = *(uint64_t *)res.cas_buf;
       SDS_INFO("%ld, %ld", *(uint64_t *)res.cas_buf, res.lock);
+      for (int i = 63; i >= 0; i--) {
+        cout << ((cas >> i) & 1);
+      }
+      cout << endl;
       context->CompareAndSwap(res.cas_buf, GlobalAddress(0, res.offset),
                               res.lock, 0);
       context->PostRequest();
