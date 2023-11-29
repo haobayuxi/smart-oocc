@@ -21,14 +21,6 @@ uint64_t reset_write_lock(uint64_t maxs) {
   uint64_t lock = COUNT_MAX << 16 + maxs;
   return (lock << 32) + lock;
 }
-// 10000000000000000000000000000000
-// 10000000000000000000000000000000
-// 10000000000000000000000000000000
-// 1000000000000000000000000000000
-// 10000000000000001000000000000000
-// 10000000000000000111111111111111
-// 1000000000000000
-// 0111111111111111
 uint64_t reset_read_lock(uint64_t maxx) {
   uint64_t lock = maxx << 16 + COUNT_MAX;
   return (lock << 32) + lock;
@@ -302,6 +294,7 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
             auto reset_lock = reset_write_lock(maxs);
             char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
             memset(cas_buf, 0, sizeof(lock_t));
+            SDS_INFO("maxx %ld", reset_lock);
             reset.emplace_back(ResetLock{
                 .offset = it->GetRemoteLockAddr(),
                 .lock = reset_lock,
