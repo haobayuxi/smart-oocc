@@ -18,14 +18,16 @@ enum DSLR_CHECK_LOCK : int {
 // reset read lock |prev maxx|count max| prev maxx| count max
 // reset write lock |count max|prev maxs|count max| prev maxs
 uint64_t reset_write_lock(uint64_t maxs) {
-  uint64_t lock = COUNT_MAX << 16 + maxs;
-  return (lock << 32) + lock;
+  uint64_t lock = COUNT_MAX << 16;
+  lock += maxs;
+  uint64_t result = lock << 32;
+  return result + lock;
 }
-// 0111111111111111011111111111111101111111111111110111111111111111
-// 0100000000000000000000000000000001000000000000000000000000000000
 uint64_t reset_read_lock(uint64_t maxx) {
-  uint64_t lock = maxx << 16 + COUNT_MAX;
-  return (lock << 32) + lock;
+  uint64_t lock = maxx << 16;
+  lock += COUNT_MAX;
+  uint64_t result = lock << 32;
+  return result + lock;
 }
 
 #define nx_mask 0x00000000FFFF0000
