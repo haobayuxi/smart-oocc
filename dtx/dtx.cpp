@@ -121,11 +121,7 @@ bool DTX::CoalescentCommit() {
   std::vector<CommitWrite> pending_commit_write;
   context->Sync();
   auto end_time = get_clock_sys_time_us();
-  if (txn_sys == DTX_SYS::OOCC) {
-    while ((last_write_lock_time + lease) > end_time) {
-      end_time = get_clock_sys_time_us();
-    }
-  }
+
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
   context->Sync();
   *((lock_t *)cas_buf) = 0;
@@ -420,11 +416,6 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
           } else {
             return false;
           }
-          // if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
-          //   re_validate = true;
-          // } else {
-          //   return false;
-          // }
         }
       }
     } else {
@@ -531,11 +522,6 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
           } else {
             return false;
           }
-          // if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
-          //   re_validate = true;
-          // } else {
-          //   return false;
-          // }
         }
       }
       iter = pending_next_hash_ro.erase(iter);
