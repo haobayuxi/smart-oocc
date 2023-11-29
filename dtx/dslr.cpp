@@ -23,7 +23,8 @@ uint64_t reset_write_lock(uint64_t maxs) {
   uint64_t result = lock << 32;
   return result + lock;
 }
-// 0101110011110111100000000000000001011100111101111000000000000000
+// 01011100111101111000000000000000
+// 01011100111101111000000000000000
 uint64_t reset_read_lock(uint64_t maxx) {
   uint64_t lock = maxx << 16;
   lock += COUNT_MAX;
@@ -357,6 +358,7 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
           result = false;
         }
         if (maxs == COUNT_MAX - 1) {
+          SDS_INFO("%ld", maxx);
           auto reset_lock = reset_read_lock(maxx);
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));

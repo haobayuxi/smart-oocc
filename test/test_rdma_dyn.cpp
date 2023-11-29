@@ -54,6 +54,13 @@ uint64_t reset_write_lock(uint64_t maxs) {
   t += maxs;
   return (t << 32) + t;
 }
+
+uint64_t reset_read_lock(uint64_t maxx) {
+  uint64_t lock = maxx << 16;
+  lock += COUNT_MAX;
+  uint64_t result = lock << 32;
+  return result + lock;
+}
 uint64_t get_max_x(uint64_t lock) {
   auto maxx = lock & max_x_mask;
   return maxx >> 48;
