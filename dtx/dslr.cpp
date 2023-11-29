@@ -302,7 +302,7 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
           auto reset_lock = reset_write_lock(maxs);
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));
-          SDS_INFO("maxx %ld", reset_lock);
+          // SDS_INFO("maxx %ld", reset_lock);
           assert((reset_lock != 4611686019501129728));
           reset.emplace_back(ResetLock{
               .offset = it->GetRemoteLockAddr(),
@@ -359,12 +359,12 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
           result = false;
         }
         if (maxs == COUNT_MAX - 1) {
-          SDS_INFO("%ld", maxx);
+          // SDS_INFO("%ld", maxx);
           auto reset_lock = reset_read_lock(maxx);
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));
 
-          SDS_INFO("%ld", reset_lock);
+          // SDS_INFO("%ld", reset_lock);
           reset.emplace_back(ResetLock{
               .offset = it->remote_offset,
               .lock = reset_lock,
@@ -767,14 +767,14 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
             result = false;
           }
           if (maxx == COUNT_MAX - 1) {
-            for (int i = 63; i >= 0; i--) {
-              cout << ((lock >> i) & 1);
-            }
-            cout << endl;
+            // for (int i = 63; i >= 0; i--) {
+            //   cout << ((lock >> i) & 1);
+            // }
+            // cout << endl;
             auto reset_lock = reset_write_lock(maxs);
             char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
             memset(cas_buf, 0, sizeof(lock_t));
-            SDS_INFO("maxs = %ld, %ld", maxs, reset_lock);
+            // SDS_INFO("maxs = %ld, %ld", maxs, reset_lock);
             reset.emplace_back(ResetLock{
                 .offset = it->GetRemoteLockAddr(),
                 .lock = reset_lock,
@@ -915,15 +915,15 @@ bool DTX::CheckReset() {
 
     if (*((uint64_t *)res.cas_buf) != res.lock) {
       auto cas = *(uint64_t *)res.cas_buf;
-      SDS_INFO("%ld, %ld", *(uint64_t *)res.cas_buf, res.lock);
-      for (int i = 63; i >= 0; i--) {
-        cout << ((cas >> i) & 1);
-      }
-      cout << endl;
-      for (int i = 63; i >= 0; i--) {
-        cout << ((res.lock >> i) & 1);
-      }
-      cout << endl;
+      // SDS_INFO("%ld, %ld", *(uint64_t *)res.cas_buf, res.lock);
+      // for (int i = 63; i >= 0; i--) {
+      //   cout << ((cas >> i) & 1);
+      // }
+      // cout << endl;
+      // for (int i = 63; i >= 0; i--) {
+      //   cout << ((res.lock >> i) & 1);
+      // }
+      // cout << endl;
       // assert(false);
       context->CompareAndSwap(res.cas_buf, GlobalAddress(0, res.offset),
                               res.lock, 0);
