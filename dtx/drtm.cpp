@@ -509,7 +509,7 @@ bool DTX::DrTMCheckCasRW(std::vector<CasRead> &pending_cas_rw,
       } else {
         if (likely(fetched_item->valid)) {
           assert(fetched_item->remote_offset == it->remote_offset);
-          if (fetched_item->lock != (tx_id << 1 + 1)) {
+          if (lock != 0) {
             // check lease
             if (lock % 2 == 1) {
               // write locked
