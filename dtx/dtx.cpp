@@ -822,32 +822,17 @@ bool DTX::OOCCCommit() {
     if (!it->user_insert) {
       it->version++;
     }
-    if (delayed_unlock) {
-      it->lock = STATE_READ_LOCKED;
-    } else {
-      it->lock = 0;
-    }
-    // it->lock = 0;
+    // if (delayed_unlock) {
+    //   it->lock = STATE_READ_LOCKED;
+    // } else {
+    it->lock = 0;
+    // }
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     context->Write(data_buf, GlobalAddress(node_id, it->remote_offset),
                    DataItemSize);
     context->PostRequest();
   }
-  if (delayed_unlock) {
-    context->Sync();
-    for (auto &set_it : read_write_set) {
-      char *data_buf = AllocLocalBuffer(sizeof(lock_t));
-      auto it = set_it.item_ptr;
-      memset(data_buf, 0, sizeof(lock_t));
-      node_id_t node_id = GetPrimaryNodeID(it->table_id);
-      context->Write(
-          data_buf,
-          GlobalAddress(node_id, it->GetRemoteLockAddr(it->remote_offset)),
-          sizeof(lock_t));
-      context->PostRequest();
-    }
-  }
-
+  context->Sync();
   return true;
 }
