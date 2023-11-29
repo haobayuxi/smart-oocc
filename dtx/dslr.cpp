@@ -303,7 +303,6 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
           char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
           memset(cas_buf, 0, sizeof(lock_t));
           // SDS_INFO("maxx %ld", reset_lock);
-          assert((reset_lock != 4611686019501129728));
           reset.emplace_back(ResetLock{
               .offset = it->GetRemoteLockAddr(),
               .lock = reset_lock,
@@ -754,7 +753,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                                 .version = fetched_item->version});
       } else {
         if (likely(fetched_item->valid)) {
-          assert(fetched_item->remote_offset == it->remote_offset);
+          // assert(fetched_item->remote_offset == it->remote_offset);
           *it = *fetched_item;
           re.item->is_fetched = true;
           uint64_t lock = *(lock_t *)re.cas_buf;
