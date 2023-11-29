@@ -26,8 +26,7 @@ bool DTX::DrTMExeRO() {
   if (!DrTMCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
-  for (int i = 0; i < 100; i++) {
-    // SDS_INFO("retry %d txid = %ld", i, tx_id);
+  for (int i = 0; i < 200; i++) {
     context->Sync();
     if (!pending_next_cas_ro.empty() || !pending_next_hash_ro.empty()) {
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
