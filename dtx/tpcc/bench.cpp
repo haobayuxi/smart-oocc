@@ -989,7 +989,7 @@ void RunTx(DTXContext* context) {
 
     TPCCTxType tx_type = workgen_arr[iter % 100];
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 20; i++) {
       switch (tx_type) {
         case TPCCTxType::kNewOrder:
           tx_committed = TxNewOrder(iter, dtx);
