@@ -989,32 +989,25 @@ void RunTx(DTXContext* context) {
 
     TPCCTxType tx_type = workgen_arr[iter % 100];
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
-    for (int i = 0; i < 30; i++) {
-      switch (tx_type) {
-        case TPCCTxType::kNewOrder:
-          tx_committed = TxNewOrder(iter, dtx);
-          break;
-        case TPCCTxType::kDelivery:
-          tx_committed = TxDelivery(iter, dtx);
-          break;
-        case TPCCTxType::kOrderStatus:
-          tx_committed = TxOrderStatus(iter, dtx);
-          break;
-        case TPCCTxType::kPayment:
-          tx_committed = TxPayment(iter, dtx);
-          break;
-        case TPCCTxType::kStockLevel:
-          tx_committed = TxStockLevel(iter, dtx);
-          break;
-        default:
-          printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
-          abort();
-      }
-      if (!tx_committed) {
-        continue;
-      } else {
+    switch (tx_type) {
+      case TPCCTxType::kNewOrder:
+        tx_committed = TxNewOrder(iter, dtx);
         break;
-      }
+      case TPCCTxType::kDelivery:
+        tx_committed = TxDelivery(iter, dtx);
+        break;
+      case TPCCTxType::kOrderStatus:
+        tx_committed = TxOrderStatus(iter, dtx);
+        break;
+      case TPCCTxType::kPayment:
+        tx_committed = TxPayment(iter, dtx);
+        break;
+      case TPCCTxType::kStockLevel:
+        tx_committed = TxStockLevel(iter, dtx);
+        break;
+      default:
+        printf("Unexpected transaction type %d\n", static_cast<int>(tx_type));
+        abort();
     }
 
     // Stat after one transaction finishes
