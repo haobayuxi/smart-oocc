@@ -896,6 +896,7 @@ bool DTX::CheckReset() {
     if (*((uint64_t *)res.cas_buf) != res.lock) {
       auto cas = *(uint64_t *)res.cas_buf;
       SDS_INFO("%ld, %ld", *(uint64_t *)res.cas_buf, res.lock);
+      sleep(10);
       for (int i = 63; i >= 0; i--) {
         cout << ((cas >> i) & 1);
       }
