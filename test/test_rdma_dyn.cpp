@@ -58,6 +58,14 @@ uint64_t reset_write_lock(uint64_t maxs) {
 // 01011100111101111000000000000000
 uint64_t reset_read_lock(uint64_t maxx) {
   uint64_t lock = maxx << 16;
+  for (int i = 63; i >= 0; i--) {
+    cout << ((lock >> i) & 1);
+  }
+  cout << endl;
+  for (int i = 63; i >= 0; i--) {
+    cout << ((COUNT_MAX >> i) & 1);
+  }
+  cout << endl;
   lock += COUNT_MAX;
   for (int i = 63; i >= 0; i--) {
     cout << ((lock >> i) & 1);
