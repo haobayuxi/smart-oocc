@@ -50,30 +50,9 @@ using namespace std;
 const uint64_t COUNT_MAX = 32768;
 
 uint64_t reset_write_lock(uint64_t maxs) {
-  for (int i = 63; i >= 0; i--) {
-    cout << ((maxs >> i) & 1);
-  }
-  cout << endl;
-  for (int i = 63; i >= 0; i--) {
-    cout << ((COUNT_MAX >> i) & 1);
-  }
-  cout << endl;
   uint64_t t = COUNT_MAX << 16;
-  for (int i = 63; i >= 0; i--) {
-    cout << ((t >> i) & 1);
-  }
-  cout << endl;
   t += maxs;
-  for (int i = 63; i >= 0; i--) {
-    cout << ((t >> i) & 1);
-  }
-  cout << endl;
-  uint64_t lock = COUNT_MAX << 16 + maxs;
-  for (int i = 63; i >= 0; i--) {
-    cout << ((lock >> i) & 1);
-  }
-  cout << endl;
-  return (lock << 32) + lock;
+  return (t << 32) + t;
 }
 
 uint64_t get_max_x(uint64_t lock) {
