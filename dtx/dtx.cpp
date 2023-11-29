@@ -794,10 +794,10 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
 bool DTX::OOCCCommit() {
   ParallelUndoLog();
   if (DelayLock && txn_sys == DTX_SYS::OOCC) {
+    char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
+    uint64_t lock = 1;
     for (auto &set_it : read_write_set) {
-      char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
       auto it = set_it.item_ptr;
-      uint64_t lock = 1;
       memcpy(lock_buf, (char *)&lock, sizeof(lock_t));
       node_id_t node_id = GetPrimaryNodeID(it->table_id);
       context->Write(
