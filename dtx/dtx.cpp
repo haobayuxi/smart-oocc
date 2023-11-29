@@ -811,11 +811,11 @@ bool DTX::OOCCCommit() {
   std::vector<CommitWrite> pending_commit_write;
   context->Sync();
   auto end_time = get_clock_sys_time_us();
-  if (txn_sys == DTX_SYS::OOCC) {
-    while ((last_write_lock_time + lease) > end_time) {
-      end_time = get_clock_sys_time_us();
-    }
+  // if (txn_sys == DTX_SYS::OOCC) {
+  while ((last_write_lock_time + lease) > end_time) {
+    end_time = get_clock_sys_time_us();
   }
+  // }
   for (auto &set_it : read_write_set) {
     char *data_buf = AllocLocalBuffer(DataItemSize);
     auto it = set_it.item_ptr;
@@ -833,6 +833,6 @@ bool DTX::OOCCCommit() {
                    DataItemSize);
     context->PostRequest();
   }
-  context->Sync();
+  // context->Sync();
   return true;
 }
