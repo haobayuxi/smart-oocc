@@ -350,8 +350,9 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
       if (likely(fetched_item->valid)) {
         *it = *fetched_item;
         res.item->is_fetched = true;
-        uint64_t maxs = get_max_s(it->lock);
-        uint64_t maxx = get_max_x(it->lock);
+        uint64_t lock = *(uint64_t *)res.cas_buf;
+        uint64_t maxs = get_max_s(lock);
+        uint64_t maxx = get_max_x(lock);
         res.item->prev_maxs = maxs;
         res.item->prev_maxx = maxx;
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
