@@ -22,6 +22,8 @@ uint64_t reset_write_lock(uint64_t maxs) {
   return (lock << 32) + lock;
 }
 // 10000000000000000000000000000000
+// 10000000000000000000000000000000
+// 10000000000000000000000000000000
 // 1000000000000000000000000000000
 // 10000000000000001000000000000000
 // 10000000000000000111111111111111
@@ -902,6 +904,10 @@ bool DTX::CheckReset() {
       SDS_INFO("%ld, %ld", *(uint64_t *)res.cas_buf, res.lock);
       for (int i = 63; i >= 0; i--) {
         cout << ((cas >> i) & 1);
+      }
+      cout << endl;
+      for (int i = 63; i >= 0; i--) {
+        cout << ((res.lock >> i) & 1);
       }
       cout << endl;
       context->CompareAndSwap(res.cas_buf, GlobalAddress(0, res.offset),
