@@ -4,7 +4,7 @@
 #include "dtx.h"
 
 bool CheckReadWriteConflict = true;
-bool DelayLock = true;
+// bool delay_lock = true;
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
     : context(context), tx_id(0), addr_cache(nullptr) {
@@ -12,7 +12,7 @@ DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
   t_id = GetThreadID();
   txn_sys = _txn_sys;
   lease = _lease;
-  delayed_unlock = _delayed;
+  delay_lock = _delayed;
 }
 
 bool DTX::ExeRO() {
@@ -310,7 +310,7 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-    if (delayed_unlock) {
+    if (delay_lock) {
       it->lock = STATE_READ_LOCKED;
     } else {
       it->lock = tx_id;
@@ -348,7 +348,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
           if (unlikely((it->lock > 0))) {
             if (txn_sys == DTX_SYS::OCC) {
               return false;
-            } else if (DelayLock) {
+            } else if () {
               if (it->lock % 2 == 0) {
                 re_validate = true;
               } else {
@@ -407,7 +407,7 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
         if (unlikely((it->lock > 0))) {
           if (txn_sys == DTX_SYS::OCC) {
             return false;
-          } else if (DelayLock) {
+          } else if (delay_lock) {
             if (it->lock % 2 == 0) {
               re_validate = true;
             } else {
@@ -513,7 +513,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
         if (unlikely((it->lock > 0))) {
           if (txn_sys == DTX_SYS::OCC) {
             return false;
-          } else if (DelayLock) {
+          } else if (delay_lock) {
             if (it->lock % 2 == 0) {
               re_validate = true;
             } else {
@@ -779,7 +779,7 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
 
 bool DTX::OOCCCommit() {
   ParallelUndoLog();
-  if (DelayLock && txn_sys == DTX_SYS::OOCC) {
+  if (delay_lock && txn_sys == DTX_SYS::OOCC) {
     char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
     uint64_t lock = 1;
     for (auto &set_it : read_write_set) {
