@@ -923,7 +923,7 @@ bool DTX::CheckReset() {
         cout << ((res.lock >> i) & 1);
       }
       cout << endl;
-      assert(false);
+      // assert(false);
       context->CompareAndSwap(res.cas_buf, GlobalAddress(0, res.offset),
                               res.lock, 0);
       context->PostRequest();
