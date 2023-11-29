@@ -744,10 +744,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
           *it = *fetched_item;
           re.item->is_fetched = true;
           uint64_t lock = *(lock_t *)re.cas_buf;
-          for (int i = 63; i >= 0; i--) {
-            cout << ((lock >> i) & 1);
-          }
-          cout << endl;
+
           uint64_t maxs = get_max_s(lock);
           uint64_t maxx = get_max_x(lock);
           re.item->prev_maxs = maxs;
@@ -756,6 +753,10 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
             result = false;
           } else if (maxs == get_ns(it->lock) && maxx == get_nx(it->lock)) {
             if (maxx == COUNT_MAX - 1) {
+              for (int i = 63; i >= 0; i--) {
+                cout << ((lock >> i) & 1);
+              }
+              cout << endl;
               auto reset_lock = reset_write_lock(maxs);
               char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
               memset(cas_buf, 0, sizeof(lock_t));
