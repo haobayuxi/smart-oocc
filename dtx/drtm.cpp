@@ -86,7 +86,9 @@ bool DTX::DrTMExeRW() {
       if (!DrTMCheckNextCasRW(pending_next_cas_rw)) return false;
       if (!DrTMCheckNextCasRO(pending_next_cas_ro)) return false;
     } else {
-      break;
+      // break;
+      ParallelUndoLog();
+      return true;
     }
   }
   //   while (!pending_invisible_ro.empty() || !pending_next_hash_ro.empty() ||
@@ -100,8 +102,7 @@ bool DTX::DrTMExeRW() {
   //     if (!CheckNextOffRW(pending_invisible_ro, pending_next_off_rw))
   //       return false;
   //   }
-  ParallelUndoLog();
-  return true;
+  return false;
 }
 
 bool DTX::DrTMIssueReadWrite(
