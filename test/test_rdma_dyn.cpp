@@ -58,6 +58,11 @@ uint64_t reset_write_lock(uint64_t maxs) {
     cout << ((COUNT_MAX >> i) & 1);
   }
   cout << endl;
+  uint64_t t = COUNT_MAX << 16;
+  for (int i = 63; i >= 0; i--) {
+    cout << ((t >> i) & 1);
+  }
+  cout << endl;
   uint64_t lock = COUNT_MAX << 16 + maxs;
   for (int i = 63; i >= 0; i--) {
     cout << ((lock >> i) & 1);
