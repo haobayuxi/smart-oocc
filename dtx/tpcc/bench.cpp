@@ -1118,12 +1118,12 @@ void report(double elapsed_time, JsonConfig& config) {
   }
   SDS_INFO(
       "%s: #thread = %ld, #coro_per_thread = %ld, "
-      "attempt txn = %.3lf M/s, committed txn = %.3lf M/s, "
+      "attempt txn = %.3lf M/s, committed txn = %.3lf k/s, "
       "P50 latency = %.3lf us, P99 latency = %.3lf us, abort rate = %.3lf, "
       "RDMA ops per txn = %.3lf M, RDMA ops per second = %.3lf M",
       dump_prefix.c_str(), threads, coroutines, attempts.load() / elapsed_time,
-      commits.load() * 1000 / elapsed_time, timer[(int)(0.5 * commits.load())],
-      timer[(int)(0.99 * commits.load())],
+      commits.load() * 1000.0 / elapsed_time,
+      timer[(int)(0.5 * commits.load())], timer[(int)(0.99 * commits.load())],
       1.0 - (commits.load() * 1.0 / attempts.load()),
       1.0 * rdma_cnt_sum.load() / attempts.load(),
       rdma_cnt_sum.load() / elapsed_time);
