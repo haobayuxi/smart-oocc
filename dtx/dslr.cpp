@@ -889,6 +889,7 @@ bool DTX::CheckReset() {
     auto res = *iter;
 
     if (*((uint64_t *)res.cas_buf) != res.lock) {
+      SDS_INFO("%ld, %ld", *((uint64_t *)res.cas_buf, res.lock);
       context->CompareAndSwap(res.cas_buf, GlobalAddress(0, res.offset),
                               res.lock, 0);
       context->PostRequest();
@@ -953,7 +954,7 @@ bool DTX::DSLRAbort() {
   }
   context->Sync();
   while (reset.size() > 0) {
-    SDS_INFO("abort %d %ld", reset.size(), tx_id);
+    // SDS_INFO("abort %d %ld", reset.size(), tx_id);
     context->Sync();
     CheckReset();
   }
