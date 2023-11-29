@@ -21,7 +21,12 @@ uint64_t reset_write_lock(uint64_t maxs) {
   uint64_t lock = COUNT_MAX << 16 + maxs;
   return (lock << 32) + lock;
 }
-
+// 10000000000000000000000000000000
+// 1000000000000000000000000000000
+// 10000000000000001000000000000000
+// 10000000000000000111111111111111
+// 1000000000000000
+// 0111111111111111
 uint64_t reset_read_lock(uint64_t maxx) {
   uint64_t lock = maxx << 16 + COUNT_MAX;
   return (lock << 32) + lock;

@@ -47,6 +47,13 @@ using namespace std;
 #define max_s_minus1 0xFFFFFFFF00000000
 #define max_x_minus1 0xFFFF000000000000
 
+const uint64_t COUNT_MAX = 32768;
+
+uint64_t reset_write_lock(uint64_t maxs) {
+  uint64_t lock = COUNT_MAX << 16 + maxs;
+  return (lock << 32) + lock;
+}
+
 uint64_t get_max_x(uint64_t lock) {
   auto maxx = lock & max_x_mask;
   return maxx >> 48;
@@ -66,12 +73,12 @@ uint64_t get_ns(uint64_t lock) { return lock & ns_mask; }
 
 int main(int argc, char **argv) {
   uint64_t t = 0;
-  auto re = t + acquire_write_lock;
+  auto re = reset_write_lock(0);
   for (int i = 63; i >= 0; i--) {
     cout << ((re >> i) & 1);
   }
   cout << endl;
-  cout << get_ns(re) << "  " << get_max_s(re) << endl;
+  // cout << get_ns(re) << "  " << get_max_s(re) << endl;
 
   return 0;
 }
