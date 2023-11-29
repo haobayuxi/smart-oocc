@@ -216,6 +216,10 @@ class DTX {
 
     } else if (txn_sys == DTX_SYS::OOCC) {
       // check lease
+      if (is_ro_tx && read_only_set.size() == 1) {
+        context->EndTask();
+        return true;
+      }
       if ((end_time - start_time) > lease || re_validate) {
         if (!Validate()) {
           goto ABORT;
