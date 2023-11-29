@@ -755,6 +755,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
               auto reset_lock = reset_write_lock(maxs);
               char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
               memset(cas_buf, 0, sizeof(lock_t));
+              SDS_INFO("maxs = %ld, %ld", maxs, reset_lock);
               reset.emplace_back(ResetLock{
                   .offset = it->GetRemoteLockAddr(),
                   .lock = reset_lock,
