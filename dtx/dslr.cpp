@@ -743,7 +743,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
           assert(fetched_item->remote_offset == it->remote_offset);
           *it = *fetched_item;
           re.item->is_fetched = true;
-          auto lock = *(lock_t *)re.cas_buf;
+          uint64_t lock = *(lock_t *)re.cas_buf;
           for (int i = 63; i >= 0; i--) {
             cout << ((lock >> i) & 1);
           }
@@ -901,7 +901,6 @@ bool DTX::CheckReset() {
     if (*((uint64_t *)res.cas_buf) != res.lock) {
       auto cas = *(uint64_t *)res.cas_buf;
       SDS_INFO("%ld, %ld", *(uint64_t *)res.cas_buf, res.lock);
-      sleep(10);
       for (int i = 63; i >= 0; i--) {
         cout << ((cas >> i) & 1);
       }
@@ -910,6 +909,7 @@ bool DTX::CheckReset() {
         cout << ((res.lock >> i) & 1);
       }
       cout << endl;
+      assert(false);
       context->CompareAndSwap(res.cas_buf, GlobalAddress(0, res.offset),
                               res.lock, 0);
       context->PostRequest();
