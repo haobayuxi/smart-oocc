@@ -20,13 +20,15 @@ enum DSLR_CHECK_LOCK : int {
 uint64_t reset_write_lock(uint64_t maxs) {
   uint64_t lock = COUNT_MAX << 16;
   lock += maxs;
-  return lock << 32 + lock;
+  uint64_t result = lock << 32;
+  return result + lock;
 }
 // 0101110011110111100000000000000001011100111101111000000000000000
 uint64_t reset_read_lock(uint64_t maxx) {
   uint64_t lock = maxx << 16;
   lock += COUNT_MAX;
-  return lock << 32 + lock;
+  uint64_t result = lock << 32;
+  return result + lock;
 }
 
 #define nx_mask 0x00000000FFFF0000
@@ -237,7 +239,18 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           // backoff
           result = false;
-        } else if (maxx != get_nx(lock)) {
+        }
+        if (maxs == COUNT_MAX - 1) {
+          auto reset_lock = reset_read_lock(maxx);
+          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          memset(cas_buf, 0, sizeof(lock_t));
+          reset.emplace_back(ResetLock{
+              .offset = it->GetRemoteLockAddr(),
+              .lock = reset_lock,
+              .cas_buf = cas_buf,
+          });
+        }
+        if (maxx != get_nx(lock)) {
           char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
@@ -249,15 +262,6 @@ bool DTX::DSLRCheckNextCasRO(std::list<CasRead> &pending_next_cas_ro,
                         GlobalAddress(res.node_id, fetched_item->remote_offset),
                         DataItemSize);
           context->PostRequest();
-        } else if (maxs == COUNT_MAX - 1) {
-          auto reset_lock = reset_read_lock(maxx);
-          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-          memset(cas_buf, 0, sizeof(lock_t));
-          reset.emplace_back(ResetLock{
-              .offset = it->GetRemoteLockAddr(),
-              .lock = reset_lock,
-              .cas_buf = cas_buf,
-          });
         }
 
         iter = pending_next_cas_ro.erase(iter);
@@ -292,24 +296,20 @@ bool DTX::DSLRCheckNextCasRW(std::list<CasRead> &pending_next_cas_rw,
         res.item->prev_maxx = maxx;
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           result = false;
-        } else if (maxs == get_ns(lock) && maxx == get_nx(lock)) {
-          if (maxx == COUNT_MAX - 1) {
-            for (int i = 63; i >= 0; i--) {
-              cout << ((lock >> i) & 1);
-            }
-            cout << endl;
-            auto reset_lock = reset_write_lock(maxs);
-            char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-            memset(cas_buf, 0, sizeof(lock_t));
-            SDS_INFO("maxx %ld", reset_lock);
-            assert((reset_lock != 4611686019501129728));
-            reset.emplace_back(ResetLock{
-                .offset = it->GetRemoteLockAddr(),
-                .lock = reset_lock,
-                .cas_buf = cas_buf,
-            });
-          }
-
+        }
+        if (maxx == COUNT_MAX - 1) {
+          auto reset_lock = reset_write_lock(maxs);
+          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          memset(cas_buf, 0, sizeof(lock_t));
+          SDS_INFO("maxx %ld", reset_lock);
+          assert((reset_lock != 4611686019501129728));
+          reset.emplace_back(ResetLock{
+              .offset = it->GetRemoteLockAddr(),
+              .lock = reset_lock,
+              .cas_buf = cas_buf,
+          });
+        }
+        if (maxs == get_ns(lock) && maxx == get_nx(lock)) {
         } else {
           char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_direct_rw.emplace_back(DirectRead{
@@ -355,7 +355,20 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
         res.item->prev_maxx = maxx;
         if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
           result = false;
-        } else if (get_max_x(it->lock) != get_nx(it->lock)) {
+        }
+        if (maxs == COUNT_MAX - 1) {
+          auto reset_lock = reset_read_lock(maxx);
+          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+          memset(cas_buf, 0, sizeof(lock_t));
+
+          SDS_INFO("%ld", reset_lock);
+          reset.emplace_back(ResetLock{
+              .offset = it->remote_offset,
+              .lock = reset_lock,
+              .cas_buf = cas_buf,
+          });
+        }
+        if (get_max_x(it->lock) != get_nx(it->lock)) {
           char *data_buf = AllocLocalBuffer(DataItemSize);
           pending_next_direct_ro.emplace_back(DirectRead{
               .node_id = res.node_id,
@@ -367,15 +380,6 @@ bool DTX::DSLRCheckCasRO(std::vector<CasRead> &pending_cas_ro,
                         GlobalAddress(res.node_id, fetched_item->remote_offset),
                         DataItemSize);
           context->PostRequest();
-        } else if (maxs == COUNT_MAX - 1) {
-          auto reset_lock = reset_read_lock(maxx);
-          char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-          memset(cas_buf, 0, sizeof(lock_t));
-          reset.emplace_back(ResetLock{
-              .offset = it->remote_offset,
-              .lock = reset_lock,
-              .cas_buf = cas_buf,
-          });
         }
 
       } else {
@@ -758,23 +762,23 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
           re.item->prev_maxx = maxx;
           if (maxs >= COUNT_MAX || maxx >= COUNT_MAX) {
             result = false;
-          } else if (maxs == get_ns(it->lock) && maxx == get_nx(it->lock)) {
-            if (maxx == COUNT_MAX - 1) {
-              for (int i = 63; i >= 0; i--) {
-                cout << ((lock >> i) & 1);
-              }
-              cout << endl;
-              auto reset_lock = reset_write_lock(maxs);
-              char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
-              memset(cas_buf, 0, sizeof(lock_t));
-              SDS_INFO("maxs = %ld, %ld", maxs, reset_lock);
-              reset.emplace_back(ResetLock{
-                  .offset = it->GetRemoteLockAddr(),
-                  .lock = reset_lock,
-                  .cas_buf = cas_buf,
-              });
+          }
+          if (maxx == COUNT_MAX - 1) {
+            for (int i = 63; i >= 0; i--) {
+              cout << ((lock >> i) & 1);
             }
-
+            cout << endl;
+            auto reset_lock = reset_write_lock(maxs);
+            char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
+            memset(cas_buf, 0, sizeof(lock_t));
+            SDS_INFO("maxs = %ld, %ld", maxs, reset_lock);
+            reset.emplace_back(ResetLock{
+                .offset = it->GetRemoteLockAddr(),
+                .lock = reset_lock,
+                .cas_buf = cas_buf,
+            });
+          }
+          if (maxs == get_ns(it->lock) && maxx == get_nx(it->lock)) {
           } else {
             char *data_buf = AllocLocalBuffer(DataItemSize);
             pending_next_direct_rw.emplace_back(DirectRead{
