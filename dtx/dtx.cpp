@@ -526,7 +526,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
       }
       iter = pending_next_hash_ro.erase(iter);
     } else {
-      return false;
+      // return false;
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
                       res.meta.base_off;
