@@ -264,20 +264,44 @@ bool DTX::IssueReadWrite(std::vector<CasRead> &pending_cas_rw,
 }
 
 bool DTX::IssueValidate(std::vector<ValidateRead> &pending_validate) {
-  for (auto &set_it : read_only_set) {
-    auto it = set_it.item_ptr;
-    node_id_t node_id = set_it.read_which_node;
-    char *version_buf = AllocLocalBuffer(sizeof(version_t));
-    pending_validate.push_back(ValidateRead{.node_id = node_id,
-                                            .item = &set_it,
-                                            .cas_buf = nullptr,
-                                            .version_buf = version_buf,
-                                            .has_lock_in_validate = false});
-    context->read(version_buf,
-                  GlobalAddress(node_id, it->GetRemoteVersionAddr()),
-                  sizeof(version_t));
-    context->PostRequest();
+  int index = 0;
+  while (index < read_only_set.size()) {
+    for (int j = 0; j < 100; j++) {
+      auto set_it = read_only_set[index];
+      auto it = set_it.item_ptr;
+      node_id_t node_id = set_it.read_which_node;
+      char *version_buf = AllocLocalBuffer(sizeof(version_t));
+      pending_validate.push_back(ValidateRead{.node_id = node_id,
+                                              .item = &set_it,
+                                              .cas_buf = nullptr,
+                                              .version_buf = version_buf,
+                                              .has_lock_in_validate = false});
+      context->read(version_buf,
+                    GlobalAddress(node_id, it->GetRemoteVersionAddr()),
+                    sizeof(version_t));
+
+      context->PostRequest();
+      index++;
+      if (index == read_only_set.size()) {
+        break;
+      }
+    }
+    context->Sync();
   }
+  // for (auto &set_it : read_only_set) {
+  //   auto it = set_it.item_ptr;
+  //   node_id_t node_id = set_it.read_which_node;
+  //   char *version_buf = AllocLocalBuffer(sizeof(version_t));
+  //   pending_validate.push_back(ValidateRead{.node_id = node_id,
+  //                                           .item = &set_it,
+  //                                           .cas_buf = nullptr,
+  //                                           .version_buf = version_buf,
+  //                                           .has_lock_in_validate = false});
+  //   context->read(version_buf,
+  //                 GlobalAddress(node_id, it->GetRemoteVersionAddr()),
+  //                 sizeof(version_t));
+  //   context->PostRequest();
+  // }
   return true;
 }
 
