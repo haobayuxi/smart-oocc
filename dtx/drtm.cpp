@@ -26,7 +26,7 @@ bool DTX::DrTMExeRO() {
   if (!DrTMCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
-  for (int i = 0; i < 500; i++) {
+  for (int i = 0; i < 100; i++) {
     // SDS_INFO("retry %d txid = %ld", i, tx_id);
     context->Sync();
     if (!pending_next_cas_ro.empty() || !pending_next_hash_ro.empty()) {
@@ -34,11 +34,12 @@ bool DTX::DrTMExeRO() {
       if (!DrTMCheckNextHashRO(pending_next_hash_ro, pending_next_cas_ro))
         return false;
     } else {
-      break;
+      // break;
+      return true;
     }
   }
   // SDS_INFO("break out txid = %ld", tx_id);
-  return true;
+  return false;
 }
 
 bool DTX::DrTMExeRW() {
