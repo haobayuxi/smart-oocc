@@ -80,7 +80,7 @@ uint64_t get_ns(uint64_t lock) { return lock & ns_mask; }
 
 int main(int argc, char **argv) {
   uint64_t t = 0;
-  auto re = reset_write_lock(COUNT_MAX - 1);
+  auto re = reset_read_lock(23799);
   for (int i = 63; i >= 0; i--) {
     cout << ((re >> i) & 1);
   }
