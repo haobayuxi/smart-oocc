@@ -38,7 +38,6 @@ bool DTX::DrTMExeRO() {
       return true;
     }
   }
-  // SDS_INFO("break out txid = %ld", tx_id);
   return false;
 }
 
