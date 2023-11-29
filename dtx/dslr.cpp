@@ -953,7 +953,7 @@ bool DTX::DSLRAbort() {
   }
   context->Sync();
   while (reset.size() > 0) {
-    SDS_INFO("abort %d %ld", reset.size(), tx_id);
+    // SDS_INFO("abort %d %ld", reset.size(), tx_id);
     context->Sync();
     CheckReset();
   }
