@@ -348,7 +348,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
           if (unlikely((it->lock > 0))) {
             if (txn_sys == DTX_SYS::OCC) {
               return false;
-            } else if () {
+            } else if (delay_lock) {
               if (it->lock % 2 == 0) {
                 re_validate = true;
               } else {
