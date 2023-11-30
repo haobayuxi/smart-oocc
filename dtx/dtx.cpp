@@ -90,10 +90,27 @@ bool DTX::Validate() {
   context->Sync();
   for (auto &re : pending_validate) {
     auto it = re.item->item_ptr;
-    if (it->version != *((version_t *)re.version_buf)) {
-      SDS_INFO("fail in validate %ld, %ld", it->version,
-               *(version_t *)re.version_buf);
-      return false;
+    if (re.has_lock_in_validate) {
+      if (*((lock_t *)re.cas_buf) != STATE_CLEAN) {
+        return false;
+      }
+      version_t my_version = it->version;
+      if (it->user_insert) {
+        for (auto &old_version : old_version_for_insert) {
+          if (old_version.table_id == it->table_id &&
+              old_version.key == it->key) {
+            my_version = old_version.version;
+            break;
+          }
+        }
+      }
+      if (my_version != *((version_t *)re.version_buf)) {
+        return false;
+      }
+    } else {
+      if (it->version != *((version_t *)re.version_buf)) {
+        return false;
+      }
     }
   }
   return true;
@@ -113,6 +130,7 @@ bool DTX::CoalescentCommit() {
                    sizeof(lock_t));
     context->PostRequest();
   }
+  // context->Sync();
   return true;
 }
 
@@ -149,17 +167,12 @@ void DTX::Abort() {
     auto &it = read_write_set[index].item_ptr;
     node_id_t primary_node_id = GetPrimaryNodeID(it->table_id);
     auto lock = it->lock;
-    if (txn_sys == DTX_SYS::DrTMH) {
-      context->CompareAndSwap(
-          unlock_buf, GlobalAddress(primary_node_id, it->GetRemoteLockAddr()),
-          tx_id << 1 + 1, 0);
-      context->PostRequest();
-    } else {
-      context->CompareAndSwap(
-          unlock_buf, GlobalAddress(primary_node_id, it->GetRemoteLockAddr()),
-          tx_id << 1, 0);
-      context->PostRequest();
-    }
+    // if (lock >> 1 == tx_id) {
+    context->CompareAndSwap(
+        unlock_buf, GlobalAddress(primary_node_id, it->GetRemoteLockAddr()),
+        tx_id << 1, 0);
+    context->PostRequest();
+    // }
   }
   context->Sync();
   context->RetryTask();
@@ -271,6 +284,20 @@ bool DTX::IssueValidate(std::vector<ValidateRead> &pending_validate) {
     }
     context->Sync();
   }
+  // for (auto &set_it : read_only_set) {
+  //   auto it = set_it.item_ptr;
+  //   node_id_t node_id = set_it.read_which_node;
+  //   char *version_buf = AllocLocalBuffer(sizeof(version_t));
+  //   pending_validate.push_back(ValidateRead{.node_id = node_id,
+  //                                           .item = &set_it,
+  //                                           .cas_buf = nullptr,
+  //                                           .version_buf = version_buf,
+  //                                           .has_lock_in_validate = false});
+  //   context->read(version_buf,
+  //                 GlobalAddress(node_id, it->GetRemoteVersionAddr()),
+  //                 sizeof(version_t));
+  //   context->PostRequest();
+  // }
   return true;
 }
 
@@ -283,11 +310,11 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-    // if (delay_lock) {
-    //   it->lock = STATE_READ_LOCKED;
-    // } else {
-    it->lock = tx_id;
-    // }
+    if (delay_lock) {
+      it->lock = STATE_READ_LOCKED;
+    } else {
+      it->lock = tx_id;
+    }
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     pending_commit_write.push_back(
@@ -320,7 +347,6 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         if (CheckReadWriteConflict) {
           if (unlikely((it->lock > 0))) {
             if (txn_sys == DTX_SYS::OCC) {
-              // SDS_INFO("locked by %ld", it->lock >> 1);
               return false;
             } else if (delay_lock) {
               if (it->lock % 2 == 0) {
