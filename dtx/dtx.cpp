@@ -130,7 +130,6 @@ bool DTX::CoalescentCommit() {
                    sizeof(lock_t));
     context->PostRequest();
   }
-  // context->Sync();
   return true;
 }
 
@@ -315,11 +314,11 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-    if (delay_lock) {
-      it->lock = STATE_READ_LOCKED;
-    } else {
-      it->lock = tx_id;
-    }
+    // if (delay_lock) {
+    //   it->lock = STATE_READ_LOCKED;
+    // } else {
+    it->lock = tx_id;
+    // }
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     pending_commit_write.push_back(
@@ -352,6 +351,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
         if (CheckReadWriteConflict) {
           if (unlikely((it->lock > 0))) {
             if (txn_sys == DTX_SYS::OCC) {
+              SDS_INFO("locked by %ld", it->lock >> 1);
               return false;
             } else if (delay_lock) {
               if (it->lock % 2 == 0) {
