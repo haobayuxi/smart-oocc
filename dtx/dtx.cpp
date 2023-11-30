@@ -4,7 +4,7 @@
 #include "dtx.h"
 
 bool CheckReadWriteConflict = true;
-// bool delay_lock = true;
+bool DelayLock = true;
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
     : context(context), tx_id(0), addr_cache(nullptr) {
@@ -12,7 +12,7 @@ DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
   t_id = GetThreadID();
   txn_sys = _txn_sys;
   lease = _lease;
-  delay_lock = _delayed;
+  // delayed_unlock = _delayed;
 }
 
 bool DTX::ExeRO() {
@@ -121,7 +121,11 @@ bool DTX::CoalescentCommit() {
   std::vector<CommitWrite> pending_commit_write;
   context->Sync();
   auto end_time = get_clock_sys_time_us();
-
+  if (txn_sys == DTX_SYS::OOCC) {
+    while ((last_write_lock_time + lease) > end_time) {
+      end_time = get_clock_sys_time_us();
+    }
+  }
   IssueCommitAllSelectFlush(pending_commit_write, cas_buf);
   context->Sync();
   *((lock_t *)cas_buf) = 0;
@@ -260,44 +264,20 @@ bool DTX::IssueReadWrite(std::vector<CasRead> &pending_cas_rw,
 }
 
 bool DTX::IssueValidate(std::vector<ValidateRead> &pending_validate) {
-  int index = 0;
-  while (index < read_only_set.size()) {
-    for (int j = 0; j < 100; j++) {
-      auto set_it = read_only_set[index];
-      auto it = set_it.item_ptr;
-      node_id_t node_id = set_it.read_which_node;
-      char *version_buf = AllocLocalBuffer(sizeof(version_t));
-      pending_validate.push_back(ValidateRead{.node_id = node_id,
-                                              .item = &set_it,
-                                              .cas_buf = nullptr,
-                                              .version_buf = version_buf,
-                                              .has_lock_in_validate = false});
-      context->read(version_buf,
-                    GlobalAddress(node_id, it->GetRemoteVersionAddr()),
-                    sizeof(version_t));
-
-      context->PostRequest();
-      index++;
-      if (index == read_only_set.size()) {
-        break;
-      }
-    }
-    context->Sync();
+  for (auto &set_it : read_only_set) {
+    auto it = set_it.item_ptr;
+    node_id_t node_id = set_it.read_which_node;
+    char *version_buf = AllocLocalBuffer(sizeof(version_t));
+    pending_validate.push_back(ValidateRead{.node_id = node_id,
+                                            .item = &set_it,
+                                            .cas_buf = nullptr,
+                                            .version_buf = version_buf,
+                                            .has_lock_in_validate = false});
+    context->read(version_buf,
+                  GlobalAddress(node_id, it->GetRemoteVersionAddr()),
+                  sizeof(version_t));
+    context->PostRequest();
   }
-  // for (auto &set_it : read_only_set) {
-  //   auto it = set_it.item_ptr;
-  //   node_id_t node_id = set_it.read_which_node;
-  //   char *version_buf = AllocLocalBuffer(sizeof(version_t));
-  //   pending_validate.push_back(ValidateRead{.node_id = node_id,
-  //                                           .item = &set_it,
-  //                                           .cas_buf = nullptr,
-  //                                           .version_buf = version_buf,
-  //                                           .has_lock_in_validate = false});
-  //   context->read(version_buf,
-  //                 GlobalAddress(node_id, it->GetRemoteVersionAddr()),
-  //                 sizeof(version_t));
-  //   context->PostRequest();
-  // }
   return true;
 }
 
@@ -310,7 +290,7 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-    if (delay_lock) {
+    if (delayed_unlock) {
       it->lock = STATE_READ_LOCKED;
     } else {
       it->lock = tx_id;
@@ -348,7 +328,7 @@ bool DTX::CheckDirectRO(std::vector<DirectRead> &pending_direct_ro,
           if (unlikely((it->lock > 0))) {
             if (txn_sys == DTX_SYS::OCC) {
               return false;
-            } else if (delay_lock) {
+            } else if (DelayLock) {
               if (it->lock % 2 == 0) {
                 re_validate = true;
               } else {
@@ -407,7 +387,7 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
         if (unlikely((it->lock > 0))) {
           if (txn_sys == DTX_SYS::OCC) {
             return false;
-          } else if (delay_lock) {
+          } else if (DelayLock) {
             if (it->lock % 2 == 0) {
               re_validate = true;
             } else {
@@ -416,6 +396,11 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
           } else {
             return false;
           }
+          // if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
+          //   re_validate = true;
+          // } else {
+          //   return false;
+          // }
         }
       }
     } else {
@@ -513,7 +498,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
         if (unlikely((it->lock > 0))) {
           if (txn_sys == DTX_SYS::OCC) {
             return false;
-          } else if (delay_lock) {
+          } else if (DelayLock) {
             if (it->lock % 2 == 0) {
               re_validate = true;
             } else {
@@ -522,6 +507,11 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
           } else {
             return false;
           }
+          // if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
+          //   re_validate = true;
+          // } else {
+          //   return false;
+          // }
         }
       }
       iter = pending_next_hash_ro.erase(iter);
@@ -779,47 +769,61 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
 
 bool DTX::OOCCCommit() {
   ParallelUndoLog();
-  if (delay_lock && txn_sys == DTX_SYS::OOCC) {
-    char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
-    uint64_t lock = 1;
+  if (DelayLock && txn_sys == DTX_SYS::OOCC) {
     for (auto &set_it : read_write_set) {
+      char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
       auto it = set_it.item_ptr;
+      uint64_t lock = 1;
       memcpy(lock_buf, (char *)&lock, sizeof(lock_t));
       node_id_t node_id = GetPrimaryNodeID(it->table_id);
       context->Write(
           lock_buf,
           GlobalAddress(node_id, it->GetRemoteLockAddr(it->remote_offset)),
           sizeof(lock_t));
-
-      context->PostRequest();
     }
+    context->PostRequest();
   }
   char *cas_buf = AllocLocalBuffer(sizeof(lock_t));
   std::vector<CommitWrite> pending_commit_write;
   context->Sync();
   auto end_time = get_clock_sys_time_us();
-  // if (txn_sys == DTX_SYS::OOCC) {
-  while ((last_write_lock_time + lease) > end_time) {
-    end_time = get_clock_sys_time_us();
+  if (txn_sys == DTX_SYS::OOCC) {
+    while ((last_write_lock_time + lease) > end_time) {
+      end_time = get_clock_sys_time_us();
+    }
   }
-  // }
   for (auto &set_it : read_write_set) {
     char *data_buf = AllocLocalBuffer(DataItemSize);
     auto it = set_it.item_ptr;
     if (!it->user_insert) {
       it->version++;
     }
-    // if (delayed_unlock) {
-    //   it->lock = STATE_READ_LOCKED;
-    // } else {
-    it->lock = 0;
-    // }
+    if (delayed_unlock) {
+      it->lock = STATE_READ_LOCKED;
+    } else {
+      it->lock = 0;
+    }
+    // it->lock = 0;
     memcpy(data_buf, (char *)it.get(), DataItemSize);
     node_id_t node_id = GetPrimaryNodeID(it->table_id);
     context->Write(data_buf, GlobalAddress(node_id, it->remote_offset),
                    DataItemSize);
     context->PostRequest();
   }
-  // context->Sync();
+  if (delayed_unlock) {
+    context->Sync();
+    for (auto &set_it : read_write_set) {
+      char *data_buf = AllocLocalBuffer(sizeof(lock_t));
+      auto it = set_it.item_ptr;
+      memset(data_buf, 0, sizeof(lock_t));
+      node_id_t node_id = GetPrimaryNodeID(it->table_id);
+      context->Write(
+          data_buf,
+          GlobalAddress(node_id, it->GetRemoteLockAddr(it->remote_offset)),
+          sizeof(lock_t));
+      context->PostRequest();
+    }
+  }
+
   return true;
 }
