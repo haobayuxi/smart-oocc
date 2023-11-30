@@ -271,20 +271,6 @@ bool DTX::IssueValidate(std::vector<ValidateRead> &pending_validate) {
     }
     context->Sync();
   }
-  // for (auto &set_it : read_only_set) {
-  //   auto it = set_it.item_ptr;
-  //   node_id_t node_id = set_it.read_which_node;
-  //   char *version_buf = AllocLocalBuffer(sizeof(version_t));
-  //   pending_validate.push_back(ValidateRead{.node_id = node_id,
-  //                                           .item = &set_it,
-  //                                           .cas_buf = nullptr,
-  //                                           .version_buf = version_buf,
-  //                                           .has_lock_in_validate = false});
-  //   context->read(version_buf,
-  //                 GlobalAddress(node_id, it->GetRemoteVersionAddr()),
-  //                 sizeof(version_t));
-  //   context->PostRequest();
-  // }
   return true;
 }
 
@@ -514,7 +500,7 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
       }
       iter = pending_next_hash_ro.erase(iter);
     } else {
-      // return false;
+      return false;
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
                       res.meta.base_off;
