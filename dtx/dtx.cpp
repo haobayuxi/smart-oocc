@@ -12,7 +12,7 @@ DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
   t_id = GetThreadID();
   txn_sys = _txn_sys;
   lease = _lease;
-  // delayed_unlock = _delayed;
+  delay_lock = _delayed;
 }
 
 bool DTX::ExeRO() {
@@ -290,7 +290,7 @@ bool DTX::IssueCommitAllSelectFlush(
     if (!it->user_insert) {
       it->version++;
     }
-    if (delayed_unlock) {
+    if (delay_lock) {
       it->lock = STATE_READ_LOCKED;
     } else {
       it->lock = tx_id;
@@ -798,7 +798,7 @@ bool DTX::OOCCCommit() {
     if (!it->user_insert) {
       it->version++;
     }
-    if (delayed_unlock) {
+    if (delay_lock) {
       it->lock = STATE_READ_LOCKED;
     } else {
       it->lock = 0;
@@ -810,7 +810,7 @@ bool DTX::OOCCCommit() {
                    DataItemSize);
     context->PostRequest();
   }
-  if (delayed_unlock) {
+  if (delay_lock) {
     context->Sync();
     for (auto &set_it : read_write_set) {
       char *data_buf = AllocLocalBuffer(sizeof(lock_t));

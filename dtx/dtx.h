@@ -441,6 +441,7 @@ class DTX {
   int lease;
   int txn_sys;
   bool delay_lock;
+  // bool delay_unlock
   uint64_t last_write_lock_time;
   bool re_validate;
 
