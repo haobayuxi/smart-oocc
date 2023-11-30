@@ -91,7 +91,8 @@ bool DTX::Validate() {
   for (auto &re : pending_validate) {
     auto it = re.item->item_ptr;
     if (it->version != *((version_t *)re.version_buf)) {
-      SDS_INFO("fail in validate %ld, %ld", it->version,*((version_t *)re.version_buf);
+      SDS_INFO("fail in validate %ld, %ld", it->version,
+               *(version_t *)re.version_buf);
       return false;
     }
   }
