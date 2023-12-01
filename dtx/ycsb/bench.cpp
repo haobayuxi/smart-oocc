@@ -68,7 +68,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
     }
   }
   bool commit_status = true;
-  if (RetryUntilSuccess && read_only) {
+  if (RetryUntilSuccess) {
     for (int i = 0; i < 50; i++) {
       if (!dtx->TxExe()) {
         dtx->Clean();
