@@ -3,7 +3,7 @@
 
 #include "dtx.h"
 
-bool CheckReadWriteConflict = true;
+bool CheckReadWriteConflict = false;
 bool DelayLock = true;
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
