@@ -167,8 +167,8 @@ void DTX::ParallelUndoLog() {
 
 void DTX::Abort() {
   char *unlock_buf = AllocLocalBuffer(sizeof(lock_t));
-  for (auto &index : locked_rw_set) {
-    auto &it = read_write_set[index].item_ptr;
+  for (auto &index : read_write_set) {
+    auto &it = index.item_ptr;
     node_id_t primary_node_id = GetPrimaryNodeID(it->table_id);
     auto lock = it->lock;
     if (txn_sys == DTX_SYS::DrTMH) {
