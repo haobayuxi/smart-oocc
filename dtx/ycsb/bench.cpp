@@ -69,38 +69,19 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
   }
   bool commit_status = true;
   if (RetryUntilSuccess) {
-    if (read_only) {
-      while (true) {
-        if (!dtx->TxExe()) {
-          dtx->Clean();
-          continue;
-        }
-        // Commit transaction
-        if (!dtx->TxCommit()) {
-          dtx->Clean();
-
-        } else {
-          return true;
-        }
+    for (int i = 0; i < 50; i++) {
+      if (!dtx->TxExe()) {
+        dtx->Clean();
+        continue;
       }
-    } else {
-      if (!dtx->TxExe()) return false;
       // Commit transaction
-      return dtx->TxCommit();
-    }
-    // for (int i = 0; i < 50; i++) {
-    //   if (!dtx->TxExe()) {
-    //     dtx->Clean();
-    //     continue;
-    //   }
-    //   // Commit transaction
-    //   if (!dtx->TxCommit()) {
-    //     dtx->Clean();
+      if (!dtx->TxCommit()) {
+        dtx->Clean();
 
-    //   } else {
-    //     return true;
-    //   }
-    // }
+      } else {
+        return true;
+      }
+    }
     return false;
   } else {
     if (!dtx->TxExe()) return false;
