@@ -83,6 +83,10 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
           return true;
         }
       }
+    } else {
+      if (!dtx->TxExe()) return false;
+      // Commit transaction
+      return dtx->TxCommit();
     }
     // for (int i = 0; i < 50; i++) {
     //   if (!dtx->TxExe()) {
