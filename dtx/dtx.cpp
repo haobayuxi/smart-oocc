@@ -776,7 +776,7 @@ bool DTX::CheckNextOffRW(std::list<InvisibleRead> &pending_invisible_ro,
 
 bool DTX::OOCCCommit() {
   ParallelUndoLog();
-  if (DelayLock && txn_sys == DTX_SYS::OOCC) {
+  if (DelayLock) {
     for (auto &set_it : read_write_set) {
       char *lock_buf = AllocLocalBuffer(sizeof(lock_t));
       auto it = set_it.item_ptr;
