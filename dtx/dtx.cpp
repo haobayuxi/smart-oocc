@@ -3,8 +3,8 @@
 
 #include "dtx.h"
 
-bool CheckReadWriteConflict = false;
-bool DelayLock = true;
+bool CheckReadWriteConflict = true;
+bool DelayLock = false;
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
     : context(context), tx_id(0), addr_cache(nullptr) {
