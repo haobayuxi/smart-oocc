@@ -41,7 +41,7 @@ thread_local bool *workgen_arr;
 thread_local uint64_t rdma_cnt;
 std::atomic<uint64_t> rdma_cnt_sum(0);
 
-bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only) {
+bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
   dtx->TxBegin(tx_id);
   // SDS_INFO("read only %d, txid%ld", read_only, tx_id);
   for (int i = 0; i < data_item_size; i++) {
@@ -67,6 +67,9 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only) {
   bool commit_status = true;
   if (RetryUntilSuccess) {
     for (int i = 0; i < 30; i++) {
+      if (read_only) {
+        *att_read_only++;
+      }
       if (!dtx->TxExe()) {
         dtx->Clean();
         continue;
@@ -95,9 +98,10 @@ thread_local int running_tasks;
 void WarmUp(DTXContext *context) {
   DTX *dtx = new DTX(context, txn_sys, lease, delayed);
   bool tx_committed = false;
+  uint64_t x = 0;
   for (int i = 0; i < 50000; ++i) {
     uint64_t iter = ++tx_id_local;
-    TxYCSB(iter, dtx, true);
+    TxYCSB(iter, dtx, true, &x);
   }
   delete dtx;
 }
@@ -137,11 +141,11 @@ void RunTx(DTXContext *context) {
     if (write < write_ratio) {
       read_only = false;
     }
-    if (read_only) {
-      attempt_read_only++;
-    }
+    // if (read_only) {
+    //   attempt_read_only++;
+    // }
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
-    tx_committed = TxYCSB(iter, dtx, read_only);
+    tx_committed = TxYCSB(iter, dtx, read_only, &attempt_read_only);
     // Stat after one transaction finishes
     if (tx_committed) {
       clock_gettime(CLOCK_REALTIME, &tx_end_time);
