@@ -28,6 +28,8 @@ int txn_sys;
 thread_local uint64_t tx_id_local = 3;
 std::atomic<uint64_t> attempts(0);
 std::atomic<uint64_t> commits(0);
+std::atomic<uint64_t> attempts_read_only(0);
+std::atomic<uint64_t> commits_read_only(0);
 double *timer;
 std::atomic<uint64_t> tx_id_generator(0);
 
@@ -160,6 +162,8 @@ void RunTx(DTXContext *context) {
     if (attempt_tx == ATTEMPTED_NUM) {
       attempts.fetch_add(attempt_tx);
       commits.fetch_add(commit_tx);
+      attempts_read_only.fetch_add(attempt_read_only);
+      commits_read_only.fetch_add(commit_read_only);
       break;
     }
   }
@@ -257,13 +261,15 @@ void report(double elapsed_time, JsonConfig &config) {
       "%s: #thread = %ld, #coro_per_thread = %ld, "
       "attempt txn = %.3lf M/s, committed txn = %.3lf M/s, "
       "P50 latency = %.3lf us, P99 latency = %.3lf us, abort rate = %.3lf, "
-      "RDMA ops per txn = %.3lf M, RDMA ops per second = %.3lf M",
+      "RDMA ops per txn = %.3lf M, RDMA ops per second = %.3lf M"
+      "read_only abort rate= %.3lf",
       dump_prefix.c_str(), threads, coroutines, attempts.load() / elapsed_time,
       commits.load() / elapsed_time, timer[(int)(0.5 * commits.load())],
       timer[(int)(0.99 * commits.load())],
       1.0 - (commits.load() * 1.0 / attempts.load()),
       1.0 * rdma_cnt_sum.load() / attempts.load(),
-      rdma_cnt_sum.load() / elapsed_time);
+      rdma_cnt_sum.load() / elapsed_time,
+      1.0 - (commits_read_only.load() * 1.0 / attempts_read_only.load()));
   std::string dump_file_path = config.get("dump_file_path").get_str();
   if (getenv("DUMP_FILE_PATH")) {
     dump_file_path = getenv("DUMP_FILE_PATH");
