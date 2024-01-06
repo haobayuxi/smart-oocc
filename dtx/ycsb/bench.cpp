@@ -39,13 +39,8 @@ thread_local bool *workgen_arr;
 thread_local uint64_t rdma_cnt;
 std::atomic<uint64_t> rdma_cnt_sum(0);
 
-bool TxYCSB(tx_id_t tx_id, DTX *dtx) {
+bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only) {
   dtx->TxBegin(tx_id);
-  bool read_only = true;
-  auto write = FastRand(&seed) % 1000;
-  if (write < write_ratio) {
-    read_only = false;
-  }
   // SDS_INFO("read only %d, txid%ld", read_only, tx_id);
   for (int i = 0; i < data_item_size; i++) {
     micro_key_t micro_key;
@@ -100,7 +95,7 @@ void WarmUp(DTXContext *context) {
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
     uint64_t iter = ++tx_id_local;
-    TxYCSB(iter, dtx);
+    TxYCSB(iter, dtx, true);
   }
   delete dtx;
 }
@@ -123,6 +118,8 @@ void RunTx(DTXContext *context) {
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
   uint64_t commit_tx = 0;
+  uint64_t commit_read_only = 0;
+  uint64_t attempt_read_only = 0;
   tx_id_local = (uint64_t)GetThreadID() << 45;
   int timer_idx = GetThreadID() * coroutines + GetTaskID();
   struct timespec tx_start_time;
@@ -132,9 +129,15 @@ void RunTx(DTXContext *context) {
     tx_id_local += 1;
     uint64_t iter = tx_id_local;  // Global atomic transaction id
     attempt_tx++;
+    attempt_read_only++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
+    bool read_only = true;
+    auto write = FastRand(&seed) % 1000;
+    if (write < write_ratio) {
+      read_only = false;
+    }
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
-    tx_committed = TxYCSB(iter, dtx);
+    tx_committed = TxYCSB(iter, dtx, read_only);
     // Stat after one transaction finishes
     if (tx_committed) {
       clock_gettime(CLOCK_REALTIME, &tx_end_time);
@@ -145,6 +148,9 @@ void RunTx(DTXContext *context) {
       timer[timer_idx] = tx_usec;
       timer_idx += threads * coroutines;
       commit_tx++;
+      if (read_only) {
+        commit_read_only++;
+      }
       // IdleExecution();
     }
     //  else {
