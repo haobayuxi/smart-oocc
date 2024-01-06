@@ -68,7 +68,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
   if (RetryUntilSuccess) {
     for (int i = 0; i < 30; i++) {
       if (read_only) {
-        *att_read_only++;
+        *att_read_only += 1;
       }
       if (!dtx->TxExe()) {
         dtx->Clean();
