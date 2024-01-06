@@ -131,12 +131,14 @@ void RunTx(DTXContext *context) {
     tx_id_local += 1;
     uint64_t iter = tx_id_local;  // Global atomic transaction id
     attempt_tx++;
-    attempt_read_only++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
     bool read_only = true;
     auto write = FastRand(&seed) % 1000;
     if (write < write_ratio) {
       read_only = false;
+    }
+    if (read_only) {
+      attempt_read_only++;
     }
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
     tx_committed = TxYCSB(iter, dtx, read_only);
