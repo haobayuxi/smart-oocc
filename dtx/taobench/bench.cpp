@@ -300,60 +300,60 @@
 //   fclose(fout);
 // }
 
-// int main(int argc, char **argv) {
-//   BindCore(1);
-//   const char *path = ROOT_DIR "/config/transaction.json";
-//   if (getenv("APP_CONFIG_PATH")) {
-//     path = getenv("APP_CONFIG_PATH");
-//   }
-//   if (getenv("IDLE_USEC")) {
-//     g_idle_cycles = kCpuFrequency * atoi(getenv("IDLE_USEC"));
-//   }
-//   JsonConfig config = JsonConfig::load_file(path);
-//   kMaxTransactions = config.get("nr_transactions").get_uint64();
-//   lease = config.get("lease").get_uint64();
-//   txn_sys = config.get("txn_sys").get_uint64();
-//   if (txn_sys == DTX_SYS::OOCC) {
-//     SDS_INFO("running OOCC");
-//   } else if (txn_sys == DTX_SYS::OCC) {
-//     SDS_INFO("running OCC");
-//   } else if (txn_sys == DTX_SYS::DrTMH) {
-//     SDS_INFO("running DrTM");
-//   }
+int main(int argc, char **argv) {
+  BindCore(1);
+  const char *path = ROOT_DIR "/config/transaction.json";
+  if (getenv("APP_CONFIG_PATH")) {
+    path = getenv("APP_CONFIG_PATH");
+  }
+  if (getenv("IDLE_USEC")) {
+    g_idle_cycles = kCpuFrequency * atoi(getenv("IDLE_USEC"));
+  }
+  // JsonConfig config = JsonConfig::load_file(path);
+  // kMaxTransactions = config.get("nr_transactions").get_uint64();
+  // lease = config.get("lease").get_uint64();
+  // txn_sys = config.get("txn_sys").get_uint64();
+  // if (txn_sys == DTX_SYS::OOCC) {
+  //   SDS_INFO("running OOCC");
+  // } else if (txn_sys == DTX_SYS::OCC) {
+  //   SDS_INFO("running OCC");
+  // } else if (txn_sys == DTX_SYS::DrTMH) {
+  //   SDS_INFO("running DrTM");
+  // }
 
-//   delayed = config.get("delayed").get_bool();
-//   auto ycsb_config = config.get("ycsb");
-//   double theta = ycsb_config.get("theta").get_double();
-//   data_item_size = ycsb_config.get("data_item_size").get_uint64();
-//   write_ratio = ycsb_config.get("write_ratio").get_uint64();
-//   is_skewed = ycsb_config.get("is_skewed").get_bool();
-//   srand48(time(nullptr));
-//   threads = argc < 2 ? 1 : atoi(argv[1]);
-//   coroutines = argc < 3 ? 1 : atoi(argv[2]);
-//   timer = new double[kMaxTransactions];
-//   DTXContext *context = new DTXContext(config, threads);
-//   SDS_INFO("context init done");
-//   timespec ts_begin, ts_end;
-//   pthread_barrier_init(&barrier, nullptr, threads + 1);
-//   std::vector<std::thread> workers;
-//   workers.resize(threads);
-//   synchronize_begin(context);
-//   for (int i = 0; i < threads; ++i) {
-//     workers[i] = std::thread(execute_thread, i, context, theta);
-//   }
+  // delayed = config.get("delayed").get_bool();
+  // auto ycsb_config = config.get("ycsb");
+  // double theta = ycsb_config.get("theta").get_double();
+  // data_item_size = ycsb_config.get("data_item_size").get_uint64();
+  // write_ratio = ycsb_config.get("write_ratio").get_uint64();
+  // is_skewed = ycsb_config.get("is_skewed").get_bool();
+  // srand48(time(nullptr));
+  // threads = argc < 2 ? 1 : atoi(argv[1]);
+  // coroutines = argc < 3 ? 1 : atoi(argv[2]);
+  // timer = new double[kMaxTransactions];
+  // DTXContext *context = new DTXContext(config, threads);
+  // SDS_INFO("context init done");
+  // timespec ts_begin, ts_end;
+  // pthread_barrier_init(&barrier, nullptr, threads + 1);
+  // std::vector<std::thread> workers;
+  // workers.resize(threads);
+  // synchronize_begin(context);
+  // for (int i = 0; i < threads; ++i) {
+  //   workers[i] = std::thread(execute_thread, i, context, theta);
+  // }
 
-//   std::thread(report_per_second);
-//   pthread_barrier_wait(&barrier);
-//   clock_gettime(CLOCK_MONOTONIC, &ts_begin);
-//   pthread_barrier_wait(&barrier);
-//   clock_gettime(CLOCK_MONOTONIC, &ts_end);
-//   for (int i = 0; i < threads; ++i) {
-//     workers[i].join();
-//   }
-//   double elapsed_time = (ts_end.tv_sec - ts_begin.tv_sec) * 1000000.0 +
-//                         (ts_end.tv_nsec - ts_begin.tv_nsec) / 1000.0;
-//   report(elapsed_time, config);
-//   synchronize_end(context);
-//   delete context;
-//   return 0;
-// }
+  // std::thread(report_per_second);
+  // pthread_barrier_wait(&barrier);
+  // clock_gettime(CLOCK_MONOTONIC, &ts_begin);
+  // pthread_barrier_wait(&barrier);
+  // clock_gettime(CLOCK_MONOTONIC, &ts_end);
+  // for (int i = 0; i < threads; ++i) {
+  //   workers[i].join();
+  // }
+  // double elapsed_time = (ts_end.tv_sec - ts_begin.tv_sec) * 1000000.0 +
+  //                       (ts_end.tv_nsec - ts_begin.tv_nsec) / 1000.0;
+  // report(elapsed_time, config);
+  // synchronize_end(context);
+  // delete context;
+  return 0;
+}
