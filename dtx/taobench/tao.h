@@ -22,6 +22,11 @@ static inline unsigned long GetCPUCycle() {
   return ((unsigned long)a) | (((unsigned long)d) << 32);
 }
 
+thread_local static std::mt19937 gen(std::random_device{}());
+thread_local static std::independent_bits_engine<std::default_random_engine,
+                                                 CHAR_BIT, unsigned char>
+    byte_engine;
+
 #define TOTAL_KEYS_NUM 1000000
 
 const int MICRO_TABLE_ID = 1;
@@ -87,7 +92,7 @@ class TAO {
 
   void GetReadTransactions() {
     ConfigParser::LineObject &obj = config_parser.fields["read_txn_sizes"];
-    int transaction_size = obj.vals[obj.distribution(rnd::gen)];
+    int transaction_size = obj.vals[obj.distribution(gen())];
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
