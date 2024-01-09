@@ -15,11 +15,11 @@ const int VALUE_SIZE = 150;
 
 #pragma once
 
-[
-  94036, 36224, 3600, 612, 612, 612, 612, 612, 614, 612, 612, 612, 612, 612, 612, 612, 614,
-  612,   612,   612,  612, 612, 612, 612, 612, 614, 612, 612, 612, 612, 612, 612, 612, 614,
-  612,   612,   612,  612, 612, 612, 612, 614, 612, 612, 612, 612, 612, 612, 612, 600
-];
+// [
+//   94036, 36224, 3600, 612, 612, 612, 612, 612, 614, 612, 612, 612, 612, 612, 612, 612, 614,
+//   612,   612,   612,  612, 612, 612, 612, 612, 614, 612, 612, 612, 612, 612, 612, 612, 614,
+//   612,   612,   612,  612, 612, 612, 612, 614, 612, 612, 612, 612, 612, 612, 612, 600
+// ];
 static inline unsigned long GetCPUCycle() {
   unsigned a, d;
   __asm __volatile("rdtsc" : "=a"(a), "=d"(d));
@@ -57,11 +57,27 @@ static ALWAYS_INLINE uint64_t align_pow2(uint64_t v) {
   return v + 1;
 }
 
+enum ReadTYPE : int {
+  obj_read = 0,
+  edge_point_read = 1,
+};
+const int ReadTypeWeight[] = [ 1, 5 ];
+
+enum WriteType : int {
+  obj_add = 0,
+  obj_update = 1,
+  edge_add = 2,
+  edge_update = 3,
+};
+const int WriteTypeWeight[] = [ 111, 214, 10, 380 ];
+
 class TAO {
  public:
   HashStore *micro_table;
   std::vector<HashStore *> table_ptrs;
   int transaction_size;
+  std::discrete_distribution<> distribution;
+  std::vector<double> weights;
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
@@ -95,42 +111,4 @@ class TAO {
 
   ALWAYS_INLINE
   std::vector<HashStore *> GetHashStore() { return table_ptrs; }
-};
-
-class YCSB {
- public:
-  HashStore *micro_table;
-  std::vector<HashStore *> table_ptrs;
-  YCSB(double theta, int thread_gid) { zipf_gen = new ZipfianGenerator(TOTAL_KEYS_NUM - 1, theta); }
-
-  void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
-                 MemStoreReserveParam *mem_store_reserve_param) {
-    micro_table = new HashStore(MICRO_TABLE_ID, 200000, mem_store_alloc_param);
-    PopulateTable(mem_store_reserve_param);
-    table_ptrs.push_back(micro_table);
-  }
-
-  void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
-    for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
-      micro_key_t micro_key;
-      micro_key.item_key = (uint64_t)i;
-
-      micro_val_t micro_val;
-      micro_val.magic = micro_magic + i;
-
-      DataItem item_to_be_inserted(MICRO_TABLE_ID, sizeof(micro_val_t), micro_key.item_key,
-                                   (uint8_t *)&micro_val);
-      DataItem *inserted_item = micro_table->LocalInsert(micro_key.item_key, item_to_be_inserted,
-                                                         mem_store_reserve_param);
-      inserted_item->remote_offset = micro_table->GetItemRemoteOffset(inserted_item);
-    }
-  }
-  ALWAYS_INLINE
-  itemkey_t next() { return (itemkey_t)(zipf_gen->next()); }
-
-  ALWAYS_INLINE
-  std::vector<HashStore *> GetHashStore() { return table_ptrs; }
-
- private:
-  ZipfianGenerator *zipf_gen;
 };
