@@ -59,10 +59,7 @@ class TAO {
   std::vector<HashStore *> table_ptrs;
   ConfigParser config_parser;
 
-  TAO() {
-    // std::string config_file = "../config/workload_a.json";
-    config_parser = ConfigParser();
-  }
+  TAO() { config_parser = ConfigParser(); }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
@@ -89,7 +86,8 @@ class TAO {
   }
 
   void GetReadTransactions() {
-    int transaction_size = 10;
+    ConfigParser::LineObject &obj = config_parser.fields["read_txn_sizes"];
+    int transaction_size = obj.vals[obj.distribution(rnd::gen)];
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
