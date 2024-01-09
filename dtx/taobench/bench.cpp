@@ -35,7 +35,7 @@
 
 // thread_local size_t ATTEMPTED_NUM;
 // thread_local uint64_t seed;
-// thread_local YCSB *ycsb_client;
+thread_local TAO *tao_client;
 // thread_local bool *workgen_arr;
 
 // thread_local uint64_t rdma_cnt;
@@ -309,6 +309,8 @@ int main(int argc, char **argv) {
   if (getenv("IDLE_USEC")) {
     g_idle_cycles = kCpuFrequency * atoi(getenv("IDLE_USEC"));
   }
+
+  tao_client = new TAO();
   // JsonConfig config = JsonConfig::load_file(path);
   // kMaxTransactions = config.get("nr_transactions").get_uint64();
   // lease = config.get("lease").get_uint64();

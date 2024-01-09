@@ -55,9 +55,12 @@ class TAO {
  public:
   HashStore *micro_table;
   std::vector<HashStore *> table_ptrs;
-  int transaction_size;
-  std::discrete_distribution<> distribution;
-  std::vector<double> weights;
+  ConfigParser config_parser;
+
+  TAO() {
+    std::string config_file = "../config/workload_a.json";
+    config_parser = ConfigParser(config_file);
+  }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
