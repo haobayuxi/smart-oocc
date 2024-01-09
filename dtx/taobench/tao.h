@@ -23,8 +23,8 @@ static inline unsigned long GetCPUCycle() {
 }
 
 thread_local static std::mt19937 gen(std::random_device{}());
-thread_local static std::independent_bits_engine<std::default_random_engine,
-                                                 CHAR_BIT, unsigned char>
+thread_local static std::independent_bits_engine<std::default_random_engine, 8,
+                                                 unsigned char>
     byte_engine;
 
 #define TOTAL_KEYS_NUM 1000000
