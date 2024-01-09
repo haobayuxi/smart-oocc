@@ -15,7 +15,7 @@
 namespace benchmark {
 class ConfigParser {
  public:
-  ConfigParser(std::string configFilepath);
+  ConfigParser();
   void printOut() const;  // for testing
 
   struct LineObject {
