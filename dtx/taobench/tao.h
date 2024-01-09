@@ -93,7 +93,7 @@ class TAO {
   void GetReadTransactions() {
     ConfigParser::LineObject &obj = config_parser.fields["read_txn_sizes"];
     int transaction_size = obj.vals[obj.distribution(gen)];
-    printfln("transaction size = %d\n", transaction_size);
+    printf("transaction size = %d\n", transaction_size);
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
