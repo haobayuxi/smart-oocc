@@ -18,5 +18,6 @@ target_link_libraries(dtx_tpcc PUBLIC smart)
 # add_subdirectory(smallbank)
 # add_subdirectory(tatp)
 add_subdirectory(ycsb)
-add_subdirectory(tpcc)
+# add_subdirectory(tpcc)
+add_subdirectory(taobench)
 
