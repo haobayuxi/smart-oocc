@@ -60,8 +60,8 @@ class TAO {
   ConfigParser config_parser;
 
   TAO() {
-    std::string config_file = "../config/workload_a.json";
-    config_parser = ConfigParser(config_file);
+    // std::string config_file = "../config/workload_a.json";
+    config_parser = ConfigParser();
   }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
