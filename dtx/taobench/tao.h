@@ -63,8 +63,13 @@ class TAO {
   HashStore *micro_table;
   std::vector<HashStore *> table_ptrs;
   ConfigParser config_parser;
-
-  TAO() { config_parser = ConfigParser(); }
+  ConfigParser::LineObject &read_transaction_size_obj;
+  ConfigParser::LineObject &op_obj;
+  TAO() {
+    config_parser = ConfigParser();
+    read_transaction_size_obj = config_parser.fields["read_txn_sizes"];
+    op_obj = config_parser.fields["read_txn_operation_types"];
+  }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
@@ -91,10 +96,13 @@ class TAO {
   }
 
   void GetReadTransactions() {
-    ConfigParser::LineObject &obj = config_parser.fields["read_txn_sizes"];
-    int transaction_size = obj.vals[obj.distribution(gen)];
+    int transaction_size =
+        read_transaction_size_obj
+            .vals[read_transaction_size_obj.distribution(gen)];
     std::cout << "transaction size = " << transaction_size << std::endl;
-    for (int i = 0; i < transaction_size; i++) {
+
+    std::string op_type = op_obj.types[op_obj.distribution(gen)];
+    bool is for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
       bool is_edge_op = true;
