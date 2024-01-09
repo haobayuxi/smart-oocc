@@ -1,4 +1,4 @@
-add_library(dtx_smallbank dtx.cpp)
+add_library(dtx_smallbank dtx.cpp dslr.cpp drtm.cpp)
 target_compile_definitions(dtx_smallbank PUBLIC CONFIG_ITEM_SIZE=40)
 target_link_libraries(dtx_smallbank PUBLIC smart)
 
