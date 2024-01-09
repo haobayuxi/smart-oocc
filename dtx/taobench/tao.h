@@ -63,7 +63,7 @@ class TAO {
   HashStore *micro_table;
   std::vector<HashStore *> table_ptrs;
   ConfigParser config_parser;
-  ConfigParser::LineObject read_transaction_size_obj;
+  ConfigParser::LineObject &read_transaction_size_obj;
   // ConfigParser::LineObject op_obj;
   TAO() {
     config_parser = ConfigParser();
