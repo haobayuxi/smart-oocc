@@ -108,8 +108,8 @@
 //   delete dtx;
 // }
 
-// const static uint64_t kCpuFrequency = 2400;
-// uint64_t g_idle_cycles = 0;
+const static uint64_t kCpuFrequency = 2400;
+uint64_t g_idle_cycles = 0;
 
 // static void IdleExecution() {
 //   if (g_idle_cycles) {
