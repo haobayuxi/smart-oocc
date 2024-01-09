@@ -63,8 +63,8 @@ class TAO {
   HashStore *micro_table;
   std::vector<HashStore *> table_ptrs;
   ConfigParser config_parser;
-  ConfigParser::LineObject &read_transaction_size_obj;
-  ConfigParser::LineObject &op_obj;
+  ConfigParser::LineObject read_transaction_size_obj;
+  ConfigParser::LineObject op_obj;
   TAO() {
     config_parser = ConfigParser();
     read_transaction_size_obj = config_parser.fields["read_txn_sizes"];
@@ -102,7 +102,8 @@ class TAO {
     std::cout << "transaction size = " << transaction_size << std::endl;
 
     std::string op_type = op_obj.types[op_obj.distribution(gen)];
-    bool is for (int i = 0; i < transaction_size; i++) {
+    // bool is
+    for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
       bool is_edge_op = true;
