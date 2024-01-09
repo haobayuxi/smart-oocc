@@ -311,6 +311,7 @@ int main(int argc, char **argv) {
   }
 
   tao_client = new TAO();
+  tao_client->GetReadTransactions();
   // JsonConfig config = JsonConfig::load_file(path);
   // kMaxTransactions = config.get("nr_transactions").get_uint64();
   // lease = config.get("lease").get_uint64();
