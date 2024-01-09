@@ -12,6 +12,8 @@
 #include "util/generator.h"
 #include "util/json_config.h"
 
+using namespace benchmark;
+
 const int VALUE_SIZE = 150;
 
 static inline unsigned long GetCPUCycle() {
@@ -87,6 +89,7 @@ class TAO {
   }
 
   void GetReadTransactions() {
+    int transaction_size = 10;
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
