@@ -164,126 +164,129 @@ void RunTx(DTXContext *context) {
   delete dtx;
 }
 
-// void execute_thread(int id, DTXContext *context, double theta) {
-//   BindCore(id);
+void execute_thread(int id, DTXContext *context, double theta) {
+  BindCore(id);
 
-//   ATTEMPTED_NUM = kMaxTransactions / threads / coroutines;
-//   auto hostname = GetHostName();
-//   seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51)
-//   *
-//              kMaxThreads +
-//          id;
-//   ycsb_client = new YCSB(theta, id);
-//   WarmUp(context);
-//   // SDS_INFO("warm done");
-//   TaskPool::Enable();
-//   auto &task_pool = TaskPool::Get();
-//   running_tasks = coroutines;
-//   pthread_barrier_wait(&barrier);
-//   task_pool.spawn(context->GetPollTask(running_tasks));
-//   for (int i = 0; i < coroutines; ++i) {
-//     task_pool.spawn(std::bind(&RunTx, context), 128 * 1024);
-//   }
-//   while (!task_pool.empty()) {
-//     YieldTask();
-//   }
-//   pthread_barrier_wait(&barrier);
-//   rdma_cnt_sum += rdma_cnt;
-// }
+  ATTEMPTED_NUM = kMaxTransactions / threads / coroutines;
+  auto hostname = GetHostName();
+  seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51) *
+             kMaxThreads +
+         id;
+  ycsb_client = new YCSB(theta, id);
+  WarmUp(context);
+  // SDS_INFO("warm done");
+  TaskPool::Enable();
+  auto &task_pool = TaskPool::Get();
+  running_tasks = coroutines;
+  pthread_barrier_wait(&barrier);
+  task_pool.spawn(context->GetPollTask(running_tasks));
+  for (int i = 0; i < coroutines; ++i) {
+    task_pool.spawn(std::bind(&RunTx, context), 128 * 1024);
+  }
+  while (!task_pool.empty()) {
+    YieldTask();
+  }
+  pthread_barrier_wait(&barrier);
+  rdma_cnt_sum += rdma_cnt;
+}
 
-// void synchronize_begin(DTXContext *ctx) {
-//   if (getenv("COMPUTE_NODES")) {
-//     int nr_compute_nodes = (int)atoi(getenv("COMPUTE_NODES"));
-//     if (nr_compute_nodes <= 1) return;
-//     GlobalAddress addr(0, sizeof(SuperChunk));
-//     uint64_t *buf = (uint64_t *)ctx->Alloc(8);
-//     ctx->FetchAndAdd(buf, addr, 1);
-//     ctx->PostRequest();
-//     ctx->Sync();
-//     int retry = 0;
-//     while (true) {
-//       ctx->read(buf, addr, sizeof(uint64_t));
-//       ctx->PostRequest();
-//       ctx->Sync();
-//       if (*buf == nr_compute_nodes) {
-//         SDS_INFO("ticket = %ld", *buf);
-//         break;
-//       }
-//       sleep(1);
-//       retry++;
-//       SDS_INFO("FAILED ticket = %ld", *buf);
-//       assert(retry < 60);
-//     }
-//   }
-// }
+void synchronize_begin(DTXContext *ctx) {
+  if (getenv("COMPUTE_NODES")) {
+    int nr_compute_nodes = (int)atoi(getenv("COMPUTE_NODES"));
+    if (nr_compute_nodes <= 1) return;
+    GlobalAddress addr(0, sizeof(SuperChunk));
+    uint64_t *buf = (uint64_t *)ctx->Alloc(8);
+    ctx->FetchAndAdd(buf, addr, 1);
+    ctx->PostRequest();
+    ctx->Sync();
+    int retry = 0;
+    while (true) {
+      ctx->read(buf, addr, sizeof(uint64_t));
+      ctx->PostRequest();
+      ctx->Sync();
+      if (*buf == nr_compute_nodes) {
+        SDS_INFO("ticket = %ld", *buf);
+        break;
+      }
+      sleep(1);
+      retry++;
+      SDS_INFO("FAILED ticket = %ld", *buf);
+      assert(retry < 60);
+    }
+  }
+}
 
-// void synchronize_end(DTXContext *ctx) {
-//   if (getenv("COMPUTE_NODES")) {
-//     uint64_t *buf = (uint64_t *)ctx->Alloc(8);
-//     int nr_compute_nodes = (int)atoi(getenv("COMPUTE_NODES"));
-//     if (nr_compute_nodes <= 1) return;
-//     GlobalAddress addr(0, sizeof(SuperChunk));
-//     ctx->CompareAndSwap(buf, addr, nr_compute_nodes, 0);
-//     ctx->PostRequest();
-//     ctx->Sync();
-//     if (*buf == nr_compute_nodes) {
-//       SDS_INFO("RESET ticket = 0");
-//     }
-//   }
-// }
+void synchronize_end(DTXContext *ctx) {
+  if (getenv("COMPUTE_NODES")) {
+    uint64_t *buf = (uint64_t *)ctx->Alloc(8);
+    int nr_compute_nodes = (int)atoi(getenv("COMPUTE_NODES"));
+    if (nr_compute_nodes <= 1) return;
+    GlobalAddress addr(0, sizeof(SuperChunk));
+    ctx->CompareAndSwap(buf, addr, nr_compute_nodes, 0);
+    ctx->PostRequest();
+    ctx->Sync();
+    if (*buf == nr_compute_nodes) {
+      SDS_INFO("RESET ticket = 0");
+    }
+  }
+}
 
-// void report_per_second() {
-//   uint64_t last_committed = 0;
-//   while (true) {
-//     sleep(1);
-//     uint64_t now = commits.load();
-//     SDS_INFO("%.3lf", (now - last_committed) / 1000000.0);
-//     last_committed = now;
-//   }
-// }
+void report_per_second() {
+  uint64_t last_committed = 0;
+  while (true) {
+    sleep(1);
+    uint64_t now = commits.load();
+    SDS_INFO("%.3lf", (now - last_committed) / 1000000.0);
+    last_committed = now;
+  }
+}
 
-// void report(double elapsed_time, JsonConfig &config) {
-//   assert(commits.load() <= kMaxTransactions);
-//   std::sort(timer, timer + commits.load());
-//   std::string dump_prefix;
-//   if (getenv("DUMP_PREFIX")) {
-//     dump_prefix = std::string(getenv("DUMP_PREFIX"));
-//   } else {
-//     dump_prefix = "dtx-ycsb";
-//   }
-//   SDS_INFO(
-//       "%s: #thread = %ld, #coro_per_thread = %ld, "
-//       "attempt txn = %.3lf M/s, committed txn = %.3lf M/s, "
-//       "P50 latency = %.3lf us, P99 latency = %.3lf us, abort rate = %.3lf, "
-//       "RDMA ops per txn = %.3lf M, RDMA ops per second = %.3lf M"
-//       "read_only abort rate= %.3lf",
-//       dump_prefix.c_str(), threads, coroutines, attempts.load() /
-//       elapsed_time, commits.load() / elapsed_time, timer[(int)(0.5 *
-//       commits.load())], timer[(int)(0.99 * commits.load())], 1.0 -
-//       (commits.load() * 1.0 / attempts.load()), 1.0 * rdma_cnt_sum.load() /
-//       attempts.load(), rdma_cnt_sum.load() / elapsed_time, 1.0 -
-//       (commits_read_only.load() * 1.0 / attempts_read_only.load()));
-//   std::string dump_file_path = config.get("dump_file_path").get_str();
-//   if (getenv("DUMP_FILE_PATH")) {
-//     dump_file_path = getenv("DUMP_FILE_PATH");
-//   }
-//   if (dump_file_path.empty()) {
-//     return;
-//   }
-//   FILE *fout = fopen(dump_file_path.c_str(), "a+");
-//   if (!fout) {
-//     SDS_PERROR("fopen");
-//     return;
-//   }
-//   fprintf(
-//       fout, "%s, %ld, %ld, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf,
-//       %.3lf\n", dump_prefix.c_str(), threads, coroutines, attempts.load() /
-//       elapsed_time, commits.load() / elapsed_time, timer[(int)(0.5 *
-//       commits.load())], timer[(int)(0.99 * commits.load())], 1.0 -
-//       (commits.load() * 1.0 / attempts.load()), 1.0 * rdma_cnt_sum.load() /
-//       attempts.load(), rdma_cnt_sum.load() / elapsed_time);
-//   fclose(fout);
-// }
+void report(double elapsed_time, JsonConfig &config) {
+  assert(commits.load() <= kMaxTransactions);
+  std::sort(timer, timer + commits.load());
+  std::string dump_prefix;
+  if (getenv("DUMP_PREFIX")) {
+    dump_prefix = std::string(getenv("DUMP_PREFIX"));
+  } else {
+    dump_prefix = "dtx-ycsb";
+  }
+  SDS_INFO(
+      "%s: #thread = %ld, #coro_per_thread = %ld, "
+      "attempt txn = %.3lf M/s, committed txn = %.3lf M/s, "
+      "P50 latency = %.3lf us, P99 latency = %.3lf us, abort rate = %.3lf, "
+      "RDMA ops per txn = %.3lf M, RDMA ops per second = %.3lf M"
+      "read_only abort rate= %.3lf",
+      dump_prefix.c_str(), threads, coroutines, attempts.load() / elapsed_time,
+      commits.load() / elapsed_time, timer[(int)(0.5 * commits.load())],
+      timer[(int)(0.99 * commits.load())],
+      1.0 - (commits.load() * 1.0 / attempts.load()),
+      1.0 * rdma_cnt_sum.load() / attempts.load(),
+      rdma_cnt_sum.load() / elapsed_time,
+      1.0 - (commits_read_only.load() * 1.0 / attempts_read_only.load()));
+  std::string dump_file_path = config.get("dump_file_path").get_str();
+  if (getenv("DUMP_FILE_PATH")) {
+    dump_file_path = getenv("DUMP_FILE_PATH");
+  }
+  if (dump_file_path.empty()) {
+    return;
+  }
+  FILE *fout = fopen(dump_file_path.c_str(), "a+");
+  if (!fout) {
+    SDS_PERROR("fopen");
+    return;
+  }
+  fprintf(fout,
+          "%s, %ld, %ld, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf,
+              % .3lf\n
+              ", dump_prefix.c_str(), threads, coroutines, attempts.load() /
+              elapsed_time,
+          commits.load() / elapsed_time, timer[(int)(0.5 * commits.load())],
+          timer[(int)(0.99 * commits.load())],
+          1.0 - (commits.load() * 1.0 / attempts.load()),
+          1.0 * rdma_cnt_sum.load() / attempts.load(),
+          rdma_cnt_sum.load() / elapsed_time);
+  fclose(fout);
+}
 
 int main(int argc, char **argv) {
   BindCore(1);
@@ -319,28 +322,28 @@ int main(int argc, char **argv) {
   coroutines = argc < 3 ? 1 : atoi(argv[2]);
   timer = new double[kMaxTransactions];
   DTXContext *context = new DTXContext(config, threads);
-  // SDS_INFO("context init done");
-  // timespec ts_begin, ts_end;
-  // pthread_barrier_init(&barrier, nullptr, threads + 1);
-  // std::vector<std::thread> workers;
-  // workers.resize(threads);
-  // synchronize_begin(context);
-  // for (int i = 0; i < threads; ++i) {
-  //   workers[i] = std::thread(execute_thread, i, context, theta);
-  // }
+  SDS_INFO("context init done");
+  timespec ts_begin, ts_end;
+  pthread_barrier_init(&barrier, nullptr, threads + 1);
+  std::vector<std::thread> workers;
+  workers.resize(threads);
+  synchronize_begin(context);
+  for (int i = 0; i < threads; ++i) {
+    workers[i] = std::thread(execute_thread, i, context, theta);
+  }
 
-  // std::thread(report_per_second);
-  // pthread_barrier_wait(&barrier);
-  // clock_gettime(CLOCK_MONOTONIC, &ts_begin);
-  // pthread_barrier_wait(&barrier);
-  // clock_gettime(CLOCK_MONOTONIC, &ts_end);
-  // for (int i = 0; i < threads; ++i) {
-  //   workers[i].join();
-  // }
-  // double elapsed_time = (ts_end.tv_sec - ts_begin.tv_sec) * 1000000.0 +
-  //                       (ts_end.tv_nsec - ts_begin.tv_nsec) / 1000.0;
-  // report(elapsed_time, config);
-  // synchronize_end(context);
-  // delete context;
+  std::thread(report_per_second);
+  pthread_barrier_wait(&barrier);
+  clock_gettime(CLOCK_MONOTONIC, &ts_begin);
+  pthread_barrier_wait(&barrier);
+  clock_gettime(CLOCK_MONOTONIC, &ts_end);
+  for (int i = 0; i < threads; ++i) {
+    workers[i].join();
+  }
+  double elapsed_time = (ts_end.tv_sec - ts_begin.tv_sec) * 1000000.0 +
+                        (ts_end.tv_nsec - ts_begin.tv_nsec) / 1000.0;
+  report(elapsed_time, config);
+  synchronize_end(context);
+  delete context;
   return 0;
 }
