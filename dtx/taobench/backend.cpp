@@ -48,6 +48,8 @@ void setup(Target &target) {
   }
   auto *edge_meta = (char *)target.alloc_chunk(
       (tao->edge_count * sizeof(Edge) / kChunkSize + 1));
+
+  target.set_root_entry(20, target.rel_ptr(edge_meta).raw);
   // write edge size
   memcpy(edge_meta, &tao->edge_count, sizeof(uint64_t));
   edge_meta += sizeof(uint64_t);
@@ -58,7 +60,6 @@ void setup(Target &target) {
       edge_meta += sizeof(uint64_t) * 2;
     }
   }
-  target.set_root_entry(20, target.rel_ptr(edge_meta).raw);
 
   target.set_root_entry(0, i);
 }
