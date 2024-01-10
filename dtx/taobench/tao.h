@@ -190,11 +190,11 @@ class TAO {
     }
     file.close();
 
-    ifstream file("tao.dat");
+    ifstream read_file("tao.dat");
     uint64_t primary_key = 0;
     uint64_t remote_key = 0;
-    file >> primary_key;
-    file >> remote_key;
+    read_file >> primary_key;
+    read_file >> remote_key;
     cout << "pri" << primary_key << "remote" << remote_key << endl;
   }
 
