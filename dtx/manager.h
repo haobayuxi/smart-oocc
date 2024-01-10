@@ -201,6 +201,7 @@ class DTXContext {
   std::unordered_map<table_id_t, std::vector<node_id_t>> backup_table_nodes;
 
   JsonConfig config_;
+  bool is_tao;
   Initiator node_;
   offset_t log_base_[NUM_MEMORY_NODES];
   int remote_nodes_;
