@@ -35,7 +35,7 @@ std::atomic<uint64_t> tx_id_generator(0);
 
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
-thread_local TAO *tao_client;
+TAO *tao_client;
 thread_local bool *workgen_arr;
 
 thread_local uint64_t rdma_cnt;
@@ -176,7 +176,7 @@ void execute_thread(int id, DTXContext *context) {
          id;
   WarmUp(context);
   // SDS_INFO("warm done");
-  tao_client = new TAO();
+  // tao_client = new TAO();
   TaskPool::Enable();
   auto &task_pool = TaskPool::Get();
   running_tasks = coroutines;
@@ -313,7 +313,7 @@ int main(int argc, char **argv) {
   } else {
     SDS_INFO("running DSLR");
   }
-
+  tao_client = new TAO();
   delayed = config.get("delayed").get_bool();
   // auto ycsb_config = config.get("ycsb");
   // double theta = ycsb_config.get("theta").get_double();
