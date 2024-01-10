@@ -119,7 +119,8 @@ class TAO {
 
   Edge const &GetRandomEdge() {
     ConfigParser::LineObject &obj = config_parser.fields["primary_shards"];
-    auto it = shard_to_edges[gen];  // 从 primary shard 拿到shard的key
+    auto it = shard_to_edges[obj.distribution(
+        gen)];  // 从 primary shard 拿到shard的key
 
     std::uniform_int_distribution<int> edge_selector(0, it.size() - 1);
     return it[edge_selector(gen)];
