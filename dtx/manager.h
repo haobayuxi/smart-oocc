@@ -16,8 +16,8 @@ extern thread_local uint64_t rdma_cnt;
 
 class DTXContext {
  public:
-  DTXContext(JsonConfig &config, int max_threads, bool is_tao)
-      : config_(config), is_tao_(false) {
+  DTXContext(JsonConfig &config, int max_threads, bool is_tao = false)
+      : config_(config) {
     for (int i = 0; i < kMaxThreads; ++i) {
       tl_data_[i].log_alloc = new LogOffsetAllocator(i, kMaxThreads);
       const static size_t kBufferSize = 8 * 1024 * 1024;
@@ -201,7 +201,6 @@ class DTXContext {
   std::unordered_map<table_id_t, std::vector<node_id_t>> backup_table_nodes;
 
   JsonConfig config_;
-  bool is_tao;
   Initiator node_;
   offset_t log_base_[NUM_MEMORY_NODES];
   int remote_nodes_;
