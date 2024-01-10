@@ -175,19 +175,19 @@ class DTXContext {
                         sizeof(uint64_t), Initiator::Option::Sync);
         assert(!rc);
         SDS_INFO("edge size = %ld", edge_size);
-        Edge edges[edge_size];
-        rc = node_.read(&edges,
-                        GlobalAddress(node_id, offset + sizeof(uint64_t)),
-                        sizeof(Edge) * edge_size, Initiator::Option::Sync);
-        assert(!rc);
-        for (int j = 0; j < edge_size; j++) {
-          auto e = edges[j];
-          auto shard = e.primary_key >> 57;
-          shard_to_edges[shard].push_back(Edge{
-              e.primary_key,
-              e.remote_key,
-          });
-        }
+        // Edge edges[edge_size];
+        // rc = node_.read(&edges,
+        //                 GlobalAddress(node_id, offset + sizeof(uint64_t)),
+        //                 sizeof(Edge) * edge_size, Initiator::Option::Sync);
+        // assert(!rc);
+        // for (int j = 0; j < edge_size; j++) {
+        //   auto e = edges[j];
+        //   auto shard = e.primary_key >> 57;
+        //   shard_to_edges[shard].push_back(Edge{
+        //       e.primary_key,
+        //       e.remote_key,
+        //   });
+        // }
       }
     }
   }
