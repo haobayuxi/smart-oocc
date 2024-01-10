@@ -41,72 +41,61 @@ thread_local bool *workgen_arr;
 thread_local uint64_t rdma_cnt;
 std::atomic<uint64_t> rdma_cnt_sum(0);
 
-// bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only)
-// {
-//   dtx->TxBegin(tx_id);
-//   // SDS_INFO("read only %d, txid%ld", read_only, tx_id);
-//   for (int i = 0; i < data_item_size; i++) {
-//     micro_key_t micro_key;
-//     if (is_skewed) {
-//       micro_key.item_key = ycsb_client->next();
-//       // micro_key.item_key = 0;
-//     } else {
-//       micro_key.item_key = (itemkey_t)(FastRand(&seed) % (TOTAL_KEYS_NUM -
-//       1));
-//       // micro_key.item_key = tx_id % (TOTAL_KEYS_NUM - 1);
-//     }
+bool TxTAO(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
+  dtx->TxBegin(tx_id);
+  // SDS_INFO("read only %d, txid%ld", read_only, tx_id);
+  vector<tao_key_t> keys = tao_client->GetReadTransactions();
+  for (int i = 0; i < keys.size(); i++) {
+    DataItemPtr micro_obj =
+        std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
+    if (read_only) {
+      dtx->AddToReadOnlySet(micro_obj);
 
-//     // SDS_INFO("txn read key = %ld", micro_key.item_key);
-//     DataItemPtr micro_obj =
-//         std::make_shared<DataItem>(MICRO_TABLE_ID, micro_key.item_key);
-//     if (read_only) {
-//       dtx->AddToReadOnlySet(micro_obj);
+    } else {
+      dtx->AddToReadWriteSet(micro_obj);
+    }
+  }
+  bool commit_status = true;
+  if (RetryUntilSuccess) {
+    for (int i = 0; i < 30; i++) {
+      if (read_only) {
+        *att_read_only += 1;
+      }
+      if (!dtx->TxExe()) {
+        dtx->Clean();
+        continue;
+      }
+      // Commit transaction
+      if (!dtx->TxCommit()) {
+        dtx->Clean();
 
-//     } else {
-//       dtx->AddToReadWriteSet(micro_obj);
-//     }
-//   }
-//   bool commit_status = true;
-//   if (RetryUntilSuccess) {
-//     for (int i = 0; i < 30; i++) {
-//       if (read_only) {
-//         *att_read_only += 1;
-//       }
-//       if (!dtx->TxExe()) {
-//         dtx->Clean();
-//         continue;
-//       }
-//       // Commit transaction
-//       if (!dtx->TxCommit()) {
-//         dtx->Clean();
+      } else {
+        return true;
+      }
+    }
+    return false;
 
-//       } else {
-//         return true;
-//       }
-//     }
-//     return false;
+  } else {
+    if (!dtx->TxExe()) return false;
+    // Commit transaction
+    commit_status = dtx->TxCommit();
+  }
 
-//   } else {
-//     if (!dtx->TxExe()) return false;
-//     // Commit transaction
-//     commit_status = dtx->TxCommit();
-//   }
+  return commit_status;
+}
 
-//   return commit_status;
-// }
+thread_local int running_tasks;
 
-// thread_local int running_tasks;
-
-// void WarmUp(DTXContext *context) {
-//   DTX *dtx = new DTX(context, txn_sys, lease, delayed);
-//   bool tx_committed = false;
-//   uint64_t x = 0;
-//   for (int i = 0; i < 50000; ++i) {
-//     uint64_t iter = ++tx_id_local;
-//     TxYCSB(iter, dtx, true, &x);
-//   }
-//   delete dtx;
-// }
+void WarmUp(DTXContext *context) {
+  DTX *dtx = new DTX(context, txn_sys, lease, delayed);
+  bool tx_committed = false;
+  uint64_t x = 0;
+  for (int i = 0; i < 50000; ++i) {
+    uint64_t iter = ++tx_id_local;
+    TxTAO(iter, dtx, true, &x);
+  }
+  delete dtx;
+}
 
 const static uint64_t kCpuFrequency = 2400;
 uint64_t g_idle_cycles = 0;
@@ -120,64 +109,60 @@ uint64_t g_idle_cycles = 0;
 //   }
 // }
 
-// void RunTx(DTXContext *context) {
-//   DTX *dtx = new DTX(context, txn_sys, lease, delayed);
-//   // struct timespec tx_start_time, tx_end_time;
-//   bool tx_committed = false;
-//   uint64_t attempt_tx = 0;
-//   uint64_t commit_tx = 0;
-//   uint64_t commit_read_only = 0;
-//   uint64_t attempt_read_only = 0;
-//   tx_id_local = (uint64_t)GetThreadID() << 45;
-//   int timer_idx = GetThreadID() * coroutines + GetTaskID();
-//   struct timespec tx_start_time;
-//   struct timespec tx_end_time;
-//   // Running transactions
-//   while (true) {
-//     tx_id_local += 1;
-//     uint64_t iter = tx_id_local;  // Global atomic transaction id
-//     attempt_tx++;
-//     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
-//     bool read_only = true;
-//     auto write = FastRand(&seed) % 1000;
-//     if (write < write_ratio) {
-//       read_only = false;
-//     }
-//     // if (read_only) {
-//     //   attempt_read_only++;
-//     // }
-//     clock_gettime(CLOCK_REALTIME, &tx_start_time);
-//     tx_committed = TxYCSB(iter, dtx, read_only, &attempt_read_only);
-//     // Stat after one transaction finishes
-//     if (tx_committed) {
-//       clock_gettime(CLOCK_REALTIME, &tx_end_time);
-//       double tx_usec =
-//           (tx_end_time.tv_sec - tx_start_time.tv_sec) * 1000000 +
-//           (double)(tx_end_time.tv_nsec - tx_start_time.tv_nsec) / 1000;
-//       // SDS_INFO("tx_usec=%lf", tx_usec);
-//       timer[timer_idx] = tx_usec;
-//       timer_idx += threads * coroutines;
-//       commit_tx++;
-//       if (read_only) {
-//         commit_read_only++;
-//       }
-//       // IdleExecution();
-//     }
-//     //  else {
-//     //   SDS_INFO("not found?");
-//     // }
-//     // Stat after a million of transactions finish
-//     if (attempt_tx == ATTEMPTED_NUM) {
-//       attempts.fetch_add(attempt_tx);
-//       commits.fetch_add(commit_tx);
-//       attempts_read_only.fetch_add(attempt_read_only);
-//       commits_read_only.fetch_add(commit_read_only);
-//       break;
-//     }
-//   }
-//   running_tasks--;
-//   delete dtx;
-// }
+void RunTx(DTXContext *context) {
+  DTX *dtx = new DTX(context, txn_sys, lease, delayed);
+  // struct timespec tx_start_time, tx_end_time;
+  bool tx_committed = false;
+  uint64_t attempt_tx = 0;
+  uint64_t commit_tx = 0;
+  uint64_t commit_read_only = 0;
+  uint64_t attempt_read_only = 0;
+  tx_id_local = (uint64_t)GetThreadID() << 45;
+  int timer_idx = GetThreadID() * coroutines + GetTaskID();
+  struct timespec tx_start_time;
+  struct timespec tx_end_time;
+  // Running transactions
+  while (true) {
+    tx_id_local += 1;
+    uint64_t iter = tx_id_local;  // Global atomic transaction id
+    attempt_tx++;
+    // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
+    bool read_only = tao_client->is_read_transaction();
+    // if (read_only) {
+    //   attempt_read_only++;
+    // }
+    clock_gettime(CLOCK_REALTIME, &tx_start_time);
+    tx_committed = TxTAO(iter, dtx, read_only, &attempt_read_only);
+    // Stat after one transaction finishes
+    if (tx_committed) {
+      clock_gettime(CLOCK_REALTIME, &tx_end_time);
+      double tx_usec =
+          (tx_end_time.tv_sec - tx_start_time.tv_sec) * 1000000 +
+          (double)(tx_end_time.tv_nsec - tx_start_time.tv_nsec) / 1000;
+      // SDS_INFO("tx_usec=%lf", tx_usec);
+      timer[timer_idx] = tx_usec;
+      timer_idx += threads * coroutines;
+      commit_tx++;
+      if (read_only) {
+        commit_read_only++;
+      }
+      // IdleExecution();
+    }
+    //  else {
+    //   SDS_INFO("not found?");
+    // }
+    // Stat after a million of transactions finish
+    if (attempt_tx == ATTEMPTED_NUM) {
+      attempts.fetch_add(attempt_tx);
+      commits.fetch_add(commit_tx);
+      attempts_read_only.fetch_add(attempt_read_only);
+      commits_read_only.fetch_add(commit_read_only);
+      break;
+    }
+  }
+  running_tasks--;
+  delete dtx;
+}
 
 // void execute_thread(int id, DTXContext *context, double theta) {
 //   BindCore(id);
@@ -311,9 +296,6 @@ int main(int argc, char **argv) {
   }
 
   tao_client = new TAO();
-  // for (int i = 0; i < 10; i++) {
-  //   tao_client->GetReadTransactions();
-  // }
   JsonConfig config = JsonConfig::load_file(path);
   kMaxTransactions = config.get("nr_transactions").get_uint64();
   lease = config.get("lease").get_uint64();

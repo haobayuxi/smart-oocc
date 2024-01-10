@@ -84,6 +84,7 @@ class TAO {
   TAO() {
     config_parser = ConfigParser();
     edge_count = 0;
+    LoadEdges();
   }
 
   void LoadEdges() {
@@ -140,18 +141,23 @@ class TAO {
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
     uint8_t value[150] = {'a'};
-    ofstream file("tao.dat");
+    // ofstream file("tao.dat");
+    ifstream file("tao.dat");
     for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
-      uint64_t primary_key = GenerateKey(primary_shard);
-      uint64_t remote_key = GenerateKey(remote_shard);
+      // uint64_t primary_key = GenerateKey(primary_shard);
+      // uint64_t remote_key = GenerateKey(remote_shard);
+      uint64_t primary_key = 0;
+      uint64_t remote_key = 0;
+      file >> primary_key;
+      file >> remote_key;
       Edge e = Edge{
           primary_key,
           remote_key,
       };
-      shard_to_edges[primary_shard].push_back(e);
-      edge_count++;
+      // shard_to_edges[primary_shard].push_back(e);
+      // edge_count++;
       // insert object
       DataItem item_to_be_inserted1(ObjectTableId, 150, (itemkey_t)primary_key,
                                     value);
@@ -174,8 +180,8 @@ class TAO {
           edge_key, item_to_be_inserted3, mem_store_reserve_param);
       inserted_item3->remote_offset =
           edge_table->GetItemRemoteOffset(inserted_item3);
-      file << primary_key;
-      file << remote_key;
+      // file << primary_key;
+      // file << remote_key;
     }
     file.close();
   }
