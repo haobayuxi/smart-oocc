@@ -145,6 +145,7 @@ class TAO {
     std::uniform_int_distribution<int> edge_selector(0, it.size() - 1);
     int index = edge_selector(gen);
     cout << "primary" << it[index].primary_key << endl;
+    cout << "addr " << it[index] << endl;
     return it[index];
   }
 
@@ -222,6 +223,7 @@ class TAO {
       int op = op_obj.distribution(gen);
       cout << "op=" << op << endl;
       Edge const &e = GetRandomEdge();
+      cout << "addr " << e << endl;
       cout << "e.primary=" << e.primary_key << endl;
       if (op == 1) {
         // read a edge
