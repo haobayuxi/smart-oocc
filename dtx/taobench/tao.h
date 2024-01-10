@@ -207,6 +207,7 @@ class TAO {
       transaction_size = read_transaction_size_obj
                              .vals[read_transaction_size_obj.distribution(gen)];
     }
+    std::cout << "transaction size = " << transaction_size << std::endl;
     ConfigParser::LineObject &op_obj =
         config_parser.fields["read_txn_operation_types"];
     // bool is
@@ -214,7 +215,7 @@ class TAO {
       // random a edge
       // random read edge or object
       std::string op_type = op_obj.types[op_obj.distribution(gen)];
-      bool is_edge_op = op_type.find("edge") != std::string::npos;;
+      bool is_edge_op = op_type.find("edge") != std::string::npos;
       Edge e = GetRandomEdge();
       if (is_edge_op) {
         // read a edge
