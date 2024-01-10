@@ -202,7 +202,8 @@ class TAO {
     return result;
   }
 
-  void GetWriteTransactions() {
+  vector<tao_key_t> GetWriteTransactions() {
+    vector<tao_key_t> result;
     ConfigParser::LineObject &read_transaction_size_obj =
         config_parser.fields["read_txn_sizes"];
     int transaction_size =
@@ -216,9 +217,29 @@ class TAO {
       bool is_edge_op = operation_type.find("edge") != std::string::npos;
       Edge edge = GetRandomEdge();
       if (is_edge_op) {
+        // read a edge
+        result.push_back(tao_key_t{
+            EdgeTableId,
+            GenerateEdgeKey(e.primary_key, e.remote_key),
+        });
       } else {
+        // read a object
+        result.push_back(tao_key_t{
+            ObjectTableId,
+            e.primary_key,
+        });
       }
     }
+    return result;
+  }
+
+
+  bool is_read_transaction(){
+    std::discrete_distribution<> op_dist = config_parser.fields["operations"].distribution;
+    if (op_dist(gen)==0){
+      return true;
+    }
+    return false;
   }
 
   ALWAYS_INLINE

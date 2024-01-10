@@ -5,7 +5,7 @@
 #include "../memstore.h"
 #include "smart/target.h"
 #include "smart/thread.h"
-#include "tatp.h"
+#include "tao.h"
 #include "util/json_config.h"
 
 using namespace sds;
@@ -49,9 +49,9 @@ void setup(Target &target) {
   // auto edge_size = tao->;
   // auto *edge_meta = (HashMeta *)target.alloc_chunk(
   //     (all_tables.size() * sizeof(HashMeta)) / kChunkSize + 1);
-  // for (auto ) {
-
-  // }
+  for (int i = 0;i < NUM_SHARDS;i++ ) {
+    
+  }
   // target.set_root_entry(3, target.rel_ptr(edge_meta).raw);
 
   target.set_root_entry(0, i);
