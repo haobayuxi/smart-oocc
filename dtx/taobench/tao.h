@@ -120,7 +120,7 @@ class TAO {
     std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
-    string value(150, 'a');
+    uint8_t value[150] = {'a'};
     for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
@@ -135,8 +135,7 @@ class TAO {
 
       // insert edge
 
-      DataItem item_to_be_inserted(ObjectTableId, 150, primary_key,
-                                   value.c_str());
+      DataItem item_to_be_inserted(ObjectTableId, 150, primary_key, &value);
       DataItem *inserted_item = object_table->LocalInsert(
           primary_key, item_to_be_inserted, mem_store_reserve_param);
       inserted_item->remote_offset =
