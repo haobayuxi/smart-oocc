@@ -124,7 +124,7 @@ class TAO {
     // and bottom 40 bits of timestamp
     // this design is fairly arbitrary; intent is just to minimize duplicate
     // keys across threads
-    return (((uint64_t)shard) << 57) + (timestamp >> 24);
+    return (((uint64_t)shard) << 57) + ((timestamp << 24) >> 24);
   }
 
   uint64_t GenerateEdgeKey(uint64_t primary_key, uint64_t remote_key) {
