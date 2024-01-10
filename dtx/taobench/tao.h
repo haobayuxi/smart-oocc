@@ -219,16 +219,19 @@ class TAO {
       Edge e = GetRandomEdge();
       if (is_edge_op) {
         // read a edge
+        cout << "edge " << endl;
         result.push_back(tao_key_t{
             EdgeTableId,
             GenerateEdgeKey(e.primary_key, e.remote_key),
         });
+        cout << "push result success " << endl;
       } else {
         // read a object
         result.push_back(tao_key_t{
             ObjectTableId,
             e.primary_key,
         });
+        cout << "object " << endl;
       }
     }
 
