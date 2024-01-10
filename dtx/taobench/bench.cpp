@@ -164,7 +164,7 @@ void RunTx(DTXContext *context) {
   delete dtx;
 }
 
-void execute_thread(int id, DTXContext *context, double theta) {
+void execute_thread(int id, DTXContext *context) {
   BindCore(id);
 
   ATTEMPTED_NUM = kMaxTransactions / threads / coroutines;
@@ -328,7 +328,7 @@ int main(int argc, char **argv) {
   workers.resize(threads);
   synchronize_begin(context);
   for (int i = 0; i < threads; ++i) {
-    workers[i] = std::thread(execute_thread, i, context, theta);
+    workers[i] = std::thread(execute_thread, i, context);
   }
 
   std::thread(report_per_second);
