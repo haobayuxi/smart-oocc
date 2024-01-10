@@ -44,17 +44,14 @@ thread_local static std::independent_bits_engine<std::default_random_engine, 8,
 
 const int MICRO_TABLE_ID = 1;
 
-struct micro_key_t {
-  // uint64_t micro_id;
-  uint64_t item_key;
+struct tao_key_t {
+  int table_id;
+  uint64_t key;
 };
-
-static_assert(sizeof(micro_key_t) == sizeof(uint64_t), "");
 
 struct micro_val_t {
   uint64_t magic;
 };
-// static_assert(sizeof(micro_val_t) == 40, "");
 
 // Magic numbers for debugging. These are unused in the spec.
 #define Micro_MAGIC 97 /* Some magic number <= 255 */
@@ -107,13 +104,32 @@ class TAO {
 
   uint64_t GenerateKey(int shard) {
     uint64_t timestamp = getTimeNs();
-    uint64_t seqnum = key_count++;
+    // uint64_t seqnum = key_count++;
     // 64 bit int split into 7 bit shard, 17 thread-specific sequence number,
     // and bottom 40 bits of timestamp
     // this design is fairly arbitrary; intent is just to minimize duplicate
     // keys across threads
-    return (((uint64_t)shard) << 57) + ((seqnum & 0x1FFFF) << 40) +
-           (timestamp >> 24);
+    return (((uint64_t)shard) << 57) + (timestamp >> 24);
+  }
+
+  uint64_t GenerateEdgeKey(uint64_t primary_key, uint64_t remote_key) {
+    uint64_t shard = remote_key >> 57;
+    return primary_key + shard << 50;
+  }
+
+  Edge const &GetRandomEdge() {
+    ConfigParser::LineObject &obj = config_parser.fields["primary_shards"];
+    auto it = shard_to_edges.find(
+        obj.distribution(rnd::gen));  // 从 primary shard 拿到shard的key
+    while (it == shard_to_edges.end()) {
+      it = shard_to_edges.find(obj.distribution(rnd::gen));
+    }
+
+    std::uniform_int_distribution<int> edge_selector(
+        0,
+        (it->second).size() -
+            1);  // 从对应的里面选择一个edge，所以初始化的时候要有一个保存所有边的
+    return (it->second)[edge_selector(rnd::gen)];
   }
 
   void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
@@ -132,19 +148,32 @@ class TAO {
       };
       shard_to_edges[primary_shard].push_back(e);
       // insert object
-
-      // insert edge
-
       DataItem item_to_be_inserted(ObjectTableId, 150, (itemkey_t)primary_key,
                                    value);
       DataItem *inserted_item = object_table->LocalInsert(
           primary_key, item_to_be_inserted, mem_store_reserve_param);
       inserted_item->remote_offset =
           object_table->GetItemRemoteOffset(inserted_item);
+
+      DataItem item_to_be_inserted(ObjectTableId, 150, (itemkey_t)remote_key,
+                                   value);
+      DataItem *inserted_item = object_table->LocalInsert(
+          remote_key, item_to_be_inserted, mem_store_reserve_param);
+      inserted_item->remote_offset =
+          object_table->GetItemRemoteOffset(inserted_item);
+      // insert edge
+      uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
+      DataItem item_to_be_inserted(EdgeTableId, 150, (itemkey_t)edge_key,
+                                   value);
+      DataItem *inserted_item = edge_table->LocalInsert(
+          edge_key, item_to_be_inserted, mem_store_reserve_param);
+      inserted_item->remote_offset =
+          edge_table->GetItemRemoteOffset(inserted_item);
     }
   }
 
-  void GetReadTransactions() {
+  vector<tao_key_t> GetReadTransactions() {
+    vector<tao_key_t> result;
     ConfigParser::LineObject &read_transaction_size_obj =
         config_parser.fields["read_txn_sizes"];
     int transaction_size =
@@ -154,24 +183,50 @@ class TAO {
 
     ConfigParser::LineObject &op_obj =
         config_parser.fields["read_txn_operation_types"];
-    std::string op_type = op_obj.types[op_obj.distribution(gen)];
     // bool is
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
+      std::string op_type = op_obj.types[op_obj.distribution(gen)];
       bool is_edge_op = true;
+      Edge e = GetRandomEdge();
       if (is_edge_op) {
         // read a edge
+        result.push_back(tao_key_t{
+            EdgeTableId,
+            GenerateEdgeKey(e.primary_key, e.remote_key),
+        });
       } else {
         // read a object
+        result.push_back(tao_key_t{
+            ObjectTableId,
+            e.primary_key,
+        });
+      }
+    }
+
+    return result;
+  }
+
+  void GetWriteTransactions() {
+    ConfigParser::LineObject &read_transaction_size_obj =
+        config_parser.fields["read_txn_sizes"];
+    int transaction_size =
+        read_transaction_size_obj
+            .vals[read_transaction_size_obj.distribution(gen)];
+    ConfigParser::LineObject &obj =
+        config_parser.fields["write_txn_operation_types"];
+
+    for (int i = 0; i < transaction_size; i++) {
+      string operation_type = obj.types[obj.distribution(gen)];
+      bool is_edge_op = operation_type.find("edge") != std::string::npos;
+      Edge edge = GetRandomEdge();
+      if (is_edge_op) {
+      } else {
       }
     }
   }
 
-  void GetWriteTransactions() {}
-
   ALWAYS_INLINE
   std::vector<HashStore *> GetHashStore() { return table_ptrs; }
 };
-
-void GetRandomEdge() {}
