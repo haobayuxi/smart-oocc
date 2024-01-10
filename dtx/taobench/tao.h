@@ -146,17 +146,17 @@ class TAO {
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
     uint8_t value[150] = {'a'};
-    ofstream file("tao.dat");
-    // ifstream file("tao.dat");
+    // ofstream file("tao.dat");
+    ifstream file("tao.dat");
     for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
-      uint64_t primary_key = GenerateKey(primary_shard);
-      uint64_t remote_key = GenerateKey(remote_shard);
-      // uint64_t primary_key = 0;
-      // uint64_t remote_key = 0;
-      // file >> primary_key;
-      // file >> remote_key;
+      // uint64_t primary_key = GenerateKey(primary_shard);
+      // uint64_t remote_key = GenerateKey(remote_shard);
+      uint64_t primary_key = 0;
+      uint64_t remote_key = 0;
+      file >> primary_key;
+      file >> remote_key;
       Edge e = Edge{
           primary_key,
           remote_key,
@@ -164,31 +164,31 @@ class TAO {
       // shard_to_edges[primary_shard].push_back(e);
       // edge_count++;
       // insert object
-      // DataItem item_to_be_inserted1(ObjectTableId, 150,
-      // (itemkey_t)primary_key,
-      //                               value);
-      // DataItem *inserted_item1 = object_table->LocalInsert(
-      //     primary_key, item_to_be_inserted1, mem_store_reserve_param);
-      // inserted_item1->remote_offset =
-      //     object_table->GetItemRemoteOffset(inserted_item1);
+      DataItem item_to_be_inserted1(ObjectTableId, 150,
+      (itemkey_t)primary_key,
+                                    value);
+      DataItem *inserted_item1 = object_table->LocalInsert(
+          primary_key, item_to_be_inserted1, mem_store_reserve_param);
+      inserted_item1->remote_offset =
+          object_table->GetItemRemoteOffset(inserted_item1);
 
-      // DataItem item_to_be_inserted2(ObjectTableId, 150,
-      // (itemkey_t)remote_key,
-      //                               value);
-      // DataItem *inserted_item2 = object_table->LocalInsert(
-      //     remote_key, item_to_be_inserted2, mem_store_reserve_param);
-      // inserted_item2->remote_offset =
-      //     object_table->GetItemRemoteOffset(inserted_item2);
-      // // insert edge
-      // uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
-      // DataItem item_to_be_inserted3(EdgeTableId, 150, (itemkey_t)edge_key,
-      //                               value);
-      // DataItem *inserted_item3 = edge_table->LocalInsert(
-      //     edge_key, item_to_be_inserted3, mem_store_reserve_param);
-      // inserted_item3->remote_offset =
-      //     edge_table->GetItemRemoteOffset(inserted_item3);
-      file << primary_key << endl;
-      file << remote_key << endl;
+      DataItem item_to_be_inserted2(ObjectTableId, 150,
+      (itemkey_t)remote_key,
+                                    value);
+      DataItem *inserted_item2 = object_table->LocalInsert(
+          remote_key, item_to_be_inserted2, mem_store_reserve_param);
+      inserted_item2->remote_offset =
+          object_table->GetItemRemoteOffset(inserted_item2);
+      // insert edge
+      uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
+      DataItem item_to_be_inserted3(EdgeTableId, 150, (itemkey_t)edge_key,
+                                    value);
+      DataItem *inserted_item3 = edge_table->LocalInsert(
+          edge_key, item_to_be_inserted3, mem_store_reserve_param);
+      inserted_item3->remote_offset =
+          edge_table->GetItemRemoteOffset(inserted_item3);
+      // file << primary_key << endl;
+      // file << remote_key << endl;
     }
     file.close();
 
