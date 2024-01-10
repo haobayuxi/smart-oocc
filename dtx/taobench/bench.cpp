@@ -10,36 +10,36 @@
 #include "../dtx.h"
 #include "tao.h"
 
-// using namespace std::placeholders;
+using namespace std::placeholders;
 
-// #define RetryUntilSuccess 1
+#define RetryUntilSuccess 1
 
-// size_t kMaxTransactions = 10000;
-// pthread_barrier_t barrier;
-// uint64_t threads;
-// uint64_t coroutines;
+size_t kMaxTransactions = 10000;
+pthread_barrier_t barrier;
+uint64_t threads;
+uint64_t coroutines;
 
-// int data_item_size;
-// int write_ratio;
-// bool is_skewed;
-// bool delayed;
-// int lease;
-// int txn_sys;
-// thread_local uint64_t tx_id_local = 3;
-// std::atomic<uint64_t> attempts(0);
-// std::atomic<uint64_t> commits(0);
-// std::atomic<uint64_t> attempts_read_only(0);
-// std::atomic<uint64_t> commits_read_only(0);
-// double *timer;
-// std::atomic<uint64_t> tx_id_generator(0);
+int data_item_size;
+int write_ratio;
+bool is_skewed;
+bool delayed;
+int lease;
+int txn_sys;
+thread_local uint64_t tx_id_local = 3;
+std::atomic<uint64_t> attempts(0);
+std::atomic<uint64_t> commits(0);
+std::atomic<uint64_t> attempts_read_only(0);
+std::atomic<uint64_t> commits_read_only(0);
+double *timer;
+std::atomic<uint64_t> tx_id_generator(0);
 
-// thread_local size_t ATTEMPTED_NUM;
-// thread_local uint64_t seed;
+thread_local size_t ATTEMPTED_NUM;
+thread_local uint64_t seed;
 thread_local TAO *tao_client;
-// thread_local bool *workgen_arr;
+thread_local bool *workgen_arr;
 
-// thread_local uint64_t rdma_cnt;
-// std::atomic<uint64_t> rdma_cnt_sum(0);
+thread_local uint64_t rdma_cnt;
+std::atomic<uint64_t> rdma_cnt_sum(0);
 
 // bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only)
 // {
