@@ -201,7 +201,7 @@ class TAO {
         read_transaction_size_obj
             .vals[read_transaction_size_obj.distribution(gen)];
     // std::cout << "transaction size = " << transaction_size << std::endl;
-    if (transaction_size > 100) {
+    while (transaction_size > 50) {
       transaction_size = read_transaction_size_obj
                              .vals[read_transaction_size_obj.distribution(gen)];
     }
