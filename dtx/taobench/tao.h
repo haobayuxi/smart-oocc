@@ -149,7 +149,7 @@ class TAO {
 
     return Edge{
         it[index].primary_key,
-        it[dex].remote_key,
+        it[index].remote_key,
     };
   }
 
