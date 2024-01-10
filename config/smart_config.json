@@ -10,7 +10,7 @@
     "max_inline_data": 64
   },
   "max_nodes": 128,
-  "initiator_cache_size": 12582912,
+  "initiator_cache_size": 4096,
   "use_thread_aware_alloc": true,
   "thread_aware_alloc": {
     "total_uuar": 100,
