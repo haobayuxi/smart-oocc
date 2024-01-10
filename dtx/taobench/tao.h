@@ -216,8 +216,9 @@ class TAO {
       // random a edge
       // random read edge or object
       int op = op_obj.distribution(gen);
-
+      cout << "op=" << op << endl;
       Edge const &e = GetRandomEdge();
+      cout << "e.primary=" << e.primary_key << endl;
       if (op == 1) {
         // read a edge
         cout << "edge " << endl;
