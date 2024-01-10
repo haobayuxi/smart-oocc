@@ -19,7 +19,7 @@ using namespace std;
 
 const int ObjectTableId = 1;
 const int EdgeTableId = 2;
-#define TOTAL_EDGES_NUM 1000000
+#define TOTAL_EDGES_NUM 500000
 
 uint64_t getTimeNs() {
   struct timespec ts;
@@ -214,7 +214,7 @@ class TAO {
       // random a edge
       // random read edge or object
       std::string op_type = op_obj.types[op_obj.distribution(gen)];
-      bool is_edge_op = true;
+      bool is_edge_op = op_type.find("edge") != std::string::npos;;
       Edge e = GetRandomEdge();
       if (is_edge_op) {
         // read a edge
