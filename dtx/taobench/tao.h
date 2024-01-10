@@ -96,6 +96,10 @@ class TAO {
       file >> primary;
       file >> remote;
       uint64_t shard = primary >> 57;
+      if (shard > 50) {
+        cout << "read shard=" << shard << endl;
+        assert(0);
+      }
       shard_to_edges[shard].push_back(Edge{
           primary,
           remote,
