@@ -217,7 +217,7 @@ class TAO {
       transaction_size = read_transaction_size_obj
                              .vals[read_transaction_size_obj.distribution(gen)];
     }
-    std::cout << "transaction size = " << transaction_size << std::endl;
+    // std::cout << "transaction size = " << transaction_size << std::endl;
     ConfigParser::LineObject &op_obj =
         config_parser.fields["read_txn_operation_types"];
     // bool is
