@@ -35,7 +35,7 @@ std::atomic<uint64_t> tx_id_generator(0);
 
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
-thread_local TAO *tao_client;
+TAO *tao_client;
 thread_local bool *workgen_arr;
 
 thread_local uint64_t rdma_cnt;
@@ -172,7 +172,6 @@ void execute_thread(int id, DTXContext *context, double theta) {
   seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51) *
              kMaxThreads +
          id;
-  ycsb_client = new YCSB(theta, id);
   WarmUp(context);
   // SDS_INFO("warm done");
   TaskPool::Enable();
@@ -275,17 +274,17 @@ void report(double elapsed_time, JsonConfig &config) {
     SDS_PERROR("fopen");
     return;
   }
-  fprintf(fout,
-          "%s, %ld, %ld, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf,
-              % .3lf\n
-              ", dump_prefix.c_str(), threads, coroutines, attempts.load() /
-              elapsed_time,
-          commits.load() / elapsed_time, timer[(int)(0.5 * commits.load())],
-          timer[(int)(0.99 * commits.load())],
-          1.0 - (commits.load() * 1.0 / attempts.load()),
-          1.0 * rdma_cnt_sum.load() / attempts.load(),
-          rdma_cnt_sum.load() / elapsed_time);
-  fclose(fout);
+  // fprintf(fout,
+  //         "%s, %ld, %ld, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf,
+  //             % .3lf\n
+  //             ", dump_prefix.c_str(), threads, coroutines, attempts.load() /
+  //             elapsed_time,
+  //         commits.load() / elapsed_time, timer[(int)(0.5 * commits.load())],
+  //         timer[(int)(0.99 * commits.load())],
+  //         1.0 - (commits.load() * 1.0 / attempts.load()),
+  //         1.0 * rdma_cnt_sum.load() / attempts.load(),
+  //         rdma_cnt_sum.load() / elapsed_time);
+  // fclose(fout);
 }
 
 int main(int argc, char **argv) {
