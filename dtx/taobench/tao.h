@@ -239,6 +239,10 @@ class TAO {
     int transaction_size =
         read_transaction_size_obj
             .vals[read_transaction_size_obj.distribution(gen)];
+    while (transaction_size > 20) {
+      transaction_size = read_transaction_size_obj
+                             .vals[read_transaction_size_obj.distribution(gen)];
+    }
     ConfigParser::LineObject &obj =
         config_parser.fields["write_txn_operation_types"];
 

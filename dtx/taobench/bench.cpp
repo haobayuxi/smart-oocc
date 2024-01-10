@@ -230,15 +230,15 @@ void synchronize_end(DTXContext *ctx) {
   }
 }
 
-void report_per_second() {
-  uint64_t last_committed = 0;
-  while (true) {
-    sleep(1);
-    uint64_t now = commits.load();
-    SDS_INFO("%.3lf", (now - last_committed) / 1000000.0);
-    last_committed = now;
-  }
-}
+// void report_per_second() {
+//   uint64_t last_committed = 0;
+//   while (true) {
+//     sleep(1);
+//     uint64_t now = commits.load();
+//     SDS_INFO("%.3lf", (now - last_committed) / 1000000.0);
+//     last_committed = now;
+//   }
+// }
 
 void report(double elapsed_time, JsonConfig &config) {
   assert(commits.load() <= kMaxTransactions);
@@ -308,6 +308,8 @@ int main(int argc, char **argv) {
     SDS_INFO("running OCC");
   } else if (txn_sys == DTX_SYS::DrTMH) {
     SDS_INFO("running DrTM");
+  } else {
+    SDS_INFO("running DSLR");
   }
 
   delayed = config.get("delayed").get_bool();
@@ -331,7 +333,7 @@ int main(int argc, char **argv) {
     workers[i] = std::thread(execute_thread, i, context);
   }
 
-  std::thread(report_per_second);
+  // std::thread(report_per_second);
   pthread_barrier_wait(&barrier);
   clock_gettime(CLOCK_MONOTONIC, &ts_begin);
   pthread_barrier_wait(&barrier);
