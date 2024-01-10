@@ -43,8 +43,9 @@ std::atomic<uint64_t> rdma_cnt_sum(0);
 
 bool TxTAO(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
   dtx->TxBegin(tx_id);
-  // SDS_INFO("read only %d, txid%ld", read_only, tx_id);
   vector<tao_key_t> keys = tao_client->GetReadTransactions();
+
+  SDS_INFO("read only %d, txid%ld, keysize=%d", read_only, tx_id, keys.size());
   for (int i = 0; i < keys.size(); i++) {
     DataItemPtr micro_obj =
         std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
