@@ -125,7 +125,7 @@ class TAO {
         remote_key,
     };
     shard_to_edges[primary_shard].push_back(e);
-    shard_to_edges.push_back for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
+    for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
       micro_key_t micro_key;
       micro_key.item_key = (uint64_t)i;
 
