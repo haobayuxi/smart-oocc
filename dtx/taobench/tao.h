@@ -128,9 +128,10 @@ class TAO {
   }
 
   uint64_t GenerateEdgeKey(uint64_t primary_key, uint64_t remote_key) {
-    cout << "primary key=" << primary_key << " remote =" << remote_key << endl;
+    // cout << "primary key=" << primary_key << " remote =" << remote_key <<
+    // endl;
     uint64_t shard = remote_key >> 57;
-    cout << "shard=" << shard << endl;
+    // cout << "shard=" << shard << endl;
     return primary_key + shard << 50;
   }
 
