@@ -202,7 +202,7 @@ class TAO {
     int transaction_size =
         read_transaction_size_obj
             .vals[read_transaction_size_obj.distribution(gen)];
-    while (transaction_size > 50) {
+    while (transaction_size > 10) {
       transaction_size = read_transaction_size_obj
                              .vals[read_transaction_size_obj.distribution(gen)];
     }
@@ -243,7 +243,7 @@ class TAO {
     int transaction_size =
         read_transaction_size_obj
             .vals[read_transaction_size_obj.distribution(gen)];
-    while (transaction_size > 20) {
+    while (transaction_size > 10) {
       transaction_size = read_transaction_size_obj
                              .vals[read_transaction_size_obj.distribution(gen)];
     }
