@@ -85,7 +85,6 @@ class TAO {
     config_parser = ConfigParser();
     edge_count = 0;
     LoadEdges();
-    cout << "load edges done=" << edge_count << endl;
   }
 
   void LoadEdges() {
@@ -128,10 +127,7 @@ class TAO {
   }
 
   uint64_t GenerateEdgeKey(uint64_t primary_key, uint64_t remote_key) {
-    // cout << "primary key=" << primary_key << " remote =" << remote_key <<
-    // endl;
     uint64_t shard = remote_key >> 57;
-    // cout << "shard=" << shard << endl;
     return primary_key + shard << 50;
   }
 
@@ -139,13 +135,9 @@ class TAO {
     ConfigParser::LineObject &obj = config_parser.fields["primary_shards"];
     int shard = obj.distribution(gen);
 
-    // cout << "shard=" << shard;
     auto it = shard_to_edges[shard];
-    // cout << "it size=" << it.size() << endl;
     std::uniform_int_distribution<int> edge_selector(0, it.size() - 1);
     int index = edge_selector(gen);
-    // cout << "primary" << it[index].primary_key << endl;
-    // cout << "addr " < < < < endl;
 
     return Edge{
         it[index].primary_key,
@@ -201,8 +193,6 @@ class TAO {
       // file << remote_key << endl;
     }
     file.close();
-
-    // cout << "pri" << primary_key << "remote" << remote_key << endl;
   }
 
   vector<tao_key_t> GetReadTransactions() {
@@ -212,7 +202,6 @@ class TAO {
     int transaction_size =
         read_transaction_size_obj
             .vals[read_transaction_size_obj.distribution(gen)];
-    // std::cout << "transaction size = " << transaction_size << std::endl;
     while (transaction_size > 50) {
       transaction_size = read_transaction_size_obj
                              .vals[read_transaction_size_obj.distribution(gen)];
