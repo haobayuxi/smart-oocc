@@ -84,8 +84,8 @@ class TAO {
   TAO() {
     config_parser = ConfigParser();
     edge_count = 0;
-    LoadEdges();
-    cout << "load edges done=" << edge_count << endl;
+    // LoadEdges();
+    // cout << "load edges done=" << edge_count << endl;
   }
 
   void LoadEdges() {
