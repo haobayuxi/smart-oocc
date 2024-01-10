@@ -19,7 +19,7 @@ using namespace std;
 
 const int ObjectTableId = 1;
 const int EdgeTableId = 2;
-#define TOTAL__NUM 100000
+#define TOTAL_EDGES_NUM 100000
 
 uint64_t getTimeNs() {
   struct timespec ts;
@@ -152,7 +152,7 @@ class TAO {
       int shard = primary_key >> 57;
       if (primary_shard != shard) {
         cout << "primary" << primary_shard << "   shard=" << shard << endl;
-        Assert(0);
+        assert(0);
       }
       // uint64_t primary_key = 0;
       // uint64_t remote_key = 0;
