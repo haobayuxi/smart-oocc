@@ -16,6 +16,9 @@
 using namespace benchmark;
 using namespace std;
 
+const int ObjectTableId = 0;
+const int EdgeTableId = 1;
+
 uint64_t getTimeNs() {
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
@@ -116,21 +119,20 @@ class TAO {
     std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
-    int primary_shard = unif(gen);
-    int remote_shard = remote_shards.distribution(gen);
-    int64_t primary_key = GenerateKey(primary_shard);
-    int64_t remote_key = GenerateKey(remote_shard);
-    Edge e = Edge{
-        primary_key,
-        remote_key,
-    };
-    shard_to_edges[primary_shard].push_back(e);
+    string value = String::from("x");
     for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
-      micro_key_t micro_key;
-      micro_key.item_key = (uint64_t)i;
+      int primary_shard = unif(gen);
+      int remote_shard = remote_shards.distribution(gen);
+      uint64_t primary_key = GenerateKey(primary_shard);
+      uint64_t remote_key = GenerateKey(remote_shard);
+      Edge e = Edge{
+          primary_key,
+          remote_key,
+      };
+      shard_to_edges[primary_shard].push_back(e);
+      // insert object
 
-      micro_val_t micro_val;
-      micro_val.magic = micro_magic + i;
+      // insert edge
 
       DataItem item_to_be_inserted(MICRO_TABLE_ID, sizeof(micro_val_t),
                                    micro_key.item_key, (uint8_t *)&micro_val);
