@@ -135,7 +135,8 @@ class TAO {
 
       // insert edge
 
-      DataItem item_to_be_inserted(ObjectTableId, 150, primary_key, &value);
+      DataItem item_to_be_inserted(ObjectTableId, 150, (itemkey_t)primary_key,
+                                   value);
       DataItem *inserted_item = object_table->LocalInsert(
           primary_key, item_to_be_inserted, mem_store_reserve_param);
       inserted_item->remote_offset =
