@@ -35,7 +35,7 @@ std::atomic<uint64_t> tx_id_generator(0);
 
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
-TAO *tao_client;
+thread_local TAO *tao_client;
 thread_local bool *workgen_arr;
 
 thread_local uint64_t rdma_cnt;
@@ -45,7 +45,8 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
   dtx->TxBegin(tx_id);
   vector<tao_key_t> keys = tao_client->GetReadTransactions();
 
-  SDS_INFO("read only %d, txid%ld, keysize=%d", read_only, tx_id, keys.size());
+  // SDS_INFO("read only %d, txid%ld, keysize=%d", read_only, tx_id,
+  // keys.size());
   for (int i = 0; i < keys.size(); i++) {
     DataItemPtr micro_obj =
         std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
@@ -175,6 +176,7 @@ void execute_thread(int id, DTXContext *context) {
          id;
   WarmUp(context);
   // SDS_INFO("warm done");
+  tao_client = new TAO();
   TaskPool::Enable();
   auto &task_pool = TaskPool::Get();
   running_tasks = coroutines;
@@ -298,7 +300,6 @@ int main(int argc, char **argv) {
     g_idle_cycles = kCpuFrequency * atoi(getenv("IDLE_USEC"));
   }
 
-  tao_client = new TAO();
   JsonConfig config = JsonConfig::load_file(path);
   kMaxTransactions = config.get("nr_transactions").get_uint64();
   lease = config.get("lease").get_uint64();
