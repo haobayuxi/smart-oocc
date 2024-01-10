@@ -76,7 +76,7 @@ class TAO {
   std::vector<HashStore *> table_ptrs;
   ConfigParser config_parser;
   // std::unordered_map<int, std::vector<Edge>> const shard_to_edges;
-  vector<Edge> shard_to_edges[NUM_SHARDS];
+  vector<Edge> shard_to_edges[NUM_SHARDS + 1];
 
   uint64_t edge_count;
 
@@ -147,17 +147,17 @@ class TAO {
     for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
-      uint64_t primary_key = GenerateKey(primary_shard);
-      uint64_t remote_key = GenerateKey(remote_shard);
-      int shard = primary_key >> 57;
-      if (primary_shard != shard) {
-        cout << "primary" << primary_shard << "   shard=" << shard << endl;
-        assert(0);
-      }
-      // uint64_t primary_key = 0;
-      // uint64_t remote_key = 0;
-      // file >> primary_key;
-      // file >> remote_key;
+      // uint64_t primary_key = GenerateKey(primary_shard);
+      // uint64_t remote_key = GenerateKey(remote_shard);
+      // int shard = primary_key >> 57;
+      // if (primary_shard != shard || shard >=50) {
+      //   cout << "primary" << primary_shard << "   shard=" << shard << endl;
+      //   assert(0);
+      // }
+      uint64_t primary_key = 0;
+      uint64_t remote_key = 0;
+      file >> primary_key;
+      file >> remote_key;
       Edge e = Edge{
           primary_key,
           remote_key,
