@@ -16,8 +16,8 @@
 using namespace benchmark;
 using namespace std;
 
-const int ObjectTableId = 0;
-const int EdgeTableId = 1;
+const int ObjectTableId = 1;
+const int EdgeTableId = 2;
 
 uint64_t getTimeNs() {
   struct timespec ts;
