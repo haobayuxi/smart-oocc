@@ -86,11 +86,11 @@ class TAO {
     edge_count = 0;
   }
 
-  TAO(DTXContext *context) {
-    config_parser = ConfigParser();
-    edge_count = 0;
-    shard_to_edges = context->shard_to_edges;
-  }
+  // TAO(DTXContext *context) {
+  //   config_parser = ConfigParser();
+  //   edge_count = 0;
+  //   shard_to_edges = context->shard_to_edges;
+  // }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {

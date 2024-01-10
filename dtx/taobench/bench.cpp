@@ -311,33 +311,32 @@ int main(int argc, char **argv) {
   }
 
   tao_client = new TAO();
-  for (int i = 0;i < 10;i++){
-
-  tao_client->GetReadTransactions();
-  }
-  // JsonConfig config = JsonConfig::load_file(path);
-  // kMaxTransactions = config.get("nr_transactions").get_uint64();
-  // lease = config.get("lease").get_uint64();
-  // txn_sys = config.get("txn_sys").get_uint64();
-  // if (txn_sys == DTX_SYS::OOCC) {
-  //   SDS_INFO("running OOCC");
-  // } else if (txn_sys == DTX_SYS::OCC) {
-  //   SDS_INFO("running OCC");
-  // } else if (txn_sys == DTX_SYS::DrTMH) {
-  //   SDS_INFO("running DrTM");
+  // for (int i = 0; i < 10; i++) {
+  //   tao_client->GetReadTransactions();
   // }
+  JsonConfig config = JsonConfig::load_file(path);
+  kMaxTransactions = config.get("nr_transactions").get_uint64();
+  lease = config.get("lease").get_uint64();
+  txn_sys = config.get("txn_sys").get_uint64();
+  if (txn_sys == DTX_SYS::OOCC) {
+    SDS_INFO("running OOCC");
+  } else if (txn_sys == DTX_SYS::OCC) {
+    SDS_INFO("running OCC");
+  } else if (txn_sys == DTX_SYS::DrTMH) {
+    SDS_INFO("running DrTM");
+  }
 
-  // delayed = config.get("delayed").get_bool();
-  // auto ycsb_config = config.get("ycsb");
-  // double theta = ycsb_config.get("theta").get_double();
-  // data_item_size = ycsb_config.get("data_item_size").get_uint64();
-  // write_ratio = ycsb_config.get("write_ratio").get_uint64();
-  // is_skewed = ycsb_config.get("is_skewed").get_bool();
-  // srand48(time(nullptr));
-  // threads = argc < 2 ? 1 : atoi(argv[1]);
-  // coroutines = argc < 3 ? 1 : atoi(argv[2]);
-  // timer = new double[kMaxTransactions];
-  // DTXContext *context = new DTXContext(config, threads);
+  delayed = config.get("delayed").get_bool();
+  auto ycsb_config = config.get("ycsb");
+  double theta = ycsb_config.get("theta").get_double();
+  data_item_size = ycsb_config.get("data_item_size").get_uint64();
+  write_ratio = ycsb_config.get("write_ratio").get_uint64();
+  is_skewed = ycsb_config.get("is_skewed").get_bool();
+  srand48(time(nullptr));
+  threads = argc < 2 ? 1 : atoi(argv[1]);
+  coroutines = argc < 3 ? 1 : atoi(argv[2]);
+  timer = new double[kMaxTransactions];
+  DTXContext *context = new DTXContext(config, threads);
   // SDS_INFO("context init done");
   // timespec ts_begin, ts_end;
   // pthread_barrier_init(&barrier, nullptr, threads + 1);
