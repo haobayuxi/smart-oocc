@@ -217,7 +217,7 @@ class TAO {
       // random read edge or object
       int op = op_obj.distribution(gen);
 
-      Edge e = GetRandomEdge();
+      Edge const &e = GetRandomEdge();
       if (op == 1) {
         // read a edge
         cout << "edge " << endl;
@@ -256,7 +256,7 @@ class TAO {
     for (int i = 0; i < transaction_size; i++) {
       string operation_type = obj.types[obj.distribution(gen)];
       bool is_edge_op = operation_type.find("edge") != std::string::npos;
-      Edge e = GetRandomEdge();
+      Edge const &e = GetRandomEdge();
       if (is_edge_op) {
         // read a edge
         result.push_back(tao_key_t{
