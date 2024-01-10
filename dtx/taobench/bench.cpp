@@ -62,6 +62,7 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
       dtx->AddToReadWriteSet(micro_obj);
     }
   }
+  return true;
   bool commit_status = true;
 
   if (!dtx->TxExe()) return false;
