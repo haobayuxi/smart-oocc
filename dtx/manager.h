@@ -171,8 +171,8 @@ class DTXContext {
         int rc = node_.get_root_entry(node_id, 20, offset);
         assert(!rc);
         uint64_t edge_size = 0;
-        // rc = node_.read(&edge_size, GlobalAddress(node_id, offset),
-        //                 sizeof(uint64_t), Initiator::Option::Sync);
+        rc = node_.read(&edge_size, GlobalAddress(node_id, offset),
+                        sizeof(uint64_t), Initiator::Option::Sync);
         assert(!rc);
         SDS_INFO("edge size = %ld", edge_size);
         // Edge edges[edge_size];
