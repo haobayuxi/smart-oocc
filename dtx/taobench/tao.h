@@ -135,18 +135,22 @@ class TAO {
     return primary_key + shard << 50;
   }
 
-  Edge const &GetRandomEdge() {
+  Edge GetRandomEdge() {
     ConfigParser::LineObject &obj = config_parser.fields["primary_shards"];
     int shard = obj.distribution(gen);
 
-    cout << "shard=" << shard;
+    // cout << "shard=" << shard;
     auto it = shard_to_edges[shard];
-    cout << "it size=" << it.size() << endl;
+    // cout << "it size=" << it.size() << endl;
     std::uniform_int_distribution<int> edge_selector(0, it.size() - 1);
     int index = edge_selector(gen);
-    cout << "primary" << it[index].primary_key << endl;
-    cout << "addr " << it[index] << endl;
-    return it[index];
+    // cout << "primary" << it[index].primary_key << endl;
+    // cout << "addr " < < < < endl;
+
+    return Edge{
+        it[index].primary_key,
+        it[dex].remote_key,
+    };
   }
 
   void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
@@ -221,25 +225,22 @@ class TAO {
       // random a edge
       // random read edge or object
       int op = op_obj.distribution(gen);
-      cout << "op=" << op << endl;
-      Edge const &e = GetRandomEdge();
-      cout << "addr " << (char *)e << endl;
-      cout << "e.primary=" << e.primary_key << endl;
+      Edge e = GetRandomEdge();
       if (op == 1) {
         // read a edge
-        cout << "edge " << endl;
+        // cout << "edge " << endl;
         result.push_back(tao_key_t{
             EdgeTableId,
             GenerateEdgeKey(e.primary_key, e.remote_key),
         });
-        cout << "push result success " << endl;
+        // cout << "push result success " << endl;
       } else {
         // read a object
         result.push_back(tao_key_t{
             ObjectTableId,
             e.primary_key,
         });
-        cout << "object " << endl;
+        // cout << "object " << endl;
       }
     }
 
@@ -263,7 +264,7 @@ class TAO {
     for (int i = 0; i < transaction_size; i++) {
       string operation_type = obj.types[obj.distribution(gen)];
       bool is_edge_op = operation_type.find("edge") != std::string::npos;
-      Edge const &e = GetRandomEdge();
+      Edge e = GetRandomEdge();
       if (is_edge_op) {
         // read a edge
         result.push_back(tao_key_t{
