@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -18,6 +19,7 @@ using namespace std;
 
 const int ObjectTableId = 1;
 const int EdgeTableId = 2;
+#define TOTAL_KEYS_NUM 100001
 
 uint64_t getTimeNs() {
   struct timespec ts;
@@ -38,8 +40,6 @@ thread_local static std::mt19937 gen(std::random_device{}());
 thread_local static std::independent_bits_engine<std::default_random_engine, 8,
                                                  unsigned char>
     byte_engine;
-
-#define TOTAL_KEYS_NUM 100001
 
 const int MICRO_TABLE_ID = 1;
 
@@ -86,11 +86,21 @@ class TAO {
     edge_count = 0;
   }
 
-  // TAO(DTXContext *context) {
-  //   config_parser = ConfigParser();
-  //   edge_count = 0;
-  //   shard_to_edges = context->shard_to_edges;
-  // }
+  void LoadEdges() {
+    ifstream file("tao.dat");
+    uint64_t primary = 0;
+    uint64_t remote = 0;
+    for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
+      ifstream >> primary;
+      ifstream >> remote;
+      uint64_t shard = primary >> 57;
+      shard_to_edges[shard].push_back(Edge{
+          primary,
+          remote,
+      });
+    }
+    file.close();
+  }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
@@ -130,6 +140,7 @@ class TAO {
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
     uint8_t value[150] = {'a'};
+    ofstream file("tao.dat");
     for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
@@ -163,7 +174,10 @@ class TAO {
           edge_key, item_to_be_inserted3, mem_store_reserve_param);
       inserted_item3->remote_offset =
           edge_table->GetItemRemoteOffset(inserted_item3);
+      file << primary_key;
+      file << remote_key;
     }
+    file.close();
   }
 
   vector<tao_key_t> GetReadTransactions() {

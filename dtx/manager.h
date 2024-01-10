@@ -19,7 +19,7 @@ extern thread_local uint64_t rdma_cnt;
 
 class DTXContext {
  public:
-  DTXContext(JsonConfig &config, int max_threads, bool is_tao = false)
+  DTXContext(JsonConfig &config, int max_threads)
       : config_(config) {
     for (int i = 0; i < kMaxThreads; ++i) {
       tl_data_[i].log_alloc = new LogOffsetAllocator(i, kMaxThreads);
@@ -40,7 +40,7 @@ class DTXContext {
       }
     }
 
-    LoadMetadata(is_tao);
+    LoadMetadata();
   }
 
   DTXContext(const DTXContext &) = delete;
@@ -137,7 +137,7 @@ class DTXContext {
                                                                log_size);
   }
 
-  void LoadMetadata(bool is_tao) {
+  void LoadMetadata() {
     // get tao edges
     for (int node_id = 0; node_id < remote_nodes_; ++node_id) {
       uint64_t offset;
@@ -166,29 +166,7 @@ class DTXContext {
         }
       }
 
-      // get edge meta
-      if (is_tao) {
-        int rc = node_.get_root_entry(node_id, 20, offset);
-        assert(!rc);
-        uint64_t edge_size = 0;
-        rc = node_.read(&edge_size, GlobalAddress(node_id, offset),
-                        sizeof(uint64_t), Initiator::Option::Sync);
-        assert(!rc);
-        SDS_INFO("edge size = %ld", edge_size);
-        // Edge edges[edge_size];
-        // rc = node_.read(&edges,
-        //                 GlobalAddress(node_id, offset + sizeof(uint64_t)),
-        //                 sizeof(Edge) * edge_size, Initiator::Option::Sync);
-        // assert(!rc);
-        // for (int j = 0; j < edge_size; j++) {
-        //   auto e = edges[j];
-        //   auto shard = e.primary_key >> 57;
-        //   shard_to_edges[shard].push_back(Edge{
-        //       e.primary_key,
-        //       e.remote_key,
-        //   });
-        // }
-      }
+      
     }
   }
 
