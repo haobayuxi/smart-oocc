@@ -29,9 +29,9 @@ void setup(Target &target) {
   MemStoreReserveParam mem_store_reserve_param(hash_reserve_buffer, 0,
                                                hash_buffer + hash_buf_size);
   std::vector<HashStore *> all_tables;
-  auto tatp = new TATP();
-  tatp->LoadTable(&mem_store_alloc_param, &mem_store_reserve_param);
-  all_tables = tatp->GetHashStore();
+  auto tao = new TAO();
+  tao->LoadTable(&mem_store_alloc_param, &mem_store_reserve_param);
+  all_tables = tao->GetHashStore();
   auto *hash_meta = (HashMeta *)target.alloc_chunk(
       (all_tables.size() * sizeof(HashMeta)) / kChunkSize + 1);
   int i = 0;
@@ -46,6 +46,13 @@ void setup(Target &target) {
                           target.rel_ptr(&hash_meta[i]).raw);
     ++i;
   }
+  // auto edge_size = tao->;
+  // auto *edge_meta = (HashMeta *)target.alloc_chunk(
+  //     (all_tables.size() * sizeof(HashMeta)) / kChunkSize + 1);
+  // for (auto ) {
+
+  // }
+  // target.set_root_entry(3, target.rel_ptr(edge_meta).raw);
 
   target.set_root_entry(0, i);
 }

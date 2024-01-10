@@ -134,6 +134,7 @@ class DTXContext {
   }
 
   void LoadMetadata() {
+    // get tao edges
     for (int node_id = 0; node_id < remote_nodes_; ++node_id) {
       uint64_t offset;
       int rc = node_.get_root_entry(node_id, 255, offset);
