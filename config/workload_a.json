@@ -4,7 +4,7 @@
 {"name": "edge_types", "values": ["unique", "bidirectional", "unique_and_bidirectional", "other"], "weights": [52, 200, 20, 728]}
 {"name": "read_operation_types", "values": ["obj_read", "edge_point_read", "edge_range_read", "edge_count_read", "edge_time_read"], "weights": [475, 68, 376, 39, 0]}
 {"name": "write_operation_types", "values": ["obj_add", "obj_update", "obj_delete", "edge_add", "edge_update", "edge_delete"], "weights": [111, 214, 0, 10, 380, 0]}
-{"name": "read_txn_operation_types", "values": ["obj_read", "edge_point_read"], "weights": [1, 5]}
+{"name": "read_txn_operation_types", "weights": [1, 5]}
 {"name": "write_txn_operation_types", "values": ["obj_add", "obj_update", "obj_delete", "edge_add", "edge_update", "edge_delete"], "weights": [111, 214, 0, 10, 380, 0]}
 {"name": "read_operation_latency", "weights": [0, 0.16, 0.16, 0.17, 0.17, 0.17, 0.17]}
 {"name": "write_operation_latency", "weights": [0, 0.16, 0.16, 0.17, 0.17, 0.17, 0.17]}

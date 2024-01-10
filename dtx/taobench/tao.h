@@ -215,10 +215,10 @@ class TAO {
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
-      std::string op_type = op_obj.types[op_obj.distribution(gen)];
-      bool is_edge_op = op_type.find("edge") != std::string::npos;
+      int op = op_obj.distribution(gen);
+
       Edge e = GetRandomEdge();
-      if (is_edge_op) {
+      if (op == 1) {
         // read a edge
         cout << "edge " << endl;
         result.push_back(tao_key_t{
@@ -242,7 +242,7 @@ class TAO {
   vector<tao_key_t> GetWriteTransactions() {
     vector<tao_key_t> result;
     ConfigParser::LineObject &read_transaction_size_obj =
-        config_parser.fields["read_txn_sizes"];
+        config_parser.fields["write_txn_sizes"];
     int transaction_size =
         read_transaction_size_obj
             .vals[read_transaction_size_obj.distribution(gen)];
