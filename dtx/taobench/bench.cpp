@@ -336,7 +336,7 @@ int main(int argc, char **argv) {
   threads = argc < 2 ? 1 : atoi(argv[1]);
   coroutines = argc < 3 ? 1 : atoi(argv[2]);
   timer = new double[kMaxTransactions];
-  DTXContext *context = new DTXContext(config, threads, true);
+  DTXContext *context = new DTXContext(config, threads);
   // SDS_INFO("context init done");
   // timespec ts_begin, ts_end;
   // pthread_barrier_init(&barrier, nullptr, threads + 1);
