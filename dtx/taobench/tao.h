@@ -85,12 +85,12 @@ class TAO {
   // std::unordered_map<int, std::vector<Edge>> const shard_to_edges;
   vector<Edge> shard_to_edges[NUM_SHARDS];
 
-  uint64_t key_count;
+  uint64_t edge_count;
 
   // ConfigParser::LineObject op_obj;
   TAO() {
     config_parser = ConfigParser();
-    key_count = 0;
+    edge_count = 0;
   }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
@@ -141,6 +141,7 @@ class TAO {
           remote_key,
       };
       shard_to_edges[primary_shard].push_back(e);
+      edge_count++;
       // insert object
       DataItem item_to_be_inserted1(ObjectTableId, 150, (itemkey_t)primary_key,
                                     value);

@@ -46,13 +46,12 @@ void setup(Target &target) {
                           target.rel_ptr(&hash_meta[i]).raw);
     ++i;
   }
-  // auto edge_size = tao->;
-  // auto *edge_meta = (HashMeta *)target.alloc_chunk(
-  //     (all_tables.size() * sizeof(HashMeta)) / kChunkSize + 1);
+  auto *edge_meta = (Edge *)target.alloc_chunk(
+      (tao->edge_count * sizeof(Edge) / kChunkSize + 1));
   for (int i = 0;i < NUM_SHARDS;i++ ) {
     
   }
-  // target.set_root_entry(3, target.rel_ptr(edge_meta).raw);
+  target.set_root_entry(3, target.rel_ptr(edge_meta).raw);
 
   target.set_root_entry(0, i);
 }
