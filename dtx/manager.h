@@ -4,6 +4,8 @@
 #ifndef SDS_DTX_MANAGER_H
 #define SDS_DTX_MANAGER_H
 
+#include <vector>
+
 #include "addr_cache.h"
 #include "memstore.h"
 #include "smart/initiator.h"
@@ -11,6 +13,7 @@
 #include "util/json_config.h"
 
 using namespace sds;
+using namespace std;
 
 extern thread_local uint64_t rdma_cnt;
 
