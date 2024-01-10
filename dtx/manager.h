@@ -174,6 +174,19 @@ class DTXContext {
         rc = node_.read(&edge_size, GlobalAddress(node_id, offset),
                         sizeof(uint64_t), Initiator::Option::Sync);
         assert(!rc);
+        Edge edges[edge_size];
+        rc = node_.read(&edges,
+                        GlobalAddress(node_id, offset + sizeof(uint64_t)),
+                        sizeof(Edge) * edge_size, Initiator::Option::Sync);
+        assert(!rc);
+        for (int j = 0; j < edge_size; j++) {
+          auto e = edges[j];
+          auto shard = e.primary_key >> 57;
+          shard_to_edges[shard].push_back(Edge{
+              e.primary_key,
+              e.remote_key,
+          });
+        }
       }
     }
   }
