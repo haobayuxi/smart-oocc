@@ -185,8 +185,8 @@ class TAO {
           edge_key, item_to_be_inserted3, mem_store_reserve_param);
       inserted_item3->remote_offset =
           edge_table->GetItemRemoteOffset(inserted_item3);
-      file << primary_key;
-      file << remote_key;
+      file << primary_key << endl;
+      file << remote_key << endl;
     }
     file.close();
 
