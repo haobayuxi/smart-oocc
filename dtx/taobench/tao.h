@@ -91,8 +91,8 @@ class TAO {
     uint64_t primary = 0;
     uint64_t remote = 0;
     for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
-      ifstream >> primary;
-      ifstream >> remote;
+      file >> primary;
+      file >> remote;
       uint64_t shard = primary >> 57;
       shard_to_edges[shard].push_back(Edge{
           primary,
