@@ -19,7 +19,7 @@ using namespace std;
 
 const int ObjectTableId = 1;
 const int EdgeTableId = 2;
-#define TOTAL_EDGES_NUM 2000000
+#define TOTAL_EDGES_NUM 1000000
 
 uint64_t getTimeNs() {
   struct timespec ts;
