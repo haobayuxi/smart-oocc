@@ -146,18 +146,14 @@ class TAO {
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
     uint8_t value[150] = {'a'};
-    // ofstream file("tao.dat");
-    ifstream file("tao.dat");
+    ofstream file("tao.dat");
+    // ifstream file("tao.dat");
     for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
       uint64_t primary_key = GenerateKey(primary_shard);
       uint64_t remote_key = GenerateKey(remote_shard);
-      int shard = primary_key >> 57;
-      if (primary_shard != shard || shard > 50) {
-        cout << "primary" << primary_shard << "   shard=" << shard << endl;
-        assert(0);
-      }
+
       // uint64_t primary_key = 0;
       // uint64_t remote_key = 0;
       // file >> primary_key;
@@ -190,8 +186,8 @@ class TAO {
           edge_key, item_to_be_inserted3, mem_store_reserve_param);
       inserted_item3->remote_offset =
           edge_table->GetItemRemoteOffset(inserted_item3);
-      // file << primary_key;
-      // file << remote_key;
+      file << primary_key;
+      file << remote_key;
     }
     file.close();
   }
