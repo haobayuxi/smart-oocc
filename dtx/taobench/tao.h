@@ -19,7 +19,7 @@ using namespace std;
 
 const int ObjectTableId = 1;
 const int EdgeTableId = 2;
-#define TOTAL_EDGES_NUM 100000
+#define TOTAL__NUM 100000
 
 uint64_t getTimeNs() {
   struct timespec ts;
@@ -147,12 +147,17 @@ class TAO {
     for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
-      // uint64_t primary_key = GenerateKey(primary_shard);
-      // uint64_t remote_key = GenerateKey(remote_shard);
-      uint64_t primary_key = 0;
-      uint64_t remote_key = 0;
-      file >> primary_key;
-      file >> remote_key;
+      uint64_t primary_key = GenerateKey(primary_shard);
+      uint64_t remote_key = GenerateKey(remote_shard);
+      int shard = primary_key >> 57;
+      if (primary_shard != shard) {
+        cout << "primary" << primary_shard << "   shard=" << shard << endl;
+        Assert(0);
+      }
+      // uint64_t primary_key = 0;
+      // uint64_t remote_key = 0;
+      // file >> primary_key;
+      // file >> remote_key;
       Edge e = Edge{
           primary_key,
           remote_key,
