@@ -107,3 +107,10 @@ uint64_t get_clock_sys_time_us() {
   return (uint64_t)(tp.tv_sec * 1000000 + tp.tv_nsec / 1000);
   //   return (long long)(tp.tv_nsec / 1000);
 }
+
+struct Edge {
+  uint64_t primary_key;
+  uint64_t remote_key;
+};
+
+const int NUM_SHARDS = 50;

@@ -27,7 +27,6 @@ uint64_t getTimeNs() {
 }
 
 const int VALUE_SIZE = 150;
-const int NUM_SHARDS = 50;
 
 static inline unsigned long GetCPUCycle() {
   unsigned a, d;
@@ -69,12 +68,6 @@ static ALWAYS_INLINE uint64_t align_pow2(uint64_t v) {
 }
 
 enum class EdgeType { Unique, Bidirectional, UniqueAndBidirectional, Other };
-
-struct Edge {
-  uint64_t primary_key;
-  uint64_t remote_key;
-  // EdgeType type;
-};
 
 class TAO {
  public:
@@ -234,10 +227,10 @@ class TAO {
     return result;
   }
 
-
-  bool is_read_transaction(){
-    std::discrete_distribution<> op_dist = config_parser.fields["operations"].distribution;
-    if (op_dist(gen)==0){
+  bool is_read_transaction() {
+    std::discrete_distribution<> op_dist =
+        config_parser.fields["operations"].distribution;
+    if (op_dist(gen) == 0) {
       return true;
     }
     return false;
