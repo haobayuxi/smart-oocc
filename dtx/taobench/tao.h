@@ -81,11 +81,10 @@ struct Edge {
 
 class TAO {
  public:
-  HashStore *micro_table;
+  HashStore *object_table;
+  HashStore *edge_table;
   std::vector<HashStore *> table_ptrs;
   ConfigParser config_parser;
-  std::string const object_table;
-  std::string const edge_table;
   // std::unordered_map<int, std::vector<Edge>> const shard_to_edges;
   vector<Edge> shard_to_edges[NUM_SHARDS];
 
@@ -99,9 +98,11 @@ class TAO {
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
-    micro_table = new HashStore(MICRO_TABLE_ID, 200000, mem_store_alloc_param);
+    object_table = new HashStore(ObjectTableId, 100000, mem_store_alloc_param);
+    edge_table = new HashStore(EdgeTableId, 100000, mem_store_alloc_param);
     PopulateTable(mem_store_reserve_param);
-    table_ptrs.push_back(micro_table);
+    table_ptrs.push_back(object_table);
+    table_ptrs.push_back(edge_table);
   }
 
   uint64_t GenerateKey(int shard) {
@@ -119,7 +120,7 @@ class TAO {
     std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
-    string value = String::from("x");
+    string value(150, 'a');
     for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
@@ -134,12 +135,12 @@ class TAO {
 
       // insert edge
 
-      DataItem item_to_be_inserted(MICRO_TABLE_ID, sizeof(micro_val_t),
-                                   micro_key.item_key, (uint8_t *)&micro_val);
-      DataItem *inserted_item = micro_table->LocalInsert(
-          micro_key.item_key, item_to_be_inserted, mem_store_reserve_param);
+      DataItem item_to_be_inserted(ObjectTableId, 150, primary_key,
+                                   (uint8_t *)value);
+      DataItem *inserted_item = object_table->LocalInsert(
+          primary_key, item_to_be_inserted, mem_store_reserve_param);
       inserted_item->remote_offset =
-          micro_table->GetItemRemoteOffset(inserted_item);
+          object_table->GetItemRemoteOffset(inserted_item);
     }
   }
 
