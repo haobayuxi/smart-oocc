@@ -58,7 +58,7 @@ void setup(Target &target) {
       edge_meta += sizeof(uint64_t) * 2;
     }
   }
-  target.set_root_entry(100, target.rel_ptr(edge_meta).raw);
+  target.set_root_entry(20, target.rel_ptr(edge_meta).raw);
 
   target.set_root_entry(0, i);
 }

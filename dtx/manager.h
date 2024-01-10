@@ -168,7 +168,7 @@ class DTXContext {
 
       // get edge meta
       if (is_tao) {
-        int rc = node_.get_root_entry(node_id, 100, offset);
+        int rc = node_.get_root_entry(node_id, 20, offset);
         assert(!rc);
         uint64_t edge_size = 0;
         rc = node_.read(&edge_size, GlobalAddress(node_id, offset),
