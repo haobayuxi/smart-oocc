@@ -19,7 +19,7 @@ using namespace std;
 
 const int ObjectTableId = 1;
 const int EdgeTableId = 2;
-#define TOTAL_KEYS_NUM 100001
+#define TOTAL_EDGES_NUM 100000
 
 uint64_t getTimeNs() {
   struct timespec ts;
@@ -85,13 +85,14 @@ class TAO {
     config_parser = ConfigParser();
     edge_count = 0;
     LoadEdges();
+    cout << "load edges done" << endl;
   }
 
   void LoadEdges() {
     ifstream file("tao.dat");
     uint64_t primary = 0;
     uint64_t remote = 0;
-    for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
+    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       file >> primary;
       file >> remote;
       uint64_t shard = primary >> 57;
@@ -143,7 +144,7 @@ class TAO {
     uint8_t value[150] = {'a'};
     // ofstream file("tao.dat");
     ifstream file("tao.dat");
-    for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
+    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
       // uint64_t primary_key = GenerateKey(primary_shard);
