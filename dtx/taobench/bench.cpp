@@ -43,7 +43,12 @@ std::atomic<uint64_t> rdma_cnt_sum(0);
 
 bool TxTAO(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
   dtx->TxBegin(tx_id);
-  vector<tao_key_t> keys = tao_client->GetReadTransactions();
+  vector<tao_key_t> keys;
+  if (read_only) {
+    keys = tao_client->GetReadTransactions();
+  } else {
+    keys = tao_client->GetWriteTransactions();
+  }
 
   // SDS_INFO("read only %d, txid%ld, keysize=%d", read_only, tx_id,
   // keys.size());
@@ -58,30 +63,10 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
     }
   }
   bool commit_status = true;
-  if (RetryUntilSuccess) {
-    for (int i = 0; i < 30; i++) {
-      if (read_only) {
-        *att_read_only += 1;
-      }
-      if (!dtx->TxExe()) {
-        dtx->Clean();
-        continue;
-      }
-      // Commit transaction
-      if (!dtx->TxCommit()) {
-        dtx->Clean();
 
-      } else {
-        return true;
-      }
-    }
-    return false;
-
-  } else {
-    if (!dtx->TxExe()) return false;
-    // Commit transaction
-    commit_status = dtx->TxCommit();
-  }
+  if (!dtx->TxExe()) return false;
+  // Commit transaction
+  commit_status = dtx->TxCommit();
 
   return commit_status;
 }
