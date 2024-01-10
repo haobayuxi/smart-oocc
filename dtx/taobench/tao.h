@@ -39,7 +39,7 @@ thread_local static std::independent_bits_engine<std::default_random_engine, 8,
                                                  unsigned char>
     byte_engine;
 
-#define TOTAL_KEYS_NUM 1000000
+#define TOTAL_KEYS_NUM 100001
 
 const int MICRO_TABLE_ID = 1;
 
