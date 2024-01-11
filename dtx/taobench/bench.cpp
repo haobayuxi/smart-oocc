@@ -45,22 +45,19 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
   dtx->TxBegin(tx_id);
   // random a key
   uint64_t index = FastRand(&seed) % 100000;
-  DataItemPtr micro_obj =
-        std::make_shared<DataItem>(MICRO_TABLE_ID, index);
-    // if (read_only) {
-      dtx->AddToReadOnlySet(micro_obj);
-  // vector<tao_key_t> keys = tao_client->query[index];
-  // bool read_only = keys[0].read_only;
+
+  vector<tao_key_t> keys = tao_client->query[index];
+  bool read_only = keys[0].read_only;
   // cout << "transaction size = " << keys.size() << endl;
-  // for (int i = 0; i < keys.size(); i++) {
-  //   DataItemPtr micro_obj =
-  //       std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
-  //   if (read_only) {
-  //     dtx->AddToReadOnlySet(micro_obj);
-  //   } else {
-  //     dtx->AddToReadWriteSet(micro_obj);
-  //   }
-  // }
+  for (int i = 0; i < keys.size(); i++) {
+    DataItemPtr micro_obj =
+        std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
+    if (read_only) {
+      dtx->AddToReadOnlySet(micro_obj);
+    } else {
+      dtx->AddToReadWriteSet(micro_obj);
+    }
+  }
   bool commit_status = true;
 
   if (!dtx->TxExe()) return false;
@@ -110,7 +107,7 @@ void RunTx(DTXContext *context) {
   // Running transactions
   while (true) {
     tx_id_local += 1;
-    uint64_t iter = tx_id_local; 
+    uint64_t iter = tx_id_local;
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
 
@@ -286,7 +283,7 @@ int main(int argc, char **argv) {
   } else if (txn_sys == DTX_SYS::OCC) {
     SDS_INFO("running OCC");
   } else if (txn_sys == DTX_SYS::DrTMH) {
-    SDS_INFO("running DrTM"); 
+    SDS_INFO("running DrTM");
   } else {
     SDS_INFO("running DSLR");
   }
