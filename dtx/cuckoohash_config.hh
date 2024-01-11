@@ -18,7 +18,7 @@ constexpr size_t DEFAULT_SIZE = (1U << 16) * DEFAULT_SLOT_PER_BUCKET;
 //! expansion. It must be a number between 0.0 and 1.0. The table will throw
 //! load_factor_too_low if the load factor falls below this value
 //! during an automatic expansion.
-constexpr double DEFAULT_MINIMUM_LOAD_FACTOR = 0.01;
+constexpr double DEFAULT_MINIMUM_LOAD_FACTOR = 0.05;
 
 //! An alias for the value that sets no limit on the maximum hashpower. If this
 //! value is set as the maximum hashpower limit, there will be no limit. This
