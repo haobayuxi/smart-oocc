@@ -46,12 +46,13 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
   // random a key
   uint64_t index = FastRand(&seed) % 100000;
 
-  vector<tao_key_t> keys = tao_client->query[index];
-  bool read_only = keys[0].read_only;
+  // vector<tao_key_t> keys = tao_client->query[index];
+  // bool read_only = keys[0].read_only;
+  bool read_only = true;
   // cout << "transaction size = " << keys.size() << endl;
-  for (int i = 0; i < keys.size(); i++) {
-    DataItemPtr micro_obj =
-        std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
+  // for (int i = 0; i < keys.size(); i++) {
+  for (int i = 0; i < 1; i++) {
+    DataItemPtr micro_obj = std::make_shared<DataItem>(1, index);
     if (read_only) {
       dtx->AddToReadOnlySet(micro_obj);
     } else {
