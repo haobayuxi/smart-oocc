@@ -44,7 +44,7 @@ std::atomic<uint64_t> rdma_cnt_sum(0);
 bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
   dtx->TxBegin(tx_id);
   // random a key
-  int index = FastRand(&seed) % 10000;
+  int index = FastRand(&seed) % 100000;
   vector<tao_key_t> keys = tao_client->query[index];
   bool read_only = keys[0].read_only;
   // cout << "transaction size = " << keys.size() << endl;

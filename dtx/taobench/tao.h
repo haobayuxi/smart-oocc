@@ -89,7 +89,7 @@ class TAO {
   }
 
   void GenerateQuery() {
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 100000; i++) {
       bool is_read = is_read_transaction();
 
       if (is_read) {
