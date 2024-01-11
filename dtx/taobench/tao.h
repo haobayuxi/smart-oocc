@@ -247,7 +247,7 @@ class TAO {
     std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
-    ofstream file("tao.dat");
+    ofstream file("tao");
     for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       int primary_shard = unif(gen);
       int remote_shard = remote_shards.distribution(gen);
