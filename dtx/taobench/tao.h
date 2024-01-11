@@ -129,9 +129,10 @@ class TAO {
       edge_count++;
     }
     file.close();
-    // for (int i = 0; i < 50; i++) {
-    //   cout << shard_to_edges[i].size() << endl;
-    // }
+    for (int i = 0; i < 50; i++) {
+      cout << shard_to_edges[0][i].primary_key << "  "
+           << shard_to_edges[0][i].remote_key << endl;
+    }
   }
 
   // void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
