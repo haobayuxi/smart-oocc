@@ -194,6 +194,7 @@ class TAO {
     int shard = obj.distribution(gen);
     std::uniform_int_distribution<int> shard_selector(0, 49);
     shard = shard_selector(gen);
+    auto it = shard_to_edges[shard];
     std::uniform_int_distribution<int> edge_selector(0, it.size() - 1);
     int index = edge_selector(gen);
 
