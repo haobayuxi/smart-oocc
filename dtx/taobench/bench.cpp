@@ -149,12 +149,22 @@ void execute_thread(int id, DTXContext *context) {
   BindCore(id);
 
   // tao_client = new TAO();
-  query_per_thread = tao_client->query;
+
   ATTEMPTED_NUM = kMaxTransactions / threads / coroutines;
   auto hostname = GetHostName();
   seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51) *
              kMaxThreads +
          id;
+  for (int i = 0; i < 100000; i++) {
+    uint64_t primary_key = FastRand(&seed) % 100000;
+    uint64_t remote_key = FastRand(&seed) % 100000;
+    query_per_thread.push_back(tao_key_t{
+        ObjectTableId,
+        primary_key,
+        true,
+    });
+  }
+  // query_per_thread = tao_client->query;
   WarmUp(context);
   // SDS_INFO("warm done");
   TaskPool::Enable();
