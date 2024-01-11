@@ -74,7 +74,6 @@ static ALWAYS_INLINE uint64_t align_pow2(uint64_t v) {
   return v + 1;
 }
 
-
 class TAO {
  public:
   HashStore *micro_table;
@@ -130,6 +129,9 @@ class TAO {
       edge_count++;
     }
     file.close();
+    for (int i = 0; i < 50; i++) {
+      cout << shard_to_edges[i].size() << endl;
+    }
   }
 
   // void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
