@@ -77,7 +77,7 @@ enum class EdgeType { Unique, Bidirectional, UniqueAndBidirectional, Other };
 
 class TAO {
  public:
- HashStore *micro_table;
+  HashStore *micro_table;
   HashStore *object_table;
   HashStore *edge_table;
   std::vector<HashStore *> table_ptrs;
@@ -86,12 +86,15 @@ class TAO {
   vector<Edge> shard_to_edges[NUM_SHARDS + 1];
   vector<vector<tao_key_t>> query;
   uint64_t edge_count;
+  uint64_t keys_per_shard;
 
   // ConfigParser::LineObject op_obj;
   TAO() {
     config_parser = ConfigParser();
     edge_count = 0;
-    LoadEdges();
+    keys_per_shard = 100000 / 50;
+    PopulateData();
+    // LoadEdges();
   }
 
   void GenerateQuery() {
@@ -154,8 +157,9 @@ class TAO {
 
   // void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
   //                MemStoreReserveParam *mem_store_reserve_param) {
-  //   object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
-  //   edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
+  //   object_table = new HashStore(ObjectTableId, 200000,
+  //   mem_store_alloc_param); edge_table = new HashStore(EdgeTableId, 200000,
+  //   mem_store_alloc_param);
   //   // PopulateTable(mem_store_reserve_param);
   //   PopulateObjectTable(mem_store_reserve_param);
   //   PopulateEdgeTable(mem_store_reserve_param);
@@ -164,18 +168,22 @@ class TAO {
   // }
 
   uint64_t GenerateKey(int shard) {
-    uint64_t timestamp = getTimeNs();
-    // uint64_t seqnum = key_count++;
-    // 64 bit int split into 7 bit shard, 17 thread-specific sequence number,
-    // and bottom 40 bits of timestamp
-    // this design is fairly arbitrary; intent is just to minimize duplicate
-    // keys across threads
-    return (((uint64_t)shard) << 57) + ((timestamp << 24) >> 24);
+    // uint64_t timestamp = getTimeNs();
+    // // uint64_t seqnum = key_count++;
+    // // 64 bit int split into 7 bit shard, 17 thread-specific sequence number,
+    // // and bottom 40 bits of timestamp
+    // // this design is fairly arbitrary; intent is just to minimize duplicate
+    // // keys across threads
+    // return (((uint64_t)shard) << 57) + ((timestamp << 24) >> 24);
+    std::uniform_int_distribution<int> edge_selector(
+        keys_per_shard * shard, keys_per_shard * (shard + 1) - 1);
+    return edge_selector(gen);
   }
 
   uint64_t GenerateEdgeKey(uint64_t primary_key, uint64_t remote_key) {
-    uint64_t shard = remote_key >> 57;
-    return primary_key + shard << 50;
+    // uint64_t shard = remote_key >> 57;
+    // return primary_key + shard << 50;
+    return primary_key << 32 + remote_key;
   }
 
   Edge GetRandomEdge() {
@@ -235,55 +243,21 @@ class TAO {
     }
   }
 
-  // void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
-  //   std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
-  //   ConfigParser::LineObject &remote_shards =
-  //       config_parser.fields["remote_shards"];
-  //   uint8_t value[VALUE_SIZE] = {'a'};
-  //   // ofstream file("tao.dat");
-  //   ifstream file("tao.dat");
-  //   for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
-  //     int primary_shard = unif(gen);
-  //     int remote_shard = remote_shards.distribution(gen);
-  //     // uint64_t primary_key = GenerateKey(primary_shard);
-  //     // uint64_t remote_key = GenerateKey(remote_shard);
-  //     uint64_t primary_key = 0;
-  //     uint64_t remote_key = 0;
-  //     file >> primary_key;
-  //     file >> remote_key;
-  //     // Edge e = Edge{
-  //     //     primary_key,
-  //     //     remote_key,
-  //     // };
-  //     // shard_to_edges[primary_shard].push_back(e);
-  //     // edge_count++;
-  //     // insert object
-  //     DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
-  //                                   (itemkey_t)primary_key, value);
-  //     DataItem *inserted_item1 = object_table->LocalInsert(
-  //         primary_key, item_to_be_inserted1, mem_store_reserve_param);
-  //     inserted_item1->remote_offset =
-  //         object_table->GetItemRemoteOffset(inserted_item1);
-
-  //     DataItem item_to_be_inserted2(ObjectTableId, VALUE_SIZE,
-  //                                   (itemkey_t)remote_key, value);
-  //     DataItem *inserted_item2 = object_table->LocalInsert(
-  //         remote_key, item_to_be_inserted2, mem_store_reserve_param);
-  //     inserted_item2->remote_offset =
-  //         object_table->GetItemRemoteOffset(inserted_item2);
-  //     // insert edge
-  //     uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
-  //     DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
-  //                                   (itemkey_t)edge_key, value);
-  //     DataItem *inserted_item3 = edge_table->LocalInsert(
-  //         edge_key, item_to_be_inserted3, mem_store_reserve_param);
-  //     inserted_item3->remote_offset =
-  //         edge_table->GetItemRemoteOffset(inserted_item3);
-  //     // file << primary_key << endl;
-  //     // file << remote_key << endl;
-  //   }
-  //   file.close();
-  // }
+  void PopulateData() {
+    std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
+    ConfigParser::LineObject &remote_shards =
+        config_parser.fields["remote_shards"];
+    ofstream file("tao.dat");
+    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
+      int primary_shard = unif(gen);
+      int remote_shard = remote_shards.distribution(gen);
+      uint64_t primary_key = GenerateKey(primary_shard);
+      uint64_t remote_key = GenerateKey(remote_shard);
+      uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
+      file << edge_key << endl;
+    }
+    file.close();
+  }
 
   vector<tao_key_t> GetReadTransactions() {
     vector<tao_key_t> result;
