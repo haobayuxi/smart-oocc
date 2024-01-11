@@ -93,11 +93,12 @@ class TAO {
     config_parser = ConfigParser();
     edge_count = 0;
     keys_per_shard = 100000 / 50;
-    PopulateData();
+    // PopulateData();
     // LoadEdges();
   }
 
   void GenerateQuery() {
+    LoadEdges();
     for (int i = 0; i < 100000; i++) {
       bool is_read = is_read_transaction();
 
