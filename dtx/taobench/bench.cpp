@@ -158,11 +158,13 @@ void execute_thread(int id, DTXContext *context) {
   for (int i = 0; i < 100000; i++) {
     uint64_t primary_key = FastRand(&seed) % 100000;
     uint64_t remote_key = FastRand(&seed) % 100000;
-    query_per_thread.push_back(tao_key_t{
+    vector<tao_key_t> a;
+    a.push_back(tao_key_t{
         ObjectTableId,
         primary_key,
         true,
     });
+    query_per_thread.push_back(a);
   }
   // query_per_thread = tao_client->query;
   WarmUp(context);
