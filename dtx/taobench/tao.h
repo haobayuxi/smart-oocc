@@ -165,7 +165,7 @@ class TAO {
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
-    object_table = new HashStore(ObjectTableId, 300000, mem_store_alloc_param);
+    object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
     // edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
     // PopulateTable(mem_store_reserve_param);
     PopulateObjectTable(mem_store_reserve_param);
@@ -325,7 +325,7 @@ class TAO {
       // random a edge
       // random read edge or object
       int op = op_obj.distribution(gen);
-      // op = 0;
+      op = 0;
       int primary_shard = primary_shards.distribution(gen);
       int remote_shard = remote_shards.distribution(gen);
       uint64_t primary_key = GenerateKey(primary_shard);
