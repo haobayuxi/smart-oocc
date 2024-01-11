@@ -112,13 +112,13 @@ class TAO {
   }
 
   void LoadEdges() {
-    ifstream file("tao.dat");
+    ifstream file("tao");
     uint64_t primary = 0;
     uint64_t remote = 0;
     for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       file >> primary;
       file >> remote;
-      uint64_t shard = primary >> 57;
+      uint64_t shard = primary / keys_per_shard;
       if (shard > 50) {
         continue;
       }
@@ -131,41 +131,41 @@ class TAO {
     file.close();
   }
 
-  void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
-                 MemStoreReserveParam *mem_store_reserve_param) {
-    micro_table = new HashStore(MICRO_TABLE_ID, 200000, mem_store_alloc_param);
-    PopulateTable(mem_store_reserve_param);
-    table_ptrs.push_back(micro_table);
-  }
-
-  void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
-    for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
-      micro_key_t micro_key;
-      micro_key.item_key = (uint64_t)i;
-
-      micro_val_t micro_val;
-      micro_val.magic = micro_magic + i;
-
-      DataItem item_to_be_inserted(MICRO_TABLE_ID, sizeof(micro_val_t),
-                                   micro_key.item_key, (uint8_t *)&micro_val);
-      DataItem *inserted_item = micro_table->LocalInsert(
-          micro_key.item_key, item_to_be_inserted, mem_store_reserve_param);
-      inserted_item->remote_offset =
-          micro_table->GetItemRemoteOffset(inserted_item);
-    }
-  }
-
   // void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
   //                MemStoreReserveParam *mem_store_reserve_param) {
-  //   object_table = new HashStore(ObjectTableId, 200000,
-  //   mem_store_alloc_param); edge_table = new HashStore(EdgeTableId, 200000,
-  //   mem_store_alloc_param);
-  //   // PopulateTable(mem_store_reserve_param);
-  //   PopulateObjectTable(mem_store_reserve_param);
-  //   PopulateEdgeTable(mem_store_reserve_param);
-  //   table_ptrs.push_back(object_table);
-  //   table_ptrs.push_back(edge_table);
+  //   micro_table = new HashStore(MICRO_TABLE_ID, 200000,
+  //   mem_store_alloc_param); PopulateTable(mem_store_reserve_param);
+  //   table_ptrs.push_back(micro_table);
   // }
+
+  // void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
+  //   for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
+  //     micro_key_t micro_key;
+  //     micro_key.item_key = (uint64_t)i;
+
+  //     micro_val_t micro_val;
+  //     micro_val.magic = micro_magic + i;
+
+  //     DataItem item_to_be_inserted(MICRO_TABLE_ID, sizeof(micro_val_t),
+  //                                  micro_key.item_key, (uint8_t
+  //                                  *)&micro_val);
+  //     DataItem *inserted_item = micro_table->LocalInsert(
+  //         micro_key.item_key, item_to_be_inserted, mem_store_reserve_param);
+  //     inserted_item->remote_offset =
+  //         micro_table->GetItemRemoteOffset(inserted_item);
+  //   }
+  // }
+
+  void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
+                 MemStoreReserveParam *mem_store_reserve_param) {
+    object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
+    edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
+    // PopulateTable(mem_store_reserve_param);
+    PopulateObjectTable(mem_store_reserve_param);
+    PopulateEdgeTable(mem_store_reserve_param);
+    table_ptrs.push_back(object_table);
+    table_ptrs.push_back(edge_table);
+  }
 
   uint64_t GenerateKey(int shard) {
     // uint64_t timestamp = getTimeNs();
@@ -202,7 +202,7 @@ class TAO {
 
   void PopulateObjectTable(MemStoreReserveParam *mem_store_reserve_param) {
     uint8_t value[VALUE_SIZE] = {'a'};
-    ifstream file("tao.dat");
+    ifstream file("tao");
     for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       uint64_t primary_key = 0;
       uint64_t remote_key = 0;
@@ -222,11 +222,12 @@ class TAO {
       inserted_item2->remote_offset =
           object_table->GetItemRemoteOffset(inserted_item2);
     }
+    file.close();
   }
 
   void PopulateEdgeTable(MemStoreReserveParam *mem_store_reserve_param) {
     uint8_t value[VALUE_SIZE] = {'a'};
-    ifstream file("tao.dat");
+    ifstream file("tao");
     for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
       uint64_t primary_key = 0;
       uint64_t remote_key = 0;
@@ -241,6 +242,7 @@ class TAO {
       inserted_item3->remote_offset =
           edge_table->GetItemRemoteOffset(inserted_item3);
     }
+    file.close();
   }
 
   void PopulateData() {
@@ -253,8 +255,9 @@ class TAO {
       int remote_shard = remote_shards.distribution(gen);
       uint64_t primary_key = GenerateKey(primary_shard);
       uint64_t remote_key = GenerateKey(remote_shard);
-      uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
-      file << edge_key << endl;
+      // uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
+      file << primary_key << endl;
+      file << remote_key << endl;
     }
     file.close();
   }
