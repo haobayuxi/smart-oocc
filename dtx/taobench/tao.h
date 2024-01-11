@@ -20,6 +20,7 @@ using namespace std;
 const int ObjectTableId = 1;
 const int EdgeTableId = 2;
 #define TOTAL_EDGES_NUM 500000
+#define TOTAO_OBJECT_NUM 100000
 #define TOTAL_KEYS_NUM 1000000
 uint64_t getTimeNs() {
   struct timespec ts;
@@ -92,7 +93,7 @@ class TAO {
   TAO() {
     config_parser = ConfigParser();
     edge_count = 0;
-    keys_per_shard = 100000 / 50;
+    keys_per_shard = TOTAO_OBJECT_NUM / 50;
     // PopulateData();
     // LoadEdges();
   }
@@ -203,27 +204,36 @@ class TAO {
 
   void PopulateObjectTable(MemStoreReserveParam *mem_store_reserve_param) {
     uint8_t value[VALUE_SIZE] = {'a'};
-    ifstream file("tao");
-    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
-      uint64_t primary_key = 0;
-      uint64_t remote_key = 0;
-      file >> primary_key;
-      file >> remote_key;
+    // ifstream file("tao");
+    for (int i = 0; i < TOTAO_OBJECT_NUM; i++) {
+      uint64_t primary_key = i;
       DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
                                     (itemkey_t)primary_key, value);
       DataItem *inserted_item1 = object_table->LocalInsert(
           primary_key, item_to_be_inserted1, mem_store_reserve_param);
       inserted_item1->remote_offset =
           object_table->GetItemRemoteOffset(inserted_item1);
-
-      DataItem item_to_be_inserted2(ObjectTableId, VALUE_SIZE,
-                                    (itemkey_t)remote_key, value);
-      DataItem *inserted_item2 = object_table->LocalInsert(
-          remote_key, item_to_be_inserted2, mem_store_reserve_param);
-      inserted_item2->remote_offset =
-          object_table->GetItemRemoteOffset(inserted_item2);
     }
-    file.close();
+    // for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
+    //   uint64_t primary_key = 0;
+    //   uint64_t remote_key = 0;
+    //   file >> primary_key;
+    //   file >> remote_key;
+    //   DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
+    //                                 (itemkey_t)primary_key, value);
+    //   DataItem *inserted_item1 = object_table->LocalInsert(
+    //       primary_key, item_to_be_inserted1, mem_store_reserve_param);
+    //   inserted_item1->remote_offset =
+    //       object_table->GetItemRemoteOffset(inserted_item1);
+
+    //   DataItem item_to_be_inserted2(ObjectTableId, VALUE_SIZE,
+    //                                 (itemkey_t)remote_key, value);
+    //   DataItem *inserted_item2 = object_table->LocalInsert(
+    //       remote_key, item_to_be_inserted2, mem_store_reserve_param);
+    //   inserted_item2->remote_offset =
+    //       object_table->GetItemRemoteOffset(inserted_item2);
+    // }
+    // file.close();
   }
 
   void PopulateEdgeTable(MemStoreReserveParam *mem_store_reserve_param) {
