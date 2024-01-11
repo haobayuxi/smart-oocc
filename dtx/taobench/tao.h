@@ -128,8 +128,8 @@ class TAO {
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
-    object_table = new HashStore(ObjectTableId, 100000, mem_store_alloc_param);
-    edge_table = new HashStore(EdgeTableId, 100000, mem_store_alloc_param);
+    object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
+    edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
     PopulateTable(mem_store_reserve_param);
     table_ptrs.push_back(object_table);
     table_ptrs.push_back(edge_table);
@@ -180,10 +180,10 @@ class TAO {
       uint64_t remote_key = 0;
       file >> primary_key;
       file >> remote_key;
-      Edge e = Edge{
-          primary_key,
-          remote_key,
-      };
+      // Edge e = Edge{
+      //     primary_key,
+      //     remote_key,
+      // };
       // shard_to_edges[primary_shard].push_back(e);
       // edge_count++;
       // insert object
@@ -273,14 +273,12 @@ class TAO {
       bool is_edge_op = operation_type.find("edge") != std::string::npos;
       Edge e = GetRandomEdge();
       if (is_edge_op) {
-        // read a edge
         result.push_back(tao_key_t{
             EdgeTableId,
             GenerateEdgeKey(e.primary_key, e.remote_key),
             false,
         });
       } else {
-        // read a object
         result.push_back(tao_key_t{
             ObjectTableId,
             e.primary_key,
