@@ -47,13 +47,12 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
   int index = FastRand(&seed) % 10000;
   vector<tao_key_t> keys = tao_client->query[index];
   bool read_only = keys[0].read_only;
-
+  cout << "transaction size = " << keys.size() << endl;
   for (int i = 0; i < keys.size(); i++) {
     DataItemPtr micro_obj =
         std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
     if (read_only) {
       dtx->AddToReadOnlySet(micro_obj);
-
     } else {
       dtx->AddToReadWriteSet(micro_obj);
     }
@@ -290,38 +289,33 @@ int main(int argc, char **argv) {
   tao_client = new TAO();
   tao_client->GenerateQuery();
   delayed = config.get("delayed").get_bool();
-  // auto ycsb_config = config.get("ycsb");
-  // double theta = ycsb_config.get("theta").get_double();
-  // data_item_size = ycsb_config.get("data_item_size").get_uint64();
-  // write_ratio = ycsb_config.get("write_ratio").get_uint64();
-  // is_skewed = ycsb_config.get("is_skewed").get_bool();
-  // srand48(time(nullptr));
-  // threads = argc < 2 ? 1 : atoi(argv[1]);
-  // coroutines = argc < 3 ? 1 : atoi(argv[2]);
-  // timer = new double[kMaxTransactions];
-  // DTXContext *context = new DTXContext(config, threads);
-  // SDS_INFO("context init done");
-  // timespec ts_begin, ts_end;
-  // pthread_barrier_init(&barrier, nullptr, threads + 1);
-  // std::vector<std::thread> workers;
-  // workers.resize(threads);
-  // synchronize_begin(context);
-  // for (int i = 0; i < threads; ++i) {
-  //   workers[i] = std::thread(execute_thread, i, context);
-  // }
+  srand48(time(nullptr));
+  threads = argc < 2 ? 1 : atoi(argv[1]);
+  coroutines = argc < 3 ? 1 : atoi(argv[2]);
+  timer = new double[kMaxTransactions];
+  DTXContext *context = new DTXContext(config, threads);
+  SDS_INFO("context init done");
+  timespec ts_begin, ts_end;
+  pthread_barrier_init(&barrier, nullptr, threads + 1);
+  std::vector<std::thread> workers;
+  workers.resize(threads);
+  synchronize_begin(context);
+  for (int i = 0; i < threads; ++i) {
+    workers[i] = std::thread(execute_thread, i, context);
+  }
 
-  // // std::thread(report_per_second);
-  // pthread_barrier_wait(&barrier);
-  // clock_gettime(CLOCK_MONOTONIC, &ts_begin);
-  // pthread_barrier_wait(&barrier);
-  // clock_gettime(CLOCK_MONOTONIC, &ts_end);
-  // for (int i = 0; i < threads; ++i) {
-  //   workers[i].join();
-  // }
-  // double elapsed_time = (ts_end.tv_sec - ts_begin.tv_sec) * 1000000.0 +
-  //                       (ts_end.tv_nsec - ts_begin.tv_nsec) / 1000.0;
-  // report(elapsed_time, config);
-  // synchronize_end(context);
-  // delete context;
+  // std::thread(report_per_second);
+  pthread_barrier_wait(&barrier);
+  clock_gettime(CLOCK_MONOTONIC, &ts_begin);
+  pthread_barrier_wait(&barrier);
+  clock_gettime(CLOCK_MONOTONIC, &ts_end);
+  for (int i = 0; i < threads; ++i) {
+    workers[i].join();
+  }
+  double elapsed_time = (ts_end.tv_sec - ts_begin.tv_sec) * 1000000.0 +
+                        (ts_end.tv_nsec - ts_begin.tv_nsec) / 1000.0;
+  report(elapsed_time, config);
+  synchronize_end(context);
+  delete context;
   return 0;
 }
