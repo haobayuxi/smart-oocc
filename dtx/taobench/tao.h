@@ -126,7 +126,9 @@ class TAO {
                  MemStoreReserveParam *mem_store_reserve_param) {
     object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
     edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
-    PopulateTable(mem_store_reserve_param);
+    // PopulateTable(mem_store_reserve_param);
+    PopulateObjectTable(mem_store_reserve_param);
+    PopulateEdgeTable(mem_store_reserve_param);
     table_ptrs.push_back(object_table);
     table_ptrs.push_back(edge_table);
   }
@@ -158,6 +160,49 @@ class TAO {
         it[index].primary_key,
         it[index].remote_key,
     };
+  }
+
+  void PopulateObjectTable(MemStoreReserveParam *mem_store_reserve_param) {
+    uint8_t value[VALUE_SIZE] = {'a'};
+    ifstream file("tao.dat");
+    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
+      uint64_t primary_key = 0;
+      uint64_t remote_key = 0;
+      file >> primary_key;
+      file >> remote_key;
+      DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
+                                    (itemkey_t)primary_key, value);
+      DataItem *inserted_item1 = object_table->LocalInsert(
+          primary_key, item_to_be_inserted1, mem_store_reserve_param);
+      inserted_item1->remote_offset =
+          object_table->GetItemRemoteOffset(inserted_item1);
+
+      DataItem item_to_be_inserted2(ObjectTableId, VALUE_SIZE,
+                                    (itemkey_t)remote_key, value);
+      DataItem *inserted_item2 = object_table->LocalInsert(
+          remote_key, item_to_be_inserted2, mem_store_reserve_param);
+      inserted_item2->remote_offset =
+          object_table->GetItemRemoteOffset(inserted_item2);
+    }
+  }
+
+  void PopulateEdgeTable(MemStoreReserveParam *mem_store_reserve_param) {
+    uint8_t value[VALUE_SIZE] = {'a'};
+    ifstream file("tao.dat");
+    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
+      uint64_t primary_key = 0;
+      uint64_t remote_key = 0;
+      file >> primary_key;
+      file >> remote_key;
+      // insert edge
+      uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
+      DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
+                                    (itemkey_t)edge_key, value);
+      DataItem *inserted_item3 = edge_table->LocalInsert(
+          edge_key, item_to_be_inserted3, mem_store_reserve_param);
+      inserted_item3->remote_offset =
+          edge_table->GetItemRemoteOffset(inserted_item3);
+    }
   }
 
   void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {

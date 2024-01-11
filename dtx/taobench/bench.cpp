@@ -106,7 +106,7 @@ void RunTx(DTXContext *context) {
   // Running transactions
   while (true) {
     tx_id_local += 1;
-    uint64_t iter = tx_id_local;  // Global atomic transaction id
+    uint64_t iter = tx_id_local; 
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
 
