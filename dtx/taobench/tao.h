@@ -72,6 +72,7 @@ enum class EdgeType { Unique, Bidirectional, UniqueAndBidirectional, Other };
 
 class TAO {
  public:
+ HashStore *micro_table;
   HashStore *object_table;
   HashStore *edge_table;
   std::vector<HashStore *> table_ptrs;
@@ -124,14 +125,38 @@ class TAO {
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
-    object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
-    edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
-    // PopulateTable(mem_store_reserve_param);
-    PopulateObjectTable(mem_store_reserve_param);
-    PopulateEdgeTable(mem_store_reserve_param);
-    table_ptrs.push_back(object_table);
-    table_ptrs.push_back(edge_table);
+    micro_table = new HashStore(MICRO_TABLE_ID, 200000, mem_store_alloc_param);
+    PopulateTable(mem_store_reserve_param);
+    table_ptrs.push_back(micro_table);
   }
+
+  void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
+    for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
+      micro_key_t micro_key;
+      micro_key.item_key = (uint64_t)i;
+
+      micro_val_t micro_val;
+      micro_val.magic = micro_magic + i;
+
+      DataItem item_to_be_inserted(MICRO_TABLE_ID, sizeof(micro_val_t),
+                                   micro_key.item_key, (uint8_t *)&micro_val);
+      DataItem *inserted_item = micro_table->LocalInsert(
+          micro_key.item_key, item_to_be_inserted, mem_store_reserve_param);
+      inserted_item->remote_offset =
+          micro_table->GetItemRemoteOffset(inserted_item);
+    }
+  }
+
+  // void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
+  //                MemStoreReserveParam *mem_store_reserve_param) {
+  //   object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
+  //   edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
+  //   // PopulateTable(mem_store_reserve_param);
+  //   PopulateObjectTable(mem_store_reserve_param);
+  //   PopulateEdgeTable(mem_store_reserve_param);
+  //   table_ptrs.push_back(object_table);
+  //   table_ptrs.push_back(edge_table);
+  // }
 
   uint64_t GenerateKey(int shard) {
     uint64_t timestamp = getTimeNs();
@@ -205,55 +230,55 @@ class TAO {
     }
   }
 
-  void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
-    std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
-    ConfigParser::LineObject &remote_shards =
-        config_parser.fields["remote_shards"];
-    uint8_t value[VALUE_SIZE] = {'a'};
-    // ofstream file("tao.dat");
-    ifstream file("tao.dat");
-    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
-      int primary_shard = unif(gen);
-      int remote_shard = remote_shards.distribution(gen);
-      // uint64_t primary_key = GenerateKey(primary_shard);
-      // uint64_t remote_key = GenerateKey(remote_shard);
-      uint64_t primary_key = 0;
-      uint64_t remote_key = 0;
-      file >> primary_key;
-      file >> remote_key;
-      // Edge e = Edge{
-      //     primary_key,
-      //     remote_key,
-      // };
-      // shard_to_edges[primary_shard].push_back(e);
-      // edge_count++;
-      // insert object
-      DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
-                                    (itemkey_t)primary_key, value);
-      DataItem *inserted_item1 = object_table->LocalInsert(
-          primary_key, item_to_be_inserted1, mem_store_reserve_param);
-      inserted_item1->remote_offset =
-          object_table->GetItemRemoteOffset(inserted_item1);
+  // void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
+  //   std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
+  //   ConfigParser::LineObject &remote_shards =
+  //       config_parser.fields["remote_shards"];
+  //   uint8_t value[VALUE_SIZE] = {'a'};
+  //   // ofstream file("tao.dat");
+  //   ifstream file("tao.dat");
+  //   for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
+  //     int primary_shard = unif(gen);
+  //     int remote_shard = remote_shards.distribution(gen);
+  //     // uint64_t primary_key = GenerateKey(primary_shard);
+  //     // uint64_t remote_key = GenerateKey(remote_shard);
+  //     uint64_t primary_key = 0;
+  //     uint64_t remote_key = 0;
+  //     file >> primary_key;
+  //     file >> remote_key;
+  //     // Edge e = Edge{
+  //     //     primary_key,
+  //     //     remote_key,
+  //     // };
+  //     // shard_to_edges[primary_shard].push_back(e);
+  //     // edge_count++;
+  //     // insert object
+  //     DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
+  //                                   (itemkey_t)primary_key, value);
+  //     DataItem *inserted_item1 = object_table->LocalInsert(
+  //         primary_key, item_to_be_inserted1, mem_store_reserve_param);
+  //     inserted_item1->remote_offset =
+  //         object_table->GetItemRemoteOffset(inserted_item1);
 
-      DataItem item_to_be_inserted2(ObjectTableId, VALUE_SIZE,
-                                    (itemkey_t)remote_key, value);
-      DataItem *inserted_item2 = object_table->LocalInsert(
-          remote_key, item_to_be_inserted2, mem_store_reserve_param);
-      inserted_item2->remote_offset =
-          object_table->GetItemRemoteOffset(inserted_item2);
-      // insert edge
-      uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
-      DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
-                                    (itemkey_t)edge_key, value);
-      DataItem *inserted_item3 = edge_table->LocalInsert(
-          edge_key, item_to_be_inserted3, mem_store_reserve_param);
-      inserted_item3->remote_offset =
-          edge_table->GetItemRemoteOffset(inserted_item3);
-      // file << primary_key << endl;
-      // file << remote_key << endl;
-    }
-    file.close();
-  }
+  //     DataItem item_to_be_inserted2(ObjectTableId, VALUE_SIZE,
+  //                                   (itemkey_t)remote_key, value);
+  //     DataItem *inserted_item2 = object_table->LocalInsert(
+  //         remote_key, item_to_be_inserted2, mem_store_reserve_param);
+  //     inserted_item2->remote_offset =
+  //         object_table->GetItemRemoteOffset(inserted_item2);
+  //     // insert edge
+  //     uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
+  //     DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
+  //                                   (itemkey_t)edge_key, value);
+  //     DataItem *inserted_item3 = edge_table->LocalInsert(
+  //         edge_key, item_to_be_inserted3, mem_store_reserve_param);
+  //     inserted_item3->remote_offset =
+  //         edge_table->GetItemRemoteOffset(inserted_item3);
+  //     // file << primary_key << endl;
+  //     // file << remote_key << endl;
+  //   }
+  //   file.close();
+  // }
 
   vector<tao_key_t> GetReadTransactions() {
     vector<tao_key_t> result;

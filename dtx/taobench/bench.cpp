@@ -44,19 +44,23 @@ std::atomic<uint64_t> rdma_cnt_sum(0);
 bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
   dtx->TxBegin(tx_id);
   // random a key
-  int index = FastRand(&seed) % 100000;
-  vector<tao_key_t> keys = tao_client->query[index];
-  bool read_only = keys[0].read_only;
-  // cout << "transaction size = " << keys.size() << endl;
-  for (int i = 0; i < keys.size(); i++) {
-    DataItemPtr micro_obj =
-        std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
-    if (read_only) {
+  uint64_t index = FastRand(&seed) % 100000;
+  DataItemPtr micro_obj =
+        std::make_shared<DataItem>(MICRO_TABLE_ID, index);
+    // if (read_only) {
       dtx->AddToReadOnlySet(micro_obj);
-    } else {
-      dtx->AddToReadWriteSet(micro_obj);
-    }
-  }
+  // vector<tao_key_t> keys = tao_client->query[index];
+  // bool read_only = keys[0].read_only;
+  // cout << "transaction size = " << keys.size() << endl;
+  // for (int i = 0; i < keys.size(); i++) {
+  //   DataItemPtr micro_obj =
+  //       std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
+  //   if (read_only) {
+  //     dtx->AddToReadOnlySet(micro_obj);
+  //   } else {
+  //     dtx->AddToReadWriteSet(micro_obj);
+  //   }
+  // }
   bool commit_status = true;
 
   if (!dtx->TxExe()) return false;
