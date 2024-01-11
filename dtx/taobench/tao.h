@@ -89,21 +89,17 @@ class TAO {
   }
 
   void GenerateQuery() {
-    int read = 0;
     for (int i = 0; i < 10000; i++) {
       bool is_read = is_read_transaction();
 
       if (is_read) {
-        read++;
         vector<tao_key_t> read_query = GetReadTransactions();
-
         query.push_back(read_query);
       } else {
         vector<tao_key_t> write_query = GetWriteTransactions();
         query.push_back(write_query);
       }
     }
-    cout << "read = " << read << endl;
   }
 
   void LoadEdges() {
@@ -246,7 +242,7 @@ class TAO {
         result.push_back(tao_key_t{
             ObjectTableId,
             e.primary_key,
-            false,
+            true,
         });
       }
     }
@@ -282,6 +278,7 @@ class TAO {
         result.push_back(tao_key_t{
             ObjectTableId,
             e.primary_key,
+            false,
         });
       }
     }
