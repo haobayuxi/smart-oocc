@@ -93,11 +93,11 @@ class TAO {
       bool is_read = is_read_transaction();
       if (is_read) {
         vector<tao_key_t> read_query = GetReadTransactions();
-        cout << "read size" << read_query.size();
-        for (int i = 0; i < read_query.size(); i++) {
-          cout << "key " << read_query[i].key;
-        }
-        cout << endl;
+        // cout << "read size" << read_query.size();
+        // for (int i = 0; i < read_query.size(); i++) {
+        //   cout << "key " << read_query[i].key;
+        // }
+        // cout << endl;
         query.push_back(read_query);
       } else {
         vector<tao_key_t> write_query = GetWriteTransactions();
