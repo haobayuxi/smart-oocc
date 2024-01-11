@@ -246,7 +246,7 @@ class TAO {
     uint8_t value[VALUE_SIZE] = {'a'};
     for (int i = 0; i < TOTAO_OBJECT_NUM; i++) {
       for (int j = 0; j < TOTAO_OBJECT_NUM; j++) {
-        uint64_t edge_key = GenerateKey(i, j);
+        uint64_t edge_key = GenerateEdgeKey(i, j);
         DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
                                       (itemkey_t)edge_key, value);
         DataItem *inserted_item3 = edge_table->LocalInsert(
