@@ -449,12 +449,13 @@ class DTX {
   std::vector<DataSetItem> read_only_set;
   std::vector<DataSetItem> read_write_set;
 
+  AddrCache *addr_cache;
+
  private:
   tx_id_t tx_id;
   uint64_t start_time;
 
   DTXContext *context;
-  AddrCache *addr_cache;
 
   bool is_ro_tx;
   std::vector<size_t> not_eager_locked_rw_set;

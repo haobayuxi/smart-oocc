@@ -378,8 +378,8 @@ bool DTX::CheckHashRO(std::vector<HashRead> &pending_hash_ro,
     for (auto &item : local_hash_node->data_items) {
       if (item.valid && item.key == it->key && item.table_id == it->table_id) {
         *it = item;
-        cout << "table id =" << it->table_id << "key= " << it->key
-             << "off=" << it->remote_offset << endl;
+        // cout << "table id =" << it->table_id << "key= " << it->key
+        //      << "off=" << it->remote_offset << endl;
         addr_cache->Insert(res.node_id, it->table_id, it->key,
                            it->remote_offset);
         res.item->is_fetched = true;

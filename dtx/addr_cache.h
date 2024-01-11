@@ -20,6 +20,11 @@ class AddrCache {
     addr_map[remote_node_id][table_id].insert(key, remote_offset);
   }
 
+  void resize() {
+    addr_map[1][1].rehash(100000); 
+    addr_map[1][2].rehash(500000); 
+  }
+
   // We know which node to read, but we do not konw whether it is cached before
   ALWAYS_INLINE
   offset_t Search(node_id_t remote_node_id, table_id_t table_id,

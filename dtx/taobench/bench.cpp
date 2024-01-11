@@ -296,6 +296,7 @@ int main(int argc, char **argv) {
   timer = new double[kMaxTransactions];
   DTXContext *context = new DTXContext(config, threads);
   SDS_INFO("context init done");
+  context->addr_cache.resize();
   timespec ts_begin, ts_end;
   pthread_barrier_init(&barrier, nullptr, threads + 1);
   std::vector<std::thread> workers;
