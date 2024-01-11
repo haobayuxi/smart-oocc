@@ -165,7 +165,7 @@ class TAO {
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
-    object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
+    object_table = new HashStore(ObjectTableId, 300000, mem_store_alloc_param);
     // edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
     // PopulateTable(mem_store_reserve_param);
     PopulateObjectTable(mem_store_reserve_param);
