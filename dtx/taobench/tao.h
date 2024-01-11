@@ -89,21 +89,21 @@ class TAO {
   }
 
   void GenerateQuery() {
+    int read = 0;
     for (int i = 0; i < 10000; i++) {
       bool is_read = is_read_transaction();
+
       if (is_read) {
+        read++;
         vector<tao_key_t> read_query = GetReadTransactions();
-        // cout << "read size" << read_query.size();
-        // for (int i = 0; i < read_query.size(); i++) {
-        //   cout << "key " << read_query[i].key;
-        // }
-        // cout << endl;
+
         query.push_back(read_query);
       } else {
         vector<tao_key_t> write_query = GetWriteTransactions();
         query.push_back(write_query);
       }
     }
+    cout << "read = " << read << endl;
   }
 
   void LoadEdges() {
