@@ -239,8 +239,8 @@ void report(double elapsed_time, JsonConfig &config) {
       timer[(int)(0.99 * commits.load())],
       1.0 - (commits.load() * 1.0 / attempts.load()),
       1.0 * rdma_cnt_sum.load() / attempts.load(),
-      rdma_cnt_sum.load() / elapsed_time, );
-  std::string dump_file_path = config.get("dump_file_path").get_str();
+      rdma_cnt_sum.load() / elapsed_time);
+  std::string dump_file_path = config.get("dumps_file_path").get_str();
   if (getenv("DUMP_FILE_PATH")) {
     dump_file_path = getenv("DUMP_FILE_PATH");
   }
