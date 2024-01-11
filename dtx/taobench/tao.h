@@ -108,6 +108,7 @@ class TAO {
       //   vector<tao_key_t> write_query = GetWriteTransactions();
       //   query.push_back(write_query);
       // }
+      cout << read_query[0].key << endl;
     }
   }
 
