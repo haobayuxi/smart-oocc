@@ -192,8 +192,8 @@ class TAO {
   Edge GetRandomEdge() {
     ConfigParser::LineObject &obj = config_parser.fields["primary_shards"];
     int shard = obj.distribution(gen);
-
-    auto it = shard_to_edges[shard];
+    std::uniform_int_distribution<int> shard_selector(0, 49);
+    shard = shard_selector(gen);
     std::uniform_int_distribution<int> edge_selector(0, it.size() - 1);
     int index = edge_selector(gen);
 
