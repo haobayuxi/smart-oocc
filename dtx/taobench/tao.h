@@ -74,7 +74,6 @@ static ALWAYS_INLINE uint64_t align_pow2(uint64_t v) {
   return v + 1;
 }
 
-enum class EdgeType { Unique, Bidirectional, UniqueAndBidirectional, Other };
 
 class TAO {
  public:
