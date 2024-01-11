@@ -36,7 +36,6 @@ std::atomic<uint64_t> tx_id_generator(0);
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
 TAO *tao_client;
-thread_local vector<vector<tao_key_t>> query_per_thread;
 thread_local bool *workgen_arr;
 
 thread_local uint64_t rdma_cnt;
@@ -155,18 +154,6 @@ void execute_thread(int id, DTXContext *context) {
   seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51) *
              kMaxThreads +
          id;
-  for (int i = 0; i < 100000; i++) {
-    uint64_t primary_key = FastRand(&seed) % 100000;
-    uint64_t remote_key = FastRand(&seed) % 100000;
-    vector<tao_key_t> a;
-    a.push_back(tao_key_t{
-        ObjectTableId,
-        primary_key,
-        true,
-    });
-    query_per_thread.push_back(a);
-  }
-  // query_per_thread = tao_client->query;
   WarmUp(context);
   // SDS_INFO("warm done");
   TaskPool::Enable();

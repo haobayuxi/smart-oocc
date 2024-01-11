@@ -20,7 +20,7 @@ using namespace std;
 const int ObjectTableId = 1;
 const int EdgeTableId = 2;
 #define TOTAL_EDGES_NUM 500000
-#define TOTAO_OBJECT_NUM 100000
+#define TOTAO_OBJECT_NUM 1000
 #define TOTAL_KEYS_NUM 1000000
 uint64_t getTimeNs() {
   struct timespec ts;
@@ -97,15 +97,15 @@ class TAO {
   }
 
   void GenerateQuery() {
-    LoadEdges();
+    // LoadEdges();
     for (int i = 0; i < 100000; i++) {
       bool is_read = is_read_transaction();
 
       // if (is_read) {
       vector<tao_key_t> read_query = GetReadTransactions();
-      vector<tao_key_t> read;
-      read.push_back(tao_key_t{1, i, true});
-      query.push_back(read);
+      // vector<tao_key_t> read;
+      // read.push_back(tao_key_t{1, i, true});
+      query.push_back(read_query);
       // } else {
       //   vector<tao_key_t> write_query = GetWriteTransactions();
       //   query.push_back(write_query);
@@ -244,22 +244,33 @@ class TAO {
 
   void PopulateEdgeTable(MemStoreReserveParam *mem_store_reserve_param) {
     uint8_t value[VALUE_SIZE] = {'a'};
-    ifstream file("tao");
-    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
-      uint64_t primary_key = 0;
-      uint64_t remote_key = 0;
-      file >> primary_key;
-      file >> remote_key;
-      // insert edge
-      uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
-      DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
-                                    (itemkey_t)edge_key, value);
-      DataItem *inserted_item3 = edge_table->LocalInsert(
-          edge_key, item_to_be_inserted3, mem_store_reserve_param);
-      inserted_item3->remote_offset =
-          edge_table->GetItemRemoteOffset(inserted_item3);
+    for (int i = 0; i < TOTAO_OBJECT_NUM; i++) {
+      for (int j = 0; j < TOTAO_OBJECT_NUM; j++) {
+        uint64_t edge_key = GenerateKey(i, j);
+        DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
+                                      (itemkey_t)edge_key, value);
+        DataItem *inserted_item3 = edge_table->LocalInsert(
+            edge_key, item_to_be_inserted3, mem_store_reserve_param);
+        inserted_item3->remote_offset =
+            edge_table->GetItemRemoteOffset(inserted_item3);
+      }
     }
-    file.close();
+    // ifstream file("tao");
+    // for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
+    //   uint64_t primary_key = 0;
+    //   uint64_t remote_key = 0;
+    //   file >> primary_key;
+    //   file >> remote_key;
+    //   // insert edge
+    //   uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
+    //   DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
+    //                                 (itemkey_t)edge_key, value);
+    //   DataItem *inserted_item3 = edge_table->LocalInsert(
+    //       edge_key, item_to_be_inserted3, mem_store_reserve_param);
+    //   inserted_item3->remote_offset =
+    //       edge_table->GetItemRemoteOffset(inserted_item3);
+    // }
+    // file.close();
   }
 
   void PopulateData() {
@@ -295,24 +306,30 @@ class TAO {
         config_parser.fields["read_txn_operation_types"];
     // bool is
     transaction_size = 1;
-
+    ConfigParser::LineObject &primary_shards =
+        config_parser.fields["primary_shards"];
+    ConfigParser::LineObject &remote_shards =
+        config_parser.fields["remote_shards"];
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
       int op = op_obj.distribution(gen);
-      Edge e = GetRandomEdge();
+      int primary_shard = primary_shards.distribution(gen);
+      int remote_shard = remote_shards.distribution(gen);
+      uint64_t primary_key = GenerateKey(primary_shard);
+      uint64_t remote_key = GenerateKey(remote_shard);
       if (op == 1) {
         // read a edge
         result.push_back(tao_key_t{
             EdgeTableId,
-            GenerateEdgeKey(e.primary_key, e.remote_key),
+            GenerateEdgeKey(primary_key, remote_key),
             true,
         });
       } else {
         // read a object
         result.push_back(tao_key_t{
             ObjectTableId,
-            e.primary_key,
+            primary_key,
             true,
         });
       }
