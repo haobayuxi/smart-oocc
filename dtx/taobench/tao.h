@@ -231,14 +231,17 @@ class TAO {
       Edge e = GetRandomEdge();
       if (op == 1) {
         // read a edge
-        result.push_back(tao_key_t {
-          EdgeTableId, GenerateEdgeKey(e.primary_key, e.remote_key), true;
+        result.push_back(tao_key_t{
+            EdgeTableId,
+            GenerateEdgeKey(e.primary_key, e.remote_key),
+            true,
         });
       } else {
         // read a object
         result.push_back(tao_key_t{
             ObjectTableId,
             e.primary_key,
+            false,
         });
       }
     }
