@@ -20,7 +20,7 @@ using namespace std;
 const int ObjectTableId = 1;
 const int EdgeTableId = 2;
 #define TOTAL_EDGES_NUM 500000
-
+#define TOTAL_KEYS_NUM 1000000
 uint64_t getTimeNs() {
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
@@ -48,8 +48,6 @@ struct tao_key_t {
   uint64_t key;
   bool read_only;
 };
-
-const int MICRO_TABLE_ID = 1;
 
 struct micro_key_t {
   // uint64_t micro_id;
