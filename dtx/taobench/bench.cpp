@@ -36,6 +36,7 @@ std::atomic<uint64_t> tx_id_generator(0);
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
 TAO *tao_client;
+thread_local vector<vector<tao_key_t>> query_per_thread;
 thread_local bool *workgen_arr;
 
 thread_local uint64_t rdma_cnt;
@@ -46,13 +47,14 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
   // random a key
   uint64_t index = FastRand(&seed) % 100000;
 
-  // vector<tao_key_t> keys = tao_client->query[index];
-  // bool read_only = keys[0].read_only;
-  bool read_only = true;
+  vector<tao_key_t> keys = query_per_thread[index];
+  bool read_only = keys[0].read_only;
+  // bool read_only = true;
   // cout << "transaction size = " << keys.size() << endl;
-  // for (int i = 0; i < keys.size(); i++) {
-  for (int i = 0; i < 1; i++) {
-    DataItemPtr micro_obj = std::make_shared<DataItem>(1, index);
+  for (int i = 0; i < keys.size(); i++) {
+    // for (int i = 0; i < 1; i++) {
+    DataItemPtr micro_obj =
+        std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
     if (read_only) {
       dtx->AddToReadOnlySet(micro_obj);
     } else {
@@ -147,6 +149,7 @@ void execute_thread(int id, DTXContext *context) {
   BindCore(id);
 
   // tao_client = new TAO();
+  query_per_thread = tao_client->query;
   ATTEMPTED_NUM = kMaxTransactions / threads / coroutines;
   auto hostname = GetHostName();
   seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51) *
