@@ -18,7 +18,7 @@ using namespace benchmark;
 using namespace std;
 
 const int ObjectTableId = 1;
-const int EdgeTableId = 2;
+const int EdgeTableId = 1;
 #define TOTAL_EDGES_NUM 500000
 #define TOTAO_OBJECT_NUM 1000
 #define TOTAL_KEYS_NUM 1000000
@@ -166,12 +166,12 @@ class TAO {
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
     object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
-    edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
+    // edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
     // PopulateTable(mem_store_reserve_param);
     PopulateObjectTable(mem_store_reserve_param);
-    PopulateEdgeTable(mem_store_reserve_param);
+    // PopulateEdgeTable(mem_store_reserve_param);
     table_ptrs.push_back(object_table);
-    table_ptrs.push_back(edge_table);
+    // table_ptrs.push_back(edge_table);
   }
 
   uint64_t GenerateKey(int shard) {
@@ -219,6 +219,17 @@ class TAO {
           primary_key, item_to_be_inserted1, mem_store_reserve_param);
       inserted_item1->remote_offset =
           object_table->GetItemRemoteOffset(inserted_item1);
+    }
+    for (int i = 0; i < TOTAO_OBJECT_NUM; i++) {
+      for (int j = 0; j < TOTAO_OBJECT_NUM; j++) {
+        uint64_t edge_key = GenerateEdgeKey(i, j);
+        DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
+                                      (itemkey_t)edge_key, value);
+        DataItem *inserted_item3 = object_table->LocalInsert(
+            edge_key, item_to_be_inserted3, mem_store_reserve_param);
+        inserted_item3->remote_offset =
+            object_table->GetItemRemoteOffset(inserted_item3);
+      }
     }
     // for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
     //   uint64_t primary_key = 0;
