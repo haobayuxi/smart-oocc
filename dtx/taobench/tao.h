@@ -49,6 +49,13 @@ struct tao_key_t {
   bool read_only;
 };
 
+const int MICRO_TABLE_ID = 1;
+
+struct micro_key_t {
+  // uint64_t micro_id;
+  uint64_t item_key;
+};
+
 struct micro_val_t {
   uint64_t magic;
 };
