@@ -47,7 +47,7 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
   // random a key
   uint64_t index = FastRand(&seed) % 100000;
 
-  vector<tao_key_t> keys = query_per_thread[index];
+  vector<tao_key_t> keys = tao_client->query[index];
   bool read_only = keys[0].read_only;
   // bool read_only = true;
   // cout << "transaction size = " << keys.size() << endl;
