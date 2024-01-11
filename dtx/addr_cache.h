@@ -21,8 +21,8 @@ class AddrCache {
   }
 
   void resize() {
-    addr_map[1][1].rehash(100000); 
-    addr_map[1][2].rehash(500000); 
+    // addr_map[1][1].rehash(100000);
+    // addr_map[1][2].rehash(500000);
   }
 
   // We know which node to read, but we do not konw whether it is cached before
