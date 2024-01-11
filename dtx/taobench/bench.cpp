@@ -58,7 +58,6 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
       dtx->AddToReadWriteSet(micro_obj);
     }
   }
-  return true;
   bool commit_status = true;
 
   if (!dtx->TxExe()) return false;
@@ -224,11 +223,11 @@ void report(double elapsed_time, JsonConfig &config) {
   assert(commits.load() <= kMaxTransactions);
   std::sort(timer, timer + commits.load());
   std::string dump_prefix;
-  if (getenv("DUMP_PREFIX")) {
-    dump_prefix = std::string(getenv("DUMP_PREFIX"));
-  } else {
-    dump_prefix = "dtx-ycsb";
-  }
+  // if (getenv("DUMP_PREFIX")) {
+  //   dump_prefix = std::string(getenv("DUMP_PREFIX"));
+  // } else {
+  //   dump_prefix = "dtx-ycsb";
+  // }
   SDS_INFO(
       "%s: #thread = %ld, #coro_per_thread = %ld, "
       "attempt txn = %.3lf M/s, committed txn = %.3lf M/s, "
@@ -240,18 +239,18 @@ void report(double elapsed_time, JsonConfig &config) {
       1.0 - (commits.load() * 1.0 / attempts.load()),
       1.0 * rdma_cnt_sum.load() / attempts.load(),
       rdma_cnt_sum.load() / elapsed_time);
-  std::string dump_file_path = config.get("dumps_file_path").get_str();
-  if (getenv("DUMP_FILE_PATH")) {
-    dump_file_path = getenv("DUMP_FILE_PATH");
-  }
-  if (dump_file_path.empty()) {
-    return;
-  }
-  FILE *fout = fopen(dump_file_path.c_str(), "a+");
-  if (!fout) {
-    SDS_PERROR("fopen");
-    return;
-  }
+  // std::string dump_file_path = config.get("dumps_file_path").get_str();
+  // if (getenv("DUMP_FILE_PATH")) {
+  //   dump_file_path = getenv("DUMP_FILE_PATH");
+  // }
+  // if (dump_file_path.empty()) {
+  //   return;
+  // }
+  // FILE *fout = fopen(dump_file_path.c_str(), "a+");
+  // if (!fout) {
+  //   SDS_PERROR("fopen");
+  //   return;
+  // }
   // fprintf(fout,
   //         "%s, %ld, %ld, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf, %.3lf,
   //             % .3lf\n
