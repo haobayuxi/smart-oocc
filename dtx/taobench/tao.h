@@ -46,6 +46,7 @@ const int MICRO_TABLE_ID = 1;
 struct tao_key_t {
   int table_id;
   uint64_t key;
+  bool read_only;
 };
 
 struct micro_val_t {
@@ -77,7 +78,7 @@ class TAO {
   ConfigParser config_parser;
   // std::unordered_map<int, std::vector<Edge>> const shard_to_edges;
   vector<Edge> shard_to_edges[NUM_SHARDS + 1];
-
+  vector<vector<tao_key_t>> query;
   uint64_t edge_count;
 
   // ConfigParser::LineObject op_obj;
@@ -85,6 +86,19 @@ class TAO {
     config_parser = ConfigParser();
     edge_count = 0;
     LoadEdges();
+  }
+
+  void GenerateQuery() {
+    for (int i = 0; i < 10000; i++) {
+      bool is_read_transaction = is_read_transaction();
+      if (is_read_transaction) {
+        vector<tao_key_t> read_query = GetReadTransactions();
+        query.push_back(read_query);
+      } else {
+        vector<tao_key_t> write_query = GetWriteTransactions();
+        query.push_back(write_query);
+      }
+    }
   }
 
   void LoadEdges() {
@@ -218,9 +232,8 @@ class TAO {
       if (op == 1) {
         // read a edge
         // cout << "edge " << endl;
-        result.push_back(tao_key_t{
-            EdgeTableId,
-            GenerateEdgeKey(e.primary_key, e.remote_key),
+        result.push_back(tao_key_t {
+          EdgeTableId, GenerateEdgeKey(e.primary_key, e.remote_key), true;
         });
         // cout << "push result success " << endl;
       } else {
@@ -259,6 +272,7 @@ class TAO {
         result.push_back(tao_key_t{
             EdgeTableId,
             GenerateEdgeKey(e.primary_key, e.remote_key),
+            false,
         });
       } else {
         // read a object

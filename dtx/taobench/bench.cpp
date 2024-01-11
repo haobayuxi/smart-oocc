@@ -35,23 +35,19 @@ std::atomic<uint64_t> tx_id_generator(0);
 
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
-thread_local TAO *tao_client;
+TAO *tao_client;
 thread_local bool *workgen_arr;
 
 thread_local uint64_t rdma_cnt;
 std::atomic<uint64_t> rdma_cnt_sum(0);
 
-bool TxTAO(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
+bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
   dtx->TxBegin(tx_id);
-  vector<tao_key_t> keys;
-  if (read_only) {
-    keys = tao_client->GetReadTransactions();
-  } else {
-    keys = tao_client->GetWriteTransactions();
-  }
+  // random a key
+  int index = FastRand(&seed) % 10000;
+  vector<tao_key_t> keys = tao_client->query[index];
+  bool read_only = keys[0].read_only;
 
-  // SDS_INFO("read only %d, txid%ld, keysize=%d", read_only, tx_id,
-  // keys.size());
   for (int i = 0; i < keys.size(); i++) {
     DataItemPtr micro_obj =
         std::make_shared<DataItem>(keys[i].table_id, keys[i].key);
@@ -80,7 +76,7 @@ void WarmUp(DTXContext *context) {
   uint64_t x = 0;
   for (int i = 0; i < 50000; ++i) {
     uint64_t iter = ++tx_id_local;
-    TxTAO(iter, dtx, true, &x);
+    TxTAO(iter, dtx, &x);
   }
   delete dtx;
 }
@@ -115,12 +111,9 @@ void RunTx(DTXContext *context) {
     uint64_t iter = tx_id_local;  // Global atomic transaction id
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
-    bool read_only = tao_client->is_read_transaction();
-    // if (read_only) {
-    //   attempt_read_only++;
-    // }
+
     clock_gettime(CLOCK_REALTIME, &tx_start_time);
-    tx_committed = TxTAO(iter, dtx, read_only, &attempt_read_only);
+    tx_committed = TxTAO(iter, dtx, &attempt_read_only);
     // Stat after one transaction finishes
     if (tx_committed) {
       clock_gettime(CLOCK_REALTIME, &tx_end_time);
@@ -155,7 +148,7 @@ void RunTx(DTXContext *context) {
 void execute_thread(int id, DTXContext *context) {
   BindCore(id);
 
-  tao_client = new TAO();
+  // tao_client = new TAO();
   ATTEMPTED_NUM = kMaxTransactions / threads / coroutines;
   auto hostname = GetHostName();
   seed = MurmurHash3_x86_32(hostname.c_str(), hostname.length(), 0xcc9e2d51) *
@@ -299,7 +292,8 @@ int main(int argc, char **argv) {
   } else {
     SDS_INFO("running DSLR");
   }
-  // tao_client = new TAO();
+  tao_client = new TAO();
+  tao_client->GenerateQuery();
   delayed = config.get("delayed").get_bool();
   // auto ycsb_config = config.get("ycsb");
   // double theta = ycsb_config.get("theta").get_double();
