@@ -129,9 +129,9 @@ class TAO {
       edge_count++;
     }
     file.close();
-    for (int i = 0; i < 50; i++) {
-      cout << shard_to_edges[i].size() << endl;
-    }
+    // for (int i = 0; i < 50; i++) {
+    //   cout << shard_to_edges[i].size() << endl;
+    // }
   }
 
   // void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
@@ -289,6 +289,8 @@ class TAO {
     ConfigParser::LineObject &op_obj =
         config_parser.fields["read_txn_operation_types"];
     // bool is
+    transaction_size = 1;
+
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
