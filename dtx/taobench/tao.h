@@ -28,7 +28,7 @@ uint64_t getTimeNs() {
   return ts.tv_sec * 1000000000 + ts.tv_nsec;
 }
 
-const int VALUE_SIZE = 150;
+const int VALUE_SIZE = 10;
 
 static inline unsigned long GetCPUCycle() {
   unsigned a, d;
@@ -168,7 +168,7 @@ class TAO {
     std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
-    uint8_t value[150] = {'a'};
+    uint8_t value[VALUE_SIZE] = {'a'};
     // ofstream file("tao.dat");
     ifstream file("tao.dat");
     for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
@@ -187,23 +187,23 @@ class TAO {
       // shard_to_edges[primary_shard].push_back(e);
       // edge_count++;
       // insert object
-      DataItem item_to_be_inserted1(ObjectTableId, 150, (itemkey_t)primary_key,
-                                    value);
+      DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
+                                    (itemkey_t)primary_key, value);
       DataItem *inserted_item1 = object_table->LocalInsert(
           primary_key, item_to_be_inserted1, mem_store_reserve_param);
       inserted_item1->remote_offset =
           object_table->GetItemRemoteOffset(inserted_item1);
 
-      DataItem item_to_be_inserted2(ObjectTableId, 150, (itemkey_t)remote_key,
-                                    value);
+      DataItem item_to_be_inserted2(ObjectTableId, VALUE_SIZE,
+                                    (itemkey_t)remote_key, value);
       DataItem *inserted_item2 = object_table->LocalInsert(
           remote_key, item_to_be_inserted2, mem_store_reserve_param);
       inserted_item2->remote_offset =
           object_table->GetItemRemoteOffset(inserted_item2);
       // insert edge
       uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
-      DataItem item_to_be_inserted3(EdgeTableId, 150, (itemkey_t)edge_key,
-                                    value);
+      DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
+                                    (itemkey_t)edge_key, value);
       DataItem *inserted_item3 = edge_table->LocalInsert(
           edge_key, item_to_be_inserted3, mem_store_reserve_param);
       inserted_item3->remote_offset =
