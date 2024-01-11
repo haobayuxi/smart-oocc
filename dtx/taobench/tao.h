@@ -190,7 +190,7 @@ class TAO {
   uint64_t GenerateEdgeKey(uint64_t primary_key, uint64_t remote_key) {
     // uint64_t shard = remote_key >> 57;
     // return primary_key + shard << 50;
-    return primary_key << 32 + remote_key;
+    return primary_key << 10 + remote_key;
   }
 
   Edge GetRandomEdge() {
@@ -314,7 +314,7 @@ class TAO {
       // random a edge
       // random read edge or object
       int op = op_obj.distribution(gen);
-      op = 0;
+      // op = 0;
       int primary_shard = primary_shards.distribution(gen);
       int remote_shard = remote_shards.distribution(gen);
       uint64_t primary_key = GenerateKey(primary_shard);
