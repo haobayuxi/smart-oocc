@@ -124,9 +124,7 @@ void RunTx(DTXContext *context) {
       timer[timer_idx] = tx_usec;
       timer_idx += threads * coroutines;
       commit_tx++;
-      if (read_only) {
-        commit_read_only++;
-      }
+
       // IdleExecution();
     }
     //  else {
@@ -235,15 +233,13 @@ void report(double elapsed_time, JsonConfig &config) {
       "%s: #thread = %ld, #coro_per_thread = %ld, "
       "attempt txn = %.3lf M/s, committed txn = %.3lf M/s, "
       "P50 latency = %.3lf us, P99 latency = %.3lf us, abort rate = %.3lf, "
-      "RDMA ops per txn = %.3lf M, RDMA ops per second = %.3lf M"
-      "read_only abort rate= %.3lf",
+      "RDMA ops per txn = %.3lf M, RDMA ops per second = %.3lf M",
       dump_prefix.c_str(), threads, coroutines, attempts.load() / elapsed_time,
       commits.load() / elapsed_time, timer[(int)(0.5 * commits.load())],
       timer[(int)(0.99 * commits.load())],
       1.0 - (commits.load() * 1.0 / attempts.load()),
       1.0 * rdma_cnt_sum.load() / attempts.load(),
-      rdma_cnt_sum.load() / elapsed_time,
-      1.0 - (commits_read_only.load() * 1.0 / attempts_read_only.load()));
+      rdma_cnt_sum.load() / elapsed_time, );
   std::string dump_file_path = config.get("dump_file_path").get_str();
   if (getenv("DUMP_FILE_PATH")) {
     dump_file_path = getenv("DUMP_FILE_PATH");

@@ -90,8 +90,8 @@ class TAO {
 
   void GenerateQuery() {
     for (int i = 0; i < 10000; i++) {
-      bool is_read_transaction = is_read_transaction();
-      if (is_read_transaction) {
+      bool is_read = is_read_transaction();
+      if (is_read) {
         vector<tao_key_t> read_query = GetReadTransactions();
         query.push_back(read_query);
       } else {
@@ -231,18 +231,15 @@ class TAO {
       Edge e = GetRandomEdge();
       if (op == 1) {
         // read a edge
-        // cout << "edge " << endl;
         result.push_back(tao_key_t {
           EdgeTableId, GenerateEdgeKey(e.primary_key, e.remote_key), true;
         });
-        // cout << "push result success " << endl;
       } else {
         // read a object
         result.push_back(tao_key_t{
             ObjectTableId,
             e.primary_key,
         });
-        // cout << "object " << endl;
       }
     }
 
