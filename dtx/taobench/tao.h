@@ -321,7 +321,7 @@ class TAO {
         config_parser.fields["primary_shards"];
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
-    std::uniform_int_distribution<int> shard_selector(0, 1000000);
+    std::uniform_int_distribution<uint64_t> shard_selector(0, 1000000);
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
