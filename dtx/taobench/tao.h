@@ -328,10 +328,10 @@ class TAO {
       // random read edge or object
       int op = op_obj.distribution(gen);
       op = 1;
-      // int primary_shard = primary_shards.distribution(gen);
-      // int remote_shard = remote_shards.distribution(gen);
-      int primary_shard = shard_selector(gen);
-      int remote_shard = shard_selector(gen);
+      int primary_shard = primary_shards.distribution(gen);
+      int remote_shard = remote_shards.distribution(gen);
+      // int primary_shard = shard_selector(gen);
+      // int remote_shard = shard_selector(gen);
       uint64_t primary_key = GenerateKey(primary_shard);
       uint64_t remote_key = GenerateKey(remote_shard);
       if (op == 1) {
