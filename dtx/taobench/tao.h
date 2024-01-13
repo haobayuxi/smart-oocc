@@ -190,7 +190,8 @@ class TAO {
   uint64_t GenerateEdgeKey(uint64_t primary_key, uint64_t remote_key) {
     // uint64_t shard = remote_key >> 57;
     // return primary_key + shard << 50;
-    return primary_key << 10 + remote_key;
+    // return primary_key << 10 + remote_key;
+    return primary_key * 1000 + remote_key;
   }
 
   Edge GetRandomEdge() {
