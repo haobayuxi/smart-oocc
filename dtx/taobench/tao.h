@@ -211,7 +211,7 @@ class TAO {
   void PopulateObjectTable(MemStoreReserveParam *mem_store_reserve_param) {
     uint8_t value[VALUE_SIZE] = {'a'};
     // ifstream file("tao");
-    for (int i = 0; i < TOTAO_OBJECT_NUM; i++) {
+    for (int i = 0; i < 1000000; i++) {
       uint64_t primary_key = i;
       DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
                                     (itemkey_t)primary_key, value);
@@ -220,17 +220,17 @@ class TAO {
       inserted_item1->remote_offset =
           object_table->GetItemRemoteOffset(inserted_item1);
     }
-    for (int i = 0; i < TOTAO_OBJECT_NUM; i++) {
-      for (int j = 0; j < TOTAO_OBJECT_NUM; j++) {
-        uint64_t edge_key = GenerateEdgeKey(i, j);
-        DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
-                                      (itemkey_t)edge_key, value);
-        DataItem *inserted_item3 = object_table->LocalInsert(
-            edge_key, item_to_be_inserted3, mem_store_reserve_param);
-        inserted_item3->remote_offset =
-            object_table->GetItemRemoteOffset(inserted_item3);
-      }
-    }
+    // for (int i = 0; i < TOTAO_OBJECT_NUM; i++) {
+    //   for (int j = 0; j < TOTAO_OBJECT_NUM; j++) {
+    //     uint64_t edge_key = GenerateEdgeKey(i, j);
+    //     DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
+    //                                   (itemkey_t)edge_key, value);
+    //     DataItem *inserted_item3 = object_table->LocalInsert(
+    //         edge_key, item_to_be_inserted3, mem_store_reserve_param);
+    //     inserted_item3->remote_offset =
+    //         object_table->GetItemRemoteOffset(inserted_item3);
+    //   }
+    // }
     // for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
     //   uint64_t primary_key = 0;
     //   uint64_t remote_key = 0;
