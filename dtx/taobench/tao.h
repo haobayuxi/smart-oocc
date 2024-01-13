@@ -321,7 +321,7 @@ class TAO {
         config_parser.fields["primary_shards"];
     ConfigParser::LineObject &remote_shards =
         config_parser.fields["remote_shards"];
-    std::uniform_int_distribution<int> shard_selector(0, 49);
+    std::uniform_int_distribution<int> shard_selector(0, 1000000);
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
@@ -329,24 +329,25 @@ class TAO {
       op = 1;
       // int primary_shard = primary_shards.distribution(gen);
       // int remote_shard = remote_shards.distribution(gen);
-      int primary_shard = shard_selector(gen);
-      int remote_shard = shard_selector(gen);
-      uint64_t primary_key = GenerateKey(primary_shard);
-      uint64_t remote_key = GenerateKey(remote_shard);
+      // int primary_shard = shard_selector(gen);
+      // int remote_shard = shard_selector(gen);
+      // uint64_t primary_key = GenerateKey(primary_shard);
+      // uint64_t remote_key = GenerateKey(remote_shard);
       if (op == 1) {
         // read a edge
         result.push_back(tao_key_t{
             EdgeTableId,
-            GenerateEdgeKey(primary_key, remote_key),
+            // GenerateEdgeKey(primary_key, remote_key),
+            shard_selector(gen),
             true,
         });
       } else {
         // read a object
-        result.push_back(tao_key_t{
-            ObjectTableId,
-            primary_key,
-            true,
-        });
+        // result.push_back(tao_key_t{
+        //     ObjectTableId,
+        //     primary_key,
+        //     true,
+        // });
       }
     }
 
