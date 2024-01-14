@@ -101,15 +101,15 @@ class TAO {
     for (int i = 0; i < 100000; i++) {
       bool is_read = is_read_transaction();
 
-      // if (is_read) {
-      vector<tao_key_t> read_query = GetReadTransactions();
-      // vector<tao_key_t> read;
-      // read.push_back(tao_key_t{1, i, true});
-      query.push_back(read_query);
-      // } else {
-      //   vector<tao_key_t> write_query = GetWriteTransactions();
-      //   query.push_back(write_query);
-      // }
+      if (is_read) {
+        vector<tao_key_t> read_query = GetReadTransactions();
+        // vector<tao_key_t> read;
+        // read.push_back(tao_key_t{1, i, true});
+        query.push_back(read_query);
+      } else {
+        vector<tao_key_t> write_query = GetWriteTransactions();
+        query.push_back(write_query);
+      }
       // cout << read_query[0].table_id << "  " << read_query[0].key << endl;
     }
   }
@@ -137,31 +137,6 @@ class TAO {
     //        << shard_to_edges[0][i].remote_key << endl;
     // }
   }
-
-  // void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
-  //                MemStoreReserveParam *mem_store_reserve_param) {
-  //   micro_table = new HashStore(MICRO_TABLE_ID, 200000,
-  //   mem_store_alloc_param); PopulateTable(mem_store_reserve_param);
-  //   table_ptrs.push_back(micro_table);
-  // }
-
-  // void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
-  //   for (int i = 0; i < TOTAL_KEYS_NUM; i++) {
-  //     micro_key_t micro_key;
-  //     micro_key.item_key = (uint64_t)i;
-
-  //     micro_val_t micro_val;
-  //     micro_val.magic = micro_magic + i;
-
-  //     DataItem item_to_be_inserted(MICRO_TABLE_ID, sizeof(micro_val_t),
-  //                                  micro_key.item_key, (uint8_t
-  //                                  *)&micro_val);
-  //     DataItem *inserted_item = micro_table->LocalInsert(
-  //         micro_key.item_key, item_to_be_inserted, mem_store_reserve_param);
-  //     inserted_item->remote_offset =
-  //         micro_table->GetItemRemoteOffset(inserted_item);
-  //   }
-  // }
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
@@ -192,7 +167,6 @@ class TAO {
   uint64_t GenerateEdgeKey(uint64_t primary_key, uint64_t remote_key) {
     // uint64_t shard = remote_key >> 57;
     // return primary_key + shard << 50;
-    // return primary_key << 10 + remote_key;
     return primary_key * 100000 + remote_key;
   }
 
@@ -289,7 +263,7 @@ class TAO {
     int transaction_size =
         read_transaction_size_obj
             .vals[read_transaction_size_obj.distribution(gen)];
-    while (transaction_size > 10) {
+    while (transaction_size > 50) {
       transaction_size = read_transaction_size_obj
                              .vals[read_transaction_size_obj.distribution(gen)];
     }
@@ -297,7 +271,6 @@ class TAO {
     ConfigParser::LineObject &op_obj =
         config_parser.fields["read_txn_operation_types"];
     // bool is
-    transaction_size = 1;
     ConfigParser::LineObject &primary_shards =
         config_parser.fields["primary_shards"];
     ConfigParser::LineObject &remote_shards =
@@ -336,7 +309,7 @@ class TAO {
     int transaction_size =
         read_transaction_size_obj
             .vals[read_transaction_size_obj.distribution(gen)];
-    while (transaction_size > 10) {
+    while (transaction_size > 20) {
       transaction_size = read_transaction_size_obj
                              .vals[read_transaction_size_obj.distribution(gen)];
     }
