@@ -97,7 +97,7 @@ class TAO {
   }
 
   void GenerateQuery() {
-    // LoadEdges();
+    LoadEdges();
     for (int i = 0; i < 100000; i++) {
       bool is_read = is_read_transaction();
 
