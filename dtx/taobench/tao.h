@@ -91,7 +91,7 @@ class TAO {
   TAO() {
     config_parser = ConfigParser();
     edge_count = 0;
-    keys_per_shard = TOTAO_OBJECT_NUM / 50;
+    keys_per_shard = 20000;
     PopulateData();
     // LoadEdges();
   }
@@ -191,7 +191,7 @@ class TAO {
     // uint64_t shard = remote_key >> 57;
     // return primary_key + shard << 50;
     // return primary_key << 10 + remote_key;
-    return primary_key * 1000 + remote_key;
+    return primary_key * 100000 + remote_key;
   }
 
   Edge GetRandomEdge() {
@@ -288,7 +288,7 @@ class TAO {
   void PopulateData() {
     vector<uint64_t> key_per_shard;
     for (int i = 0; i <= NUM_SHARDS; i++) {
-      key_per_shard.push_back(0);
+      key_per_shard.push_back(i * keys_per_shard);
     }
     std::uniform_int_distribution<> unif(0, NUM_SHARDS - 1);
     ConfigParser::LineObject &remote_shards =
