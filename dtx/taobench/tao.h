@@ -166,26 +166,28 @@ class TAO {
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
     object_table = new HashStore(ObjectTableId, 200000, mem_store_alloc_param);
-    // edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
+    edge_table = new HashStore(EdgeTableId, 200000, mem_store_alloc_param);
     // PopulateTable(mem_store_reserve_param);
     PopulateObjectTable(mem_store_reserve_param);
-    // PopulateEdgeTable(mem_store_reserve_param);
+    PopulateEdgeTable(mem_store_reserve_param);
     table_ptrs.push_back(object_table);
-    // table_ptrs.push_back(edge_table);
+    table_ptrs.push_back(edge_table);
   }
 
-  uint64_t GenerateKey(int shard) {
-    // uint64_t timestamp = getTimeNs();
-    // // uint64_t seqnum = key_count++;
-    // // 64 bit int split into 7 bit shard, 17 thread-specific sequence number,
-    // // and bottom 40 bits of timestamp
-    // // this design is fairly arbitrary; intent is just to minimize duplicate
-    // // keys across threads
-    // return (((uint64_t)shard) << 57) + ((timestamp << 24) >> 24);
-    std::uniform_int_distribution<int> edge_selector(
-        keys_per_shard * shard, keys_per_shard * (shard + 1) - 1);
-    return edge_selector(gen);
-  }
+  // uint64_t GenerateKey(int shard) {
+  //   // uint64_t timestamp = getTimeNs();
+  //   // // uint64_t seqnum = key_count++;
+  //   // // 64 bit int split into 7 bit shard, 17 thread-specific sequence
+  //   number,
+  //   // // and bottom 40 bits of timestamp
+  //   // // this design is fairly arbitrary; intent is just to minimize
+  //   duplicate
+  //   // // keys across threads
+  //   // return (((uint64_t)shard) << 57) + ((timestamp << 24) >> 24);
+  //   std::uniform_int_distribution<int> edge_selector(
+  //       keys_per_shard * shard, keys_per_shard * (shard + 1) - 1);
+  //   return edge_selector(gen);
+  // }
 
   uint64_t GenerateEdgeKey(uint64_t primary_key, uint64_t remote_key) {
     // uint64_t shard = remote_key >> 57;
@@ -211,78 +213,48 @@ class TAO {
 
   void PopulateObjectTable(MemStoreReserveParam *mem_store_reserve_param) {
     uint8_t value[VALUE_SIZE] = {'a'};
-    // ifstream file("tao");
-    for (int i = 0; i < 1000000; i++) {
-      uint64_t primary_key = i;
+    ifstream file("tao");
+
+    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
+      uint64_t primary_key = 0;
+      uint64_t remote_key = 0;
+      file >> primary_key;
+      file >> remote_key;
       DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
                                     (itemkey_t)primary_key, value);
       DataItem *inserted_item1 = object_table->LocalInsert(
           primary_key, item_to_be_inserted1, mem_store_reserve_param);
       inserted_item1->remote_offset =
           object_table->GetItemRemoteOffset(inserted_item1);
-    }
-    // for (int i = 0; i < TOTAO_OBJECT_NUM; i++) {
-    //   for (int j = 0; j < TOTAO_OBJECT_NUM; j++) {
-    //     uint64_t edge_key = GenerateEdgeKey(i, j);
-    //     DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
-    //                                   (itemkey_t)edge_key, value);
-    //     DataItem *inserted_item3 = object_table->LocalInsert(
-    //         edge_key, item_to_be_inserted3, mem_store_reserve_param);
-    //     inserted_item3->remote_offset =
-    //         object_table->GetItemRemoteOffset(inserted_item3);
-    //   }
-    // }
-    // for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
-    //   uint64_t primary_key = 0;
-    //   uint64_t remote_key = 0;
-    //   file >> primary_key;
-    //   file >> remote_key;
-    //   DataItem item_to_be_inserted1(ObjectTableId, VALUE_SIZE,
-    //                                 (itemkey_t)primary_key, value);
-    //   DataItem *inserted_item1 = object_table->LocalInsert(
-    //       primary_key, item_to_be_inserted1, mem_store_reserve_param);
-    //   inserted_item1->remote_offset =
-    //       object_table->GetItemRemoteOffset(inserted_item1);
 
-    //   DataItem item_to_be_inserted2(ObjectTableId, VALUE_SIZE,
-    //                                 (itemkey_t)remote_key, value);
-    //   DataItem *inserted_item2 = object_table->LocalInsert(
-    //       remote_key, item_to_be_inserted2, mem_store_reserve_param);
-    //   inserted_item2->remote_offset =
-    //       object_table->GetItemRemoteOffset(inserted_item2);
-    // }
-    // file.close();
+      DataItem item_to_be_inserted2(ObjectTableId, VALUE_SIZE,
+                                    (itemkey_t)remote_key, value);
+      DataItem *inserted_item2 = object_table->LocalInsert(
+          remote_key, item_to_be_inserted2, mem_store_reserve_param);
+      inserted_item2->remote_offset =
+          object_table->GetItemRemoteOffset(inserted_item2);
+    }
+    file.close();
   }
 
   void PopulateEdgeTable(MemStoreReserveParam *mem_store_reserve_param) {
     uint8_t value[VALUE_SIZE] = {'a'};
-    for (int i = 0; i < TOTAO_OBJECT_NUM; i++) {
-      for (int j = 0; j < TOTAO_OBJECT_NUM; j++) {
-        uint64_t edge_key = GenerateEdgeKey(i, j);
-        DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
-                                      (itemkey_t)edge_key, value);
-        DataItem *inserted_item3 = edge_table->LocalInsert(
-            edge_key, item_to_be_inserted3, mem_store_reserve_param);
-        inserted_item3->remote_offset =
-            edge_table->GetItemRemoteOffset(inserted_item3);
-      }
+    ifstream file("tao");
+    for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
+      uint64_t primary_key = 0;
+      uint64_t remote_key = 0;
+      file >> primary_key;
+      file >> remote_key;
+      // insert edge
+      uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
+      DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
+                                    (itemkey_t)edge_key, value);
+      DataItem *inserted_item3 = edge_table->LocalInsert(
+          edge_key, item_to_be_inserted3, mem_store_reserve_param);
+      inserted_item3->remote_offset =
+          edge_table->GetItemRemoteOffset(inserted_item3);
     }
-    // ifstream file("tao");
-    // for (int i = 0; i < TOTAL_EDGES_NUM; i++) {
-    //   uint64_t primary_key = 0;
-    //   uint64_t remote_key = 0;
-    //   file >> primary_key;
-    //   file >> remote_key;
-    //   // insert edge
-    //   uint64_t edge_key = GenerateEdgeKey(primary_key, remote_key);
-    //   DataItem item_to_be_inserted3(EdgeTableId, VALUE_SIZE,
-    //                                 (itemkey_t)edge_key, value);
-    //   DataItem *inserted_item3 = edge_table->LocalInsert(
-    //       edge_key, item_to_be_inserted3, mem_store_reserve_param);
-    //   inserted_item3->remote_offset =
-    //       edge_table->GetItemRemoteOffset(inserted_item3);
-    // }
-    // file.close();
+    file.close();
   }
 
   void PopulateData() {
