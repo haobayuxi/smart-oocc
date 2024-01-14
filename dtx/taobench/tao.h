@@ -308,13 +308,6 @@ class TAO {
       // random read edge or object
       Edge e = GetRandomEdge();
       int op = op_obj.distribution(gen);
-      op = 1;
-      // int primary_shard = primary_shards.distribution(gen);
-      // int remote_shard = remote_shards.distribution(gen);
-      // int primary_shard = shard_selector(gen);
-      // int remote_shard = shard_selector(gen);
-      // uint64_t primary_key = GenerateKey(primary_shard);
-      // uint64_t remote_key = GenerateKey(remote_shard);
       if (op == 1) {
         // read a edge
         result.push_back(tao_key_t{
@@ -325,11 +318,11 @@ class TAO {
         });
       } else {
         // read a object
-        // result.push_back(tao_key_t{
-        //     ObjectTableId,
-        //     primary_key,
-        //     true,
-        // });
+        result.push_back(tao_key_t{
+            ObjectTableId,
+            e.primary_key,
+            true,
+        });
       }
     }
 
