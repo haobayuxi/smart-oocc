@@ -92,7 +92,7 @@ class TAO {
     config_parser = ConfigParser();
     edge_count = 0;
     keys_per_shard = 20000;
-    PopulateData();
+    // PopulateData();
     // LoadEdges();
   }
 
