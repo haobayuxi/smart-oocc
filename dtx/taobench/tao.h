@@ -101,15 +101,15 @@ class TAO {
     for (int i = 0; i < 100000; i++) {
       bool is_read = is_read_transaction();
 
-      if (is_read) {
-        vector<tao_key_t> read_query = GetReadTransactions();
-        // vector<tao_key_t> read;
-        // read.push_back(tao_key_t{1, i, true});
-        query.push_back(read_query);
-      } else {
-        vector<tao_key_t> write_query = GetWriteTransactions();
-        query.push_back(write_query);
-      }
+      // if (is_read) {
+      vector<tao_key_t> read_query = GetReadTransactions();
+      // vector<tao_key_t> read;
+      // read.push_back(tao_key_t{1, i, true});
+      query.push_back(read_query);
+      // } else {
+      //   vector<tao_key_t> write_query = GetWriteTransactions();
+      //   query.push_back(write_query);
+      // }
       // cout << read_query[0].table_id << "  " << read_query[0].key << endl;
     }
   }
