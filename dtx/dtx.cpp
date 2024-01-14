@@ -516,16 +516,10 @@ bool DTX::CheckNextHashRO(std::list<HashRead> &pending_next_hash_ro) {
           } else {
             return false;
           }
-          // if (Re_Validate && txn_sys == DTX_SYS::OOCC) {
-          //   re_validate = true;
-          // } else {
-          //   return false;
-          // }
         }
       }
       iter = pending_next_hash_ro.erase(iter);
     } else {
-      // return false;
       if (local_hash_node->next == nullptr) return false;
       auto node_off = (uint64_t)local_hash_node->next - res.meta.data_ptr +
                       res.meta.base_off;
