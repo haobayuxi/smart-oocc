@@ -263,7 +263,7 @@ class TAO {
     int transaction_size =
         read_transaction_size_obj
             .vals[read_transaction_size_obj.distribution(gen)];
-    while (transaction_size > 50) {
+    while (transaction_size > 10) {
       transaction_size = read_transaction_size_obj
                              .vals[read_transaction_size_obj.distribution(gen)];
     }
@@ -271,11 +271,11 @@ class TAO {
     ConfigParser::LineObject &op_obj =
         config_parser.fields["read_txn_operation_types"];
     // bool is
-    ConfigParser::LineObject &primary_shards =
-        config_parser.fields["primary_shards"];
-    ConfigParser::LineObject &remote_shards =
-        config_parser.fields["remote_shards"];
-    std::uniform_int_distribution<uint64_t> shard_selector(0, 49);
+    // ConfigParser::LineObject &primary_shards =
+    //     config_parser.fields["primary_shards"];
+    // ConfigParser::LineObject &remote_shards =
+    //     config_parser.fields["remote_shards"];
+    // std::uniform_int_distribution<uint64_t> shard_selector(0, 49);
     for (int i = 0; i < transaction_size; i++) {
       // random a edge
       // random read edge or object
