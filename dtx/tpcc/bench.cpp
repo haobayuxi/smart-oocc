@@ -1167,7 +1167,7 @@ int main(int argc, char** argv) {
   lease = config.get("lease").get_uint64();
   txn_sys = config.get("txn_sys").get_uint64();
   delayed = config.get("delayed").get_bool();
-  offset = config.get("offset".get_double());
+  offset = config.get("offset").get_double();
   if (txn_sys == DTX_SYS::OOCC) {
     SDS_INFO("running OOCC");
   } else if (txn_sys == DTX_SYS::OCC) {
