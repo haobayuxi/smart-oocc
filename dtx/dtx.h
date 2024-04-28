@@ -217,7 +217,7 @@ class DTX {
     } else if (txn_sys == DTX_SYS::OOCC) {
       // check lease
 
-      if ((end_time - start_time) > lease || re_validate) {
+      if ((end_time - start_time) > (lease - offset) || re_validate) {
         if (!Validate()) {
           goto ABORT;
         }
