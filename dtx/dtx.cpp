@@ -6,13 +6,15 @@
 bool CheckReadWriteConflict = true;
 bool DelayLock = true;
 
-DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed)
+DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed,
+         double _offset)
     : context(context), tx_id(0), addr_cache(nullptr) {
   addr_cache = &context->addr_cache;
   t_id = GetThreadID();
   txn_sys = _txn_sys;
   lease = _lease;
   delay_lock = _delayed;
+  offset = _offset;
 }
 
 bool DTX::ExeRO() {

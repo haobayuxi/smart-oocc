@@ -271,7 +271,8 @@ class DTX {
   void RemoveLastROItem() { read_only_set.pop_back(); }
 
  public:
-  DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed);
+  DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed,
+      double _offset);
 
   ~DTX() { Clean(); }
 
@@ -419,7 +420,7 @@ class DTX {
   ALWAYS_INLINE
   node_id_t GetPrimaryNodeID(uint64_t key) {
     return context->GetPrimaryNodeID(key);
-    // get by 
+    // get by
   }
 
   std::vector<node_id_t> *GetBackupNodeID(table_id_t table_id) {

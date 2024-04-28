@@ -30,5 +30,6 @@
   "lease": 100,
   "delayed": true,
   "txn_sys": 3,
+  "offset": 1.0,
   "comment": "0 for oocc, 1 for DrTM, 2 for DSLR, 3 for OCC"
 }

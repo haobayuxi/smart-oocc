@@ -26,6 +26,7 @@ std::atomic<uint64_t> tx_id_generator(0);
 int lease;
 int txn_sys;
 bool delayed;
+double offset;
 
 thread_local size_t ATTEMPTED_NUM;
 thread_local uint64_t seed;
@@ -924,7 +925,7 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
 /******************** The business logic (Transaction) end ********************/
 
 void WarmUp(DTXContext* context) {
-  DTX* dtx = new DTX(context, txn_sys, lease, delayed);
+  DTX* dtx = new DTX(context, txn_sys, lease, delayed, offset);
   bool tx_committed = false;
   for (int i = 0; i < 50000; ++i) {
     TPCCTxType tx_type = workgen_arr[FastRand(&seed) % 100];
@@ -974,7 +975,7 @@ static void IdleExecution() {
 }
 
 void RunTx(DTXContext* context) {
-  DTX* dtx = new DTX(context, txn_sys, lease, delayed);
+  DTX* dtx = new DTX(context, txn_sys, lease, delayed, offset);
   struct timespec tx_start_time, tx_end_time;
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
@@ -1166,6 +1167,7 @@ int main(int argc, char** argv) {
   lease = config.get("lease").get_uint64();
   txn_sys = config.get("txn_sys").get_uint64();
   delayed = config.get("delayed").get_bool();
+  offset = config.get("offset".get_double());
   if (txn_sys == DTX_SYS::OOCC) {
     SDS_INFO("running OOCC");
   } else if (txn_sys == DTX_SYS::OCC) {
