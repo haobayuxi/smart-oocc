@@ -23,88 +23,87 @@ void TPCC::LoadTable(node_id_t node_id, node_id_t num_server,
       sizeof(tpcc_order_index_val_t), sizeof(tpcc_order_line_val_t),
       sizeof(tpcc_item_val_t), sizeof(tpcc_stock_val_t), DataItemSize);
   // Initiate + Populate table for primary role
-  if ((node_id_t)TPCCTableType::kWarehouseTable % num_server == node_id) {
-    printf("Primary: Initializing Warehouse table\n");
-    warehouse_table = new HashStore((table_id_t)TPCCTableType::kWarehouseTable,
-                                    num_warehouse, mem_store_alloc_param);
-    printf("Warehouse table setup\n");
-    PopulateWarehouseTable(9324, mem_store_reserve_param);
-    primary_table_ptrs.push_back(warehouse_table);
-  }
-  if ((node_id_t)TPCCTableType::kDistrictTable % num_server == node_id) {
-    printf("Primary: Initializing District table\n");
+  // if ((node_id_t)TPCCTableType::kWarehouseTable % num_server == node_id) {
+  printf("Primary: Initializing Warehouse table\n");
+  warehouse_table = new HashStore((table_id_t)TPCCTableType::kWarehouseTable,
+                                  num_warehouse, mem_store_alloc_param);
+  printf("Warehouse table setup\n");
+  PopulateWarehouseTable(9324, mem_store_reserve_param);
+  primary_table_ptrs.push_back(warehouse_table);
+  // }
+  // if ((node_id_t)TPCCTableType::kDistrictTable % num_server == node_id) {
+  printf("Primary: Initializing District table\n");
 
-    district_table = new HashStore((table_id_t)TPCCTableType::kDistrictTable,
-                                   num_warehouse * num_district_per_warehouse,
-                                   mem_store_alloc_param);
+  district_table = new HashStore((table_id_t)TPCCTableType::kDistrictTable,
+                                 num_warehouse * num_district_per_warehouse,
+                                 mem_store_alloc_param);
 
-    PopulateDistrictTable(129856349, mem_store_reserve_param);
-    primary_table_ptrs.push_back(district_table);
-  }
-  if ((node_id_t)TPCCTableType::kCustomerTable % num_server == node_id) {
-    printf("Primary: Initializing Customer+CustomerIndex+History table\n");
+  PopulateDistrictTable(129856349, mem_store_reserve_param);
+  primary_table_ptrs.push_back(district_table);
+  // }
+  // if ((node_id_t)TPCCTableType::kCustomerTable % num_server == node_id) {
+  printf("Primary: Initializing Customer+CustomerIndex+History table\n");
 
-    customer_table = new HashStore((table_id_t)TPCCTableType::kCustomerTable,
-                                   num_warehouse * num_district_per_warehouse *
-                                       num_customer_per_district * 0.5,
-                                   mem_store_alloc_param);
+  customer_table = new HashStore((table_id_t)TPCCTableType::kCustomerTable,
+                                 num_warehouse * num_district_per_warehouse *
+                                     num_customer_per_district * 0.5,
+                                 mem_store_alloc_param);
 
-    customer_index_table =
-        new HashStore((table_id_t)TPCCTableType::kCustomerIndexTable,
-                      num_warehouse * num_district_per_warehouse *
-                          num_customer_per_district * 0.5,
-                      mem_store_alloc_param);
-    history_table = new HashStore((table_id_t)TPCCTableType::kHistoryTable,
+  customer_index_table =
+      new HashStore((table_id_t)TPCCTableType::kCustomerIndexTable,
+                    num_warehouse * num_district_per_warehouse *
+                        num_customer_per_district * 0.5,
+                    mem_store_alloc_param);
+  history_table = new HashStore((table_id_t)TPCCTableType::kHistoryTable,
+                                num_warehouse * num_district_per_warehouse *
+                                    num_customer_per_district * 0.5,
+                                mem_store_alloc_param);
+
+  PopulateCustomerAndHistoryTable(923587856425, mem_store_reserve_param);
+  primary_table_ptrs.push_back(customer_table);
+  primary_table_ptrs.push_back(customer_index_table);
+  primary_table_ptrs.push_back(history_table);
+  // }
+  // if ((node_id_t)TPCCTableType::kOrderTable % num_server == node_id) {
+  order_table = new HashStore(
+      (table_id_t)TPCCTableType::kOrderTable,
+      num_warehouse * num_district_per_warehouse * num_customer_per_district,
+      mem_store_alloc_param);
+  order_index_table = new HashStore(
+      (table_id_t)TPCCTableType::kOrderIndexTable,
+      num_warehouse * num_district_per_warehouse * num_customer_per_district,
+      mem_store_alloc_param);
+  new_order_table = new HashStore((table_id_t)TPCCTableType::kNewOrderTable,
                                   num_warehouse * num_district_per_warehouse *
-                                      num_customer_per_district * 0.5,
+                                      num_customer_per_district * 0.3,
                                   mem_store_alloc_param);
+  order_line_table = new HashStore((table_id_t)TPCCTableType::kOrderLineTable,
+                                   num_warehouse * num_district_per_warehouse *
+                                       num_customer_per_district * 15,
+                                   mem_store_alloc_param);
 
-    PopulateCustomerAndHistoryTable(923587856425, mem_store_reserve_param);
-    primary_table_ptrs.push_back(customer_table);
-    primary_table_ptrs.push_back(customer_index_table);
-    primary_table_ptrs.push_back(history_table);
-  }
-  if ((node_id_t)TPCCTableType::kOrderTable % num_server == node_id) {
-    order_table = new HashStore(
-        (table_id_t)TPCCTableType::kOrderTable,
-        num_warehouse * num_district_per_warehouse * num_customer_per_district,
-        mem_store_alloc_param);
-    order_index_table = new HashStore(
-        (table_id_t)TPCCTableType::kOrderIndexTable,
-        num_warehouse * num_district_per_warehouse * num_customer_per_district,
-        mem_store_alloc_param);
-    new_order_table = new HashStore((table_id_t)TPCCTableType::kNewOrderTable,
-                                    num_warehouse * num_district_per_warehouse *
-                                        num_customer_per_district * 0.3,
-                                    mem_store_alloc_param);
-    order_line_table =
-        new HashStore((table_id_t)TPCCTableType::kOrderLineTable,
-                      num_warehouse * num_district_per_warehouse *
-                          num_customer_per_district * 15,
-                      mem_store_alloc_param);
+  PopulateOrderNewOrderAndOrderLineTable(2343352, mem_store_reserve_param);
+  primary_table_ptrs.push_back(order_table);
+  primary_table_ptrs.push_back(order_index_table);
+  primary_table_ptrs.push_back(new_order_table);
+  primary_table_ptrs.push_back(order_line_table);
+  // }
+  // if ((node_id_t)TPCCTableType::kStockTable % num_server == node_id) {
+  printf("Primary: Initializing Stock table\n");
 
-    PopulateOrderNewOrderAndOrderLineTable(2343352, mem_store_reserve_param);
-    primary_table_ptrs.push_back(order_table);
-    primary_table_ptrs.push_back(order_index_table);
-    primary_table_ptrs.push_back(new_order_table);
-    primary_table_ptrs.push_back(order_line_table);
-  }
-  if ((node_id_t)TPCCTableType::kStockTable % num_server == node_id) {
-    printf("Primary: Initializing Stock table\n");
+  stock_table = new HashStore((table_id_t)TPCCTableType::kStockTable,
+                              num_stock_per_warehouse, mem_store_alloc_param);
+  PopulateStockTable(89785943, mem_store_reserve_param);
+  primary_table_ptrs.push_back(stock_table);
+  // }
+  // if ((node_id_t)TPCCTableType::kItemTable % num_server == node_id) {
+  printf("Primary: Initializing Item table\n");
 
-    stock_table = new HashStore((table_id_t)TPCCTableType::kStockTable,
-                                num_stock_per_warehouse, mem_store_alloc_param);
-    PopulateStockTable(89785943, mem_store_reserve_param);
-    primary_table_ptrs.push_back(stock_table);
-  }
-  if ((node_id_t)TPCCTableType::kItemTable % num_server == node_id) {
-    printf("Primary: Initializing Item table\n");
-
-    item_table = new HashStore((table_id_t)TPCCTableType::kItemTable, num_item,
-                               mem_store_alloc_param);
-    PopulateItemTable(235443, mem_store_reserve_param);
-    primary_table_ptrs.push_back(item_table);
-  }
+  item_table = new HashStore((table_id_t)TPCCTableType::kItemTable, num_item,
+                             mem_store_alloc_param);
+  PopulateItemTable(235443, mem_store_reserve_param);
+  primary_table_ptrs.push_back(item_table);
+  // }
 }
 
 void TPCC::PopulateWarehouseTable(
