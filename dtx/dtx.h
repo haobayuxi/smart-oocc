@@ -417,8 +417,9 @@ class DTX {
   char *AllocLocalBuffer(size_t size) { return context->Alloc(size); }
 
   ALWAYS_INLINE
-  node_id_t GetPrimaryNodeID(table_id_t table_id) {
-    return context->GetPrimaryNodeID(table_id);
+  node_id_t GetPrimaryNodeID(uint64_t key) {
+    return context->GetPrimaryNodeID(key);
+    // get by 
   }
 
   std::vector<node_id_t> *GetBackupNodeID(table_id_t table_id) {
@@ -440,6 +441,7 @@ class DTX {
  public:
   int lease;
   int txn_sys;
+  double offset;
   bool delay_lock;
   // bool delay_unlock
   uint64_t last_write_lock_time;

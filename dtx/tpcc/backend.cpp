@@ -11,7 +11,7 @@
 
 using namespace sds;
 
-void setup(Target &target) {
+void setup(Target &target, int id, int server_num) {
   static_assert(MAX_ITEM_SIZE == 664, "");
   uint64_t hash_buf_size = 4ull * 1024 * 1024 * 1024;
 
@@ -31,7 +31,8 @@ void setup(Target &target) {
                                                hash_buffer + hash_buf_size);
   std::vector<HashStore *> all_tables;
   auto tpcc = new TPCC(0);
-  tpcc->LoadTable(0, 1, &mem_store_alloc_param, &mem_store_reserve_param);
+  tpcc->LoadTable(id, server_num, &mem_store_alloc_param,
+                  &mem_store_reserve_param);
   all_tables = tpcc->GetHashStore();
   auto *hash_meta = (HashMeta *)target.alloc_chunk(
       (all_tables.size() * sizeof(HashMeta)) / kChunkSize + 1);
@@ -54,9 +55,10 @@ void setup(Target &target) {
 int main(int argc, char **argv) {
   // WritePidFile();
   const char *path = ROOT_DIR "/config/backend.json";
-  if (argc == 2) {
-    path = argv[1];
-  }
+  // if (argc == 2) {
+  //   path = argv[1];
+  // }
+  int id = argv[1];
   JsonConfig config = JsonConfig::load_file(path);
   BindCore((int)config.get("nic_numa_node").get_int64());
   std::string dev_dax_path = config.get("dev_dax_path").get_str();
@@ -66,7 +68,7 @@ int main(int argc, char **argv) {
   void *mmap_addr = mapping_memory(dev_dax_path, capacity);
   int rc = target.register_main_memory(mmap_addr, capacity);
   assert(!rc);
-  setup(target);
+  setup(target, id, 2);
   SDS_INFO("Press C to stop the memory node daemon.");
   target.start(tcp_port);
   while (getchar() != 'c') {
