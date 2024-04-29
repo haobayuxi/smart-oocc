@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   int rc = target.register_main_memory(mmap_addr, capacity);
   assert(!rc);
   setup(target, id, 2);
-  SDS_INFO("Press C to stop the memory node daemon.");
+  SDS_INFO("Press C to stop the memory node daemon."); 
   target.start(tcp_port);
   while (getchar() != 'c') {
     sleep(1);
