@@ -64,5 +64,5 @@ class AddrCache {
   //     offset_t>>> addr_map;
 
   // std::unordered_map<itemkey_t, offset_t> addr_map[1][20];
-  libcuckoo::cuckoohash_map<int, uint64_t> addr_map[1][20];
+  libcuckoo::cuckoohash_map<int, uint64_t> addr_map[4][20];
 };
