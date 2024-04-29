@@ -48,7 +48,7 @@ void setup(Target &target, int id, int server_num) {
                           target.rel_ptr(&hash_meta[i]).raw);
     ++i;
   }
-
+  SDS_INFO("%d", i);
   target.set_root_entry(0, i);
 }
 
