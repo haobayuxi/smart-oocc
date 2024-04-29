@@ -19,8 +19,7 @@ extern thread_local uint64_t rdma_cnt;
 
 class DTXContext {
  public:
-  DTXContext(JsonConfig &config, int max_threads)
-      : config_(config) {
+  DTXContext(JsonConfig &config, int max_threads) : config_(config) {
     for (int i = 0; i < kMaxThreads; ++i) {
       tl_data_[i].log_alloc = new LogOffsetAllocator(i, kMaxThreads);
       const static size_t kBufferSize = 8 * 1024 * 1024;
@@ -148,6 +147,7 @@ class DTXContext {
       table_id_t nr_tables = offset;
       HashMeta *hash_meta = (HashMeta *)node_.alloc_cache(sizeof(HashMeta));
       assert(hash_meta);
+      SDS_INFO("read server %d", node_id);
       for (table_id_t table_id = 1; table_id <= nr_tables; ++table_id) {
         rc = node_.get_root_entry(node_id, table_id, offset);
         assert(!rc);
@@ -159,13 +159,12 @@ class DTXContext {
         if (node_id == table_id % remote_nodes_) {
           primary_hash_metas[table_id] = *hash_meta;
           primary_table_nodes[table_id] = node_id;
-        } else if (backup_hash_metas[table_id].size() < BACKUP_DEGREE) {
-          backup_hash_metas[table_id].push_back(*hash_meta);
-          backup_table_nodes[table_id].push_back(node_id);
         }
+        // else if (backup_hash_metas[table_id].size() < BACKUP_DEGREE) {
+        //   backup_hash_metas[table_id].push_back(*hash_meta);
+        //   backup_table_nodes[table_id].push_back(node_id);
+        // }
       }
-
-      
     }
   }
 
