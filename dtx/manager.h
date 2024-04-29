@@ -147,7 +147,7 @@ class DTXContext {
       table_id_t nr_tables = offset;
       HashMeta *hash_meta = (HashMeta *)node_.alloc_cache(sizeof(HashMeta));
       assert(hash_meta);
-      SDS_INFO("read server %d", node_id);
+      SDS_INFO("read server %d, %ld", node_id, offset);
       for (table_id_t table_id = 1; table_id <= nr_tables; ++table_id) {
         rc = node_.get_root_entry(node_id, table_id, offset);
         assert(!rc);
