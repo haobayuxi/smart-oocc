@@ -156,10 +156,10 @@ class DTXContext {
         assert(!rc);
         SDS_INFO("%ld: %lx %ld %ld", hash_meta->table_id, hash_meta->base_off,
                  hash_meta->bucket_num, hash_meta->node_size);
-        if (node_id == table_id % remote_nodes_) {
-          primary_hash_metas[table_id] = *hash_meta;
-          primary_table_nodes[table_id] = node_id;
-        }
+        // if (node_id == table_id % remote_nodes_) {
+        primary_hash_metas[table_id] = *hash_meta;
+        primary_table_nodes[table_id] = table_id % remote_nodes_;
+        // }
         // else if (backup_hash_metas[table_id].size() < BACKUP_DEGREE) {
         //   backup_hash_metas[table_id].push_back(*hash_meta);
         //   backup_table_nodes[table_id].push_back(node_id);
