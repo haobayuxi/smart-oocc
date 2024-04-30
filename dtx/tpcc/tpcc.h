@@ -530,8 +530,7 @@ class TPCC {
   }
 
   // For server-side usage
-  void LoadTable(node_id_t node_id, node_id_t num_server,
-                 MemStoreAllocParam* mem_store_alloc_param,
+  void LoadTable(MemStoreAllocParam* mem_store_alloc_param,
                  MemStoreReserveParam* mem_store_reserve_param);
 
   void PopulateWarehouseTable(unsigned long seed,

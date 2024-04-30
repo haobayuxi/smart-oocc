@@ -31,8 +31,7 @@ void setup(Target &target, int id, int server_num) {
                                                hash_buffer + hash_buf_size);
   std::vector<HashStore *> all_tables;
   auto tpcc = new TPCC(0);
-  tpcc->LoadTable(id, server_num, &mem_store_alloc_param,
-                  &mem_store_reserve_param);
+  tpcc->LoadTable(&mem_store_alloc_param, &mem_store_reserve_param);
   all_tables = tpcc->GetHashStore();
   auto *hash_meta = (HashMeta *)target.alloc_chunk(
       (all_tables.size() * sizeof(HashMeta)) / kChunkSize + 1);
@@ -45,17 +44,14 @@ void setup(Target &target, int id, int server_num) {
                  hash_table->GetBaseOff());
     SDS_INFO("%ld: %lx %ld %ld", hash_meta[i].table_id, hash_meta[i].base_off,
              hash_meta[i].bucket_num, hash_meta[i].node_size);
-    SDS_INFO("%ld", target.rel_ptr(&hash_meta[i]).raw);
+    // SDS_INFO("%ld", target.rel_ptr(&hash_meta[i]).raw);
     target.set_root_entry(hash_table->GetTableID(),
                           target.rel_ptr(&hash_meta[i]).raw);
-    t = target.get_root_entry(hash_table->GetTableID());
-    SDS_INFO("%ld", t);
+    // t = target.get_root_entry(hash_table->GetTableID());
+    // SDS_INFO("%ld", t);
     ++i;
   }
-  SDS_INFO("%d", i);
   target.set_root_entry(0, i);
-  t = target.get_root_entry(0);
-  SDS_INFO("%ld", t);
 }
 
 int main(int argc, char **argv) {

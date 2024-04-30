@@ -3,8 +3,7 @@
 #define NUM_CUSTOMER_LAST_NAME_FROM_CID 100
 #define NUM_ORDER_MINUS_NEWORDER 210
 
-void TPCC::LoadTable(node_id_t node_id, node_id_t num_server,
-                     MemStoreAllocParam* mem_store_alloc_param,
+void TPCC::LoadTable(MemStoreAllocParam* mem_store_alloc_param,
                      MemStoreReserveParam* mem_store_reserve_param) {
   printf(
       "sizeof(tpcc_warehouse_val_t) = %lu, sizeof(tpcc_district_val_t) = %lu\n"
