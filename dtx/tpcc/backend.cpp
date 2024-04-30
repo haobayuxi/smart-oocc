@@ -37,7 +37,8 @@ void setup(Target &target, int id, int server_num) {
   auto *hash_meta = (HashMeta *)target.alloc_chunk(
       (all_tables.size() * sizeof(HashMeta)) / kChunkSize + 1);
   int i = 0;
-  uint64_t t for (auto &hash_table : all_tables) {
+  uint64_t t;
+  for (auto &hash_table : all_tables) {
     new (&hash_meta[i])
         HashMeta(hash_table->GetTableID(), (uint64_t)hash_table->GetDataPtr(),
                  hash_table->GetBucketNum(), hash_table->GetHashNodeSize(),
