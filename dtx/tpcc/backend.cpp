@@ -37,7 +37,7 @@ void setup(Target &target, int id, int server_num) {
   auto *hash_meta = (HashMeta *)target.alloc_chunk(
       (all_tables.size() * sizeof(HashMeta)) / kChunkSize + 1);
   int i = 0;
-  for (auto &hash_table : all_tables) {
+  uint64_t t for (auto &hash_table : all_tables) {
     new (&hash_meta[i])
         HashMeta(hash_table->GetTableID(), (uint64_t)hash_table->GetDataPtr(),
                  hash_table->GetBucketNum(), hash_table->GetHashNodeSize(),
@@ -46,11 +46,13 @@ void setup(Target &target, int id, int server_num) {
              hash_meta[i].bucket_num, hash_meta[i].node_size);
     target.set_root_entry(hash_table->GetTableID(),
                           target.rel_ptr(&hash_meta[i]).raw);
+    t = target.get_root_entry(i);
+    SDS_INFO("%ld", t);
     ++i;
   }
   SDS_INFO("%d", i);
   target.set_root_entry(0, i);
-  uint64_t t = target.get_root_entry(0);
+  t = target.get_root_entry(0);
   SDS_INFO("%ld", t);
 }
 
@@ -71,7 +73,7 @@ int main(int argc, char **argv) {
   int rc = target.register_main_memory(mmap_addr, capacity);
   assert(!rc);
   setup(target, id, 2);
-  SDS_INFO("Press C to stop the memory node daemon."); 
+  SDS_INFO("Press C to stop the memory node daemon.");
   target.start(tcp_port);
   while (getchar() != 'c') {
     sleep(1);
