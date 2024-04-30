@@ -45,9 +45,10 @@ void setup(Target &target, int id, int server_num) {
                  hash_table->GetBaseOff());
     SDS_INFO("%ld: %lx %ld %ld", hash_meta[i].table_id, hash_meta[i].base_off,
              hash_meta[i].bucket_num, hash_meta[i].node_size);
+    SDS_INFO("%ld", target.rel_ptr(&hash_meta[i]).raw);
     target.set_root_entry(hash_table->GetTableID(),
                           target.rel_ptr(&hash_meta[i]).raw);
-    t = target.get_root_entry(i);
+    t = target.get_root_entry(hash_table->GetTableID());
     SDS_INFO("%ld", t);
     ++i;
   }
