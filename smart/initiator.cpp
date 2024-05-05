@@ -232,10 +232,11 @@ int Initiator::get_root_entry(node_t mem_node_id, uint8_t index,
   SDS_INFO("get root entry %d, %ld, %ld", index, super, entry);
   auto remote_addr =
       GlobalAddress(mem_node_id, (uint64_t)entry - (uint64_t)super);
-  SDS_INFO("get root entry %d, %ld", index, (uint64_t)entry - (uint64_t)super);
-  rc = read(entry, remote_addr, sizeof(uint64_t), Option::Sync);
+  // SDS_INFO("get root entry %d, %ld", index, (uint64_t)entry -
+  // (uint64_t)super); rc = read(entry, remote_addr, sizeof(uint64_t),
+  // Option::Sync);
   assert(!rc);
-  SDS_INFO("get entry addr %d, %ld", index, (uint64_t)entry);
+  // SDS_INFO("get entry addr %d, %ld", index, (uint64_t)entry);
   value = *entry;
   return 0;
 }
