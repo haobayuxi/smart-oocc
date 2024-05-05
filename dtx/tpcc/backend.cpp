@@ -52,6 +52,8 @@ void setup(Target &target, int id, int server_num) {
     ++i;
   }
   target.set_root_entry(0, i);
+  t = target.get_root_entry(1);
+  SDS_INFO("%ld", t);
 }
 
 int main(int argc, char **argv) {
