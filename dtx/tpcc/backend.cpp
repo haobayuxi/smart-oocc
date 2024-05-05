@@ -47,8 +47,8 @@ void setup(Target &target) {
     // SDS_INFO("%ld", target.rel_ptr(&hash_meta[i]).raw);
     target.set_root_entry(hash_table->GetTableID(),
                           target.rel_ptr(&hash_meta[i]).raw);
-    // t = target.get_root_entry(hash_table->GetTableID());
-    // SDS_INFO("%ld", t);
+    t = target.get_root_entry(hash_table->GetTableID());
+    SDS_INFO("%ld", t);
     ++i;
   }
   target.set_root_entry(0, i);
