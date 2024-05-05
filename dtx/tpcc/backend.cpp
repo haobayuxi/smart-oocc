@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
   // if (argc == 2) {
   //   path = argv[1];
   // }
-  int id = atoi(argv[1]);
+  // int id = atoi(argv[1]);
   JsonConfig config = JsonConfig::load_file(path);
   BindCore((int)config.get("nic_numa_node").get_int64());
   std::string dev_dax_path = config.get("dev_dax_path").get_str();
