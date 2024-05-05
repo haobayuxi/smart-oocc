@@ -151,7 +151,7 @@ class DTXContext {
       for (table_id_t table_id = 1; table_id <= nr_tables; ++table_id) {
         rc = node_.get_root_entry(node_id, table_id, offset);
         SDS_INFO("read table %ld, %ld", table_id, offset);
-        offset += node_id * 8;
+        offset += node_id * 40;
         assert(!rc);
         rc = node_.read(hash_meta, GlobalAddress(node_id, offset),
                         sizeof(HashMeta), Initiator::Option::Sync);
