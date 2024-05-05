@@ -927,7 +927,7 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
 void WarmUp(DTXContext* context) {
   DTX* dtx = new DTX(context, txn_sys, lease, delayed, offset);
   bool tx_committed = false;
-  for (int i = 0; i < 50000; ++i) {
+  for (int i = 0; i < 5000; ++i) {
     TPCCTxType tx_type = workgen_arr[FastRand(&seed) % 100];
     uint64_t iter = ++tx_id_local;
     // Global atomic transaction id
@@ -1049,8 +1049,10 @@ void execute_thread(int id, DTXContext* context) {
          id;
   tpcc_client = new TPCC(seed);
   workgen_arr = tpcc_client->CreateWorkgenArray();
+
+  SDS_INFO("warm up start");
   WarmUp(context);
-  //   SDS_INFO("warm up done");
+  SDS_INFO("warm up done");
   TaskPool::Enable();
   auto& task_pool = TaskPool::Get();
   running_tasks = coroutines;
