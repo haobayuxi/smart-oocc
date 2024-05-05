@@ -11,7 +11,7 @@
 
 using namespace sds;
 
-void setup(Target &target, int id, int server_num) {
+void setup(Target &target) {
   static_assert(MAX_ITEM_SIZE == 664, "");
   uint64_t hash_buf_size = 4ull * 1024 * 1024 * 1024;
 
@@ -53,7 +53,7 @@ void setup(Target &target, int id, int server_num) {
   }
   target.set_root_entry(0, i);
   t = target.get_root_entry(1);
-  SDS_INFO("%ld", t);
+  // SDS_INFO("%ld", t);
 }
 
 int main(int argc, char **argv) {
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
   void *mmap_addr = mapping_memory(dev_dax_path, capacity);
   int rc = target.register_main_memory(mmap_addr, capacity);
   assert(!rc);
-  setup(target, id, 2);
+  setup(target);
   SDS_INFO("Press C to stop the memory node daemon.");
   target.start(tcp_port);
   while (getchar() != 'c') {
