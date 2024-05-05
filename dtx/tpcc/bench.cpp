@@ -1050,9 +1050,9 @@ void execute_thread(int id, DTXContext* context) {
   tpcc_client = new TPCC(seed);
   workgen_arr = tpcc_client->CreateWorkgenArray();
 
-  SDS_INFO("warm up start");
+  SDS_INFO("warm up start %d", id);
   WarmUp(context);
-  SDS_INFO("warm up done");
+  SDS_INFO("warm up done %d", id);
   TaskPool::Enable();
   auto& task_pool = TaskPool::Get();
   running_tasks = coroutines;
