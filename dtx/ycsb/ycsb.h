@@ -18,7 +18,8 @@ static inline unsigned long GetCPUCycle() {
 
 #define TOTAL_KEYS_NUM 1000000
 
-const int MICRO_TABLE_ID = 1;
+const int MICRO_TABLE_ID1 = 1;
+const int MICRO_TABLE_ID2 = 2;
 
 struct micro_key_t {
   // uint64_t micro_id;
@@ -49,7 +50,8 @@ static ALWAYS_INLINE uint64_t align_pow2(uint64_t v) {
 
 class YCSB {
  public:
-  HashStore *micro_table;
+  HashStore *micro_table1;
+  HashStore *micro_table2;
   std::vector<HashStore *> table_ptrs;
   YCSB(double theta, int thread_gid) {
     zipf_gen = new ZipfianGenerator(TOTAL_KEYS_NUM - 1, theta);
@@ -57,9 +59,13 @@ class YCSB {
 
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
-    micro_table = new HashStore(MICRO_TABLE_ID, 200000, mem_store_alloc_param);
+    micro_table1 =
+        new HashStore(MICRO_TABLE_ID1, 200000, mem_store_alloc_param);
+    micro_table2 =
+        new HashStore(MICRO_TABLE_ID2, 200000, mem_store_alloc_param);
     PopulateTable(mem_store_reserve_param);
-    table_ptrs.push_back(micro_table);
+    table_ptrs.push_back(micro_table1);
+    table_ptrs.push_back(micro_table2);
   }
 
   void PopulateTable(MemStoreReserveParam *mem_store_reserve_param) {
@@ -69,13 +75,21 @@ class YCSB {
 
       micro_val_t micro_val;
       micro_val.magic = micro_magic + i;
-
-      DataItem item_to_be_inserted(MICRO_TABLE_ID, sizeof(micro_val_t),
-                                   micro_key.item_key, (uint8_t *)&micro_val);
-      DataItem *inserted_item = micro_table->LocalInsert(
-          micro_key.item_key, item_to_be_inserted, mem_store_reserve_param);
-      inserted_item->remote_offset =
-          micro_table->GetItemRemoteOffset(inserted_item);
+      if (micro_key.item_key % 2 == MICRO_TABLE_ID1) {
+        DataItem item_to_be_inserted(MICRO_TABLE_ID1, sizeof(micro_val_t),
+                                     micro_key.item_key, (uint8_t *)&micro_val);
+        DataItem *inserted_item = micro_table1->LocalInsert(
+            micro_key.item_key, item_to_be_inserted, mem_store_reserve_param);
+        inserted_item->remote_offset =
+            micro_table1->GetItemRemoteOffset(inserted_item);
+      } else {
+        DataItem item_to_be_inserted(MICRO_TABLE_ID2, sizeof(micro_val_t),
+                                     micro_key.item_key, (uint8_t *)&micro_val);
+        DataItem *inserted_item = micro_table2->LocalInsert(
+            micro_key.item_key, item_to_be_inserted, mem_store_reserve_param);
+        inserted_item->remote_offset =
+            micro_table2->GetItemRemoteOffset(inserted_item);
+      }
     }
   }
   ALWAYS_INLINE
