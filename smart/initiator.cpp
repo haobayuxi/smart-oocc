@@ -421,11 +421,27 @@ int Initiator::sync() {
       WaitTask();
     }
   } else {
-    auto req = state.post_req[0];
+    // auto req = state.post_req[0];
 
-    while (state.ack_req[0] < req) {
-      if (poll_once(0) < 0) {
-        return -1;
+    // while (state.ack_req[0] < req) {
+    //   if (poll_once(0) < 0) {
+    //     return -1;
+    //   }
+    // }
+    auto &post_req = tl.post_req_snapshot[GetTaskID()];
+    post_req.resize(state.post_req.size());
+    for (int id = 0; id < post_req.size(); ++id) {
+      post_req[id] = state.post_req[id];
+    }
+    for (int id = 0; id < post_req.size(); ++id) {
+      while (state.ack_req[id] < post_req[id]) {
+        if (TaskPool::IsEnabled()) {
+          WaitTask();
+        } else {
+          if (poll_once(id) < 0) {
+            return -1;
+          }
+        }
       }
     }
   }
