@@ -146,7 +146,7 @@ void RunTx(DTXContext *context) {
     attempt_tx++;
     // SDS_INFO("attempt = %ld, %ld", attempt_tx, ATTEMPTED_NUM);
     bool read_only = true;
-    auto write = FastRand(&seed) % 1000;
+    auto write = FastRand(&seed) % 100;
     if (write < write_ratio) {
       read_only = false;
     }
