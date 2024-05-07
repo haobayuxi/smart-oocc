@@ -147,15 +147,16 @@ class DTXContext {
       table_id_t nr_tables = offset;
       HashMeta *hash_meta = (HashMeta *)node_.alloc_cache(sizeof(HashMeta));
       assert(hash_meta);
-      SDS_INFO("read server %d, %ld", node_id, offset);
+      // SDS_INFO("read server %d, %ld", node_id, offset);
       for (table_id_t table_id = 1; table_id <= nr_tables; ++table_id) {
         rc = node_.get_root_entry(node_id, table_id, offset);
         assert(!rc);
         rc = node_.read(hash_meta, GlobalAddress(node_id, offset),
                         sizeof(HashMeta), Initiator::Option::Sync);
         assert(!rc);
-        SDS_INFO("%ld: %lx %ld %ld", hash_meta->table_id, hash_meta->base_off,
-                 hash_meta->bucket_num, hash_meta->node_size);
+        // SDS_INFO("%ld: %lx %ld %ld", hash_meta->table_id,
+        // hash_meta->base_off,
+        //          hash_meta->bucket_num, hash_meta->node_size);
         if (node_id == (table_id + 1) % remote_nodes_) {
           primary_hash_metas[table_id] = *hash_meta;
           primary_table_nodes[table_id] = node_id;
