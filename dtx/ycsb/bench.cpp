@@ -57,11 +57,11 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
     }
 
     // SDS_INFO("txn read key = %ld", micro_key.item_key);
-    DataItemPtr micro_obj if (micro_key.item_key % 2 == MICRO_TABLE_ID1) {
+    DataItemPtr micro_obj;
+    if (micro_key.item_key % 2 == MICRO_TABLE_ID1) {
       micro_obj =
           std::make_shared<DataItem>(MICRO_TABLE_ID1, micro_key.item_key);
-    }
-    else {
+    } else {
       micro_obj =
           std::make_shared<DataItem>(MICRO_TABLE_ID2, micro_key.item_key);
     }
