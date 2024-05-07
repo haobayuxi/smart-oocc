@@ -50,12 +50,12 @@ bool TxGetSubsciberData(tx_id_t tx_id, DTX *dtx) {
   // tatp_sub_key_t sub_key2;
   // sub_key2.s_id = tatp_client->GetNonUniformRandomSubscriber(&seed);
   // // This empty data sub_obj will be filled by RDMA reading from remote
-  when
-      // // running transaction
-      // auto sub_obj2 = std::make_shared<DataItem>(
-      //     (table_id_t)TATPTableType::kSubscriberTable, sub_key2.item_key);
-      // Add r/w set and execute transaction
-      if (!dtx->TxExe()) return false;
+  //   when
+  // // running transaction
+  // auto sub_obj2 = std::make_shared<DataItem>(
+  //     (table_id_t)TATPTableType::kSubscriberTable, sub_key2.item_key);
+  // Add r/w set and execute transaction
+  if (!dtx->TxExe()) return false;
   // Get value
   auto *value = (tatp_sub_val_t *)(sub_obj->value);
   assert(value->msc_location == tatp_sub_msc_location_magic);
