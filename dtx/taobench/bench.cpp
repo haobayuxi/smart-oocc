@@ -72,7 +72,7 @@ bool TxTAO(tx_id_t tx_id, DTX *dtx, uint64_t *att_read_only) {
 thread_local int running_tasks;
 
 void WarmUp(DTXContext *context) {
-  DTX *dtx = new DTX(context, txn_sys, lease, delayed);
+  DTX *dtx = new DTX(context, txn_sys, lease, delayed, 0.0);
   bool tx_committed = false;
   uint64_t x = 0;
   for (int i = 0; i < 50000; ++i) {
@@ -95,7 +95,7 @@ uint64_t g_idle_cycles = 0;
 // }
 
 void RunTx(DTXContext *context) {
-  DTX *dtx = new DTX(context, txn_sys, lease, delayed);
+  DTX *dtx = new DTX(context, txn_sys, lease, delayed, 0.0);
   // struct timespec tx_start_time, tx_end_time;
   bool tx_committed = false;
   uint64_t attempt_tx = 0;
