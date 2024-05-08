@@ -18,7 +18,7 @@ using namespace benchmark;
 using namespace std;
 
 const int ObjectTableId = 1;
-const int EdgeTableId = 1;
+const int EdgeTableId = 2;
 #define TOTAL_EDGES_NUM 500000
 #define TOTAO_OBJECT_NUM 1000
 #define TOTAL_KEYS_NUM 1000000
