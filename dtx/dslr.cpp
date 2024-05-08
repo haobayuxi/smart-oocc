@@ -78,7 +78,7 @@ bool DTX::DSLRExeRO() {
   if (!DSLRCheckHashRO(pending_hash_ro, pending_next_cas_ro,
                        pending_next_hash_ro))
     return false;
-  for (int i = 0; i < 50; i++) {
+  for (int i = 0; i < 100; i++) {
     context->Sync();
     if (!pending_next_direct_ro.empty() || !pending_next_cas_ro.empty() ||
         !pending_next_hash_ro.empty()) {
