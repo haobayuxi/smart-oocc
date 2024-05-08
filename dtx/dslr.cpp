@@ -133,7 +133,7 @@ bool DTX::DSLRExeRW() {
   if (!CheckInsertOffRW(pending_insert_off_rw, pending_invisible_ro,
                         pending_next_off_rw))
     return false;
-  for (int i = 0; i < 50; i++) {
+  for (int i = 0; i < 100; i++) {
     context->Sync();
     if (!pending_next_direct_ro.empty() || !pending_next_direct_rw.empty() ||
         !pending_next_hash_ro.empty() || !pending_next_hash_rw.empty() ||
@@ -753,8 +753,7 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                                 .version = fetched_item->version});
       } else {
         if (likely(fetched_item->valid)) {
-                    if (fetched_item->remote_offset == it->remote_offset){
-            result =false;
+                      result =false;
           }
           //  {
           //   result = false;
