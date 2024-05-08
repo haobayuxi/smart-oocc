@@ -753,8 +753,8 @@ bool DTX::DSLRCheckCasRW(std::vector<CasRead> &pending_cas_rw,
                                 .version = fetched_item->version});
       } else {
         if (likely(fetched_item->valid)) {
-          if(fetched_item->remote_offset == it->remote_offset){
-            return false;
+                    if (fetched_item->remote_offset == it->remote_offset){
+            result =false;
           }
           //  {
           //   result = false;
