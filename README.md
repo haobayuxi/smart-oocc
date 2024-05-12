@@ -7,9 +7,6 @@ SMART is a framework to deal with the complexity of building scalable applicatio
 
 To ease the programming, SMART provides a set of coroutine-based asynchronous APIs that are almost identical to the original RDMA verbs. We also design adaptive methods for adjusting configuration parameters that are important to the performance.
 
-For more technical details, please refer to our paper: 
-
-> Feng Ren, Mingxing Zhang, Kang Chen, Huaxia Xia, Zuoning Chen, Yongwei Wu. Scaling Up Memory Disaggregated Applications with SMART. In 29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS '24).
 
 ## Artifact Contents
 - SMART’s library (including techniques mentioned in this paper, `include/` and `smart/`);
@@ -238,5 +235,3 @@ We also provide scripts to reproduce all experiments in Section 3 and Section 6.
 
 Details are aviilable in [`ae/README.md`](ae/README.md).
 
-## Contact
-For any questions, please contact us at `renfeng.chn AT outlook.com`.
