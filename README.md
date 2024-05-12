@@ -1,4 +1,4 @@
-# SMART
+# SMART-OOCC
 
 SMART is a framework to deal with the complexity of building scalable applications for memory disaggregation, which integrated with the following techniques to resolve RDMA-related performance issues:
 - Thread-aware resource allocation,
@@ -138,36 +138,8 @@ Options of backend servers running in memory blades.
   "nic_numa_node": 1  // Prefer bind socket
 }
 ```
-
-#### 3A. `datastructure.json`
-Options of hashtable/B+tree clients running in the compute blades. Use `memory_servers` to specify **hostnames and ports** of memory blades to be connected. If you change the topology of the cluster, modify it accordingly.
-```json
-{
-  "dataset": "ycsb-a",   // see "include/util/ycsb.h" for available datasets
-  "dump_file_path": "datastructure.csv",
-
-  "insert_before_execution": true, // insert all keys before performing tests
-  "max_key": 100000000,  // key range [0, max_key)
-  "key_length": 8,       // key length in bytes
-  "value_length": 8,     // value length in bytes
-  "rehash_key": false,   // key/value randomly inserted
-  "duration": 15,        // test duration in seconds
-  "zipfian_const": 0.99, // zipfian parameter
-
-  "memory_servers": [    // memory server hostnames and ports
-    {
-      "hostname": "optane06",
-      "port": 12345
-    },
-    {
-      "hostname": "optane07",
-      "port": 12345
-    }
-  ]
-}
-```
   
-#### 3B. `transaction.json`
+#### 3. `transaction.json`
 Options of transaction processing clients running in the compute blades. Use `memory_servers` to specify **hostnames and ports** of memory blades to be connected. If you change the topology of the cluster, modify it accordingly.
 ```json
 {
@@ -182,7 +154,6 @@ Options of transaction processing clients running in the compute blades. Use `me
     }
   ],
   "tpcc": { ... },
-  "smallbank": { ... },
   "tatp": { ... },
   "nr_transactions": 60000000,
   "dump_file_path": "dtx.csv"
@@ -194,15 +165,6 @@ For each memory blade **(`optane06` and `optane07` in our example)**, run one of
    ```bash
    # working path should be build/
 
-   # start hash table backend
-   LD_PRELOAD=libmlx5.so ./hashtable/hashtable_backend 
-
-   # start B+Tree backend
-   LD_PRELOAD=libmlx5.so ./btree/btree_backend
-
-   # start SmallBank backend
-   LD_PRELOAD=libmlx5.so ./dtx/smallbank/smallbank_backend
-
    # start TATP backend
    LD_PRELOAD=libmlx5.so ./dtx/tatp/tatp_backend
    ```
@@ -213,25 +175,6 @@ In compute blades **(`optane04` in our example)**, run one of the benchmark prog
 ```bash
 # working path should be build/
 
-# start hash table bench
-# `coro` means `coroutine`
-LD_PRELOAD=libmlx5.so ./hashtable/hashtable_bench [nr_thread] [nr_coro] 
-
-# start B+Tree bench
-LD_PRELOAD=libmlx5.so ./btree/btree_bench [nr_thread] [nr_coro] 
-
-# start SmallBank bench
-LD_PRELOAD=libmlx5.so ./dtx/smallbank/smallbank_bench [nr_thread] [nr_coro] 
-
 # start TATP bench
 LD_PRELOAD=libmlx5.so ./dtx/tatp/tatp_bench [nr_thread] [nr_coro] 
 ```
-
-After execution, the benchmark program displays the throughput and latency to stdout. It also adds a line to the file specified by `dump_file_path`.
-
-
-## Reproduce Evaluation
-We also provide scripts to reproduce all experiments in Section 3 and Section 6. In Section 3, there are 3 experiments (Figures 3, 4 and 5), each of them points out one of the scalability bottlenecks. In Section 6, there are 9 experiments (Figures 7–14, and Table 1) that compare SMART-refactorized applications (i.e. SMART-HT, SMART-BT and SMART-DTX) with the state-of-the-art disaggregated systems (i.e. RACE, Sherman and FORD) respectively.
-
-Details are aviilable in [`ae/README.md`](ae/README.md).
-
