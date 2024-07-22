@@ -1,11 +1,6 @@
 # SMART-OOCC
 
-SMART is a framework to deal with the complexity of building scalable applications for memory disaggregation, which integrated with the following techniques to resolve RDMA-related performance issues:
-- Thread-aware resource allocation,
-- Adaptive work request throttling, and
-- Conflict avoidance technique.
-
-To ease the programming, SMART provides a set of coroutine-based asynchronous APIs that are almost identical to the original RDMA verbs. We also design adaptive methods for adjusting configuration parameters that are important to the performance.
+The TLA+ is provided in OOCC.tla.
 
 
 ## Artifact Contents
