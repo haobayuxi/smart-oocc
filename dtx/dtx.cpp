@@ -4,8 +4,8 @@
 #include "dtx.h"
 
 bool CheckReadWriteConflict = true;
-bool DelayLock = false;   // set to true to open
-bool WriteUnlock = true;  // set to false to open
+bool DelayLock = false;    // set to true to open
+bool WriteUnlock = false;  // set to false to open
 
 DTX::DTX(DTXContext *context, int _txn_sys, int _lease, bool _delayed,
          double _offset)
