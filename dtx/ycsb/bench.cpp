@@ -32,7 +32,7 @@ std::atomic<uint64_t> attempts(0);
 std::atomic<uint64_t> commits(0);
 std::atomic<uint64_t> attempts_read_only(0);
 std::atomic<uint64_t> commits_read_only(0);
-double *ti mer;
+double *timer;
 std::atomic<uint64_t> tx_id_generator(0);
 
 thread_local size_t ATTEMPTED_NUM;
@@ -76,7 +76,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
   bool commit_status = true;
   if (RetryUntilSuccess) {
     for (int i = 0; i < 30; i++) {
-        if (read_only) {
+      if (read_only) {
         *att_read_only += 1;
       }
       if (!dtx->TxExe()) {
