@@ -3,7 +3,7 @@
 
 #include "dtx.h"
 
-bool CheckReadWriteConflict = true;
+bool CheckReadWriteConflict = false;
 bool DelayLock = false;
 bool WriteUnlock = false;
 
