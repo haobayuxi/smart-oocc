@@ -75,7 +75,7 @@ bool TxYCSB(tx_id_t tx_id, DTX *dtx, bool read_only, uint64_t *att_read_only) {
   }
   bool commit_status = true;
   if (RetryUntilSuccess) {
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 50; i++) {
       if (read_only) {
         *att_read_only += 1;
       }
