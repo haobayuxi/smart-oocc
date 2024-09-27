@@ -521,10 +521,10 @@ class TPCC {
     // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kOrderStatus;
 
     // j += FREQUENCY_DELIVERY;
-    for (; i < j; i++) workgen_arr[i] = TPCCTxType::kDelivery;
+    // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kDelivery;
 
     // j += FREQUENCY_STOCK_LEVEL;
-    // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kStockLevel;
+    for (; i < j; i++) workgen_arr[i] = TPCCTxType::kStockLevel;
 
     assert(i == 100 && j == 100);
     return workgen_arr;
