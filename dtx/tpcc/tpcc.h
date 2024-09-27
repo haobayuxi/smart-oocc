@@ -512,10 +512,10 @@ class TPCC {
     // return workgen_arr;
     // j += FREQUENCY_NEW_ORDER;
     j = 100;
-    for (; i < j; i++) workgen_arr[i] = TPCCTxType::kNewOrder;
+    // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kNewOrder;
 
     // j += FREQUENCY_PAYMENT;
-    // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kPayment;
+    for (; i < j; i++) workgen_arr[i] = TPCCTxType::kPayment;
 
     // j += FREQUENCY_ORDER_STATUS;
     // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kOrderStatus;
