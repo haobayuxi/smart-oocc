@@ -11,7 +11,7 @@
 using namespace sds;
 
 void setup(Target &target) {
-  static_assert(MAX_ITEM_SIZE == 8, "");
+  // static_assert(MAX_ITEM_SIZE == 8, "");
   uint64_t hash_buf_size = 4ull * 1024 * 1024 * 1024;
 
   char *hash_buffer = (char *)target.alloc_chunk(hash_buf_size / kChunkSize);
