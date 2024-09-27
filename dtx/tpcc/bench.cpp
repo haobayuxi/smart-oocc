@@ -859,52 +859,52 @@ bool TxStockLevel(tx_id_t tx_id, DTX* dtx) {
   s_i_ids.reserve(300);
 
   // Iterate over [o_id-20, o_id)
-  for (int order_id = o_id - tpcc_stock_val_t::STOCK_LEVEL_ORDERS;
-       order_id < o_id; ++order_id) {
-    // Populate line_numer is random: [Min_OL_CNT, MAX_OL_CNT)
-    for (int line_number = 1; line_number <= tpcc_order_line_val_t::MAX_OL_CNT;
-         ++line_number) {
-      int64_t ol_key = tpcc_client->MakeOrderLineKey(warehouse_id, district_id,
-                                                     order_id, line_number);
-      tpcc_order_line_key_t order_line_key;
-      order_line_key.ol_id = ol_key;
-      auto ol_obj = std::make_shared<DataItem>(
-          (table_id_t)TPCCTableType::kOrderLineTable, order_line_key.item_key);
-      dtx->AddToReadOnlySet(ol_obj);
+  // for (int order_id = o_id - tpcc_stock_val_t::STOCK_LEVEL_ORDERS;
+  //      order_id < o_id; ++order_id) {
+  //   // Populate line_numer is random: [Min_OL_CNT, MAX_OL_CNT)
+  //   for (int line_number = 1; line_number <= tpcc_order_line_val_t::MAX_OL_CNT;
+  //        ++line_number) {
+  //     int64_t ol_key = tpcc_client->MakeOrderLineKey(warehouse_id, district_id,
+  //                                                    order_id, line_number);
+  //     tpcc_order_line_key_t order_line_key;
+  //     order_line_key.ol_id = ol_key;
+  //     auto ol_obj = std::make_shared<DataItem>(
+  //         (table_id_t)TPCCTableType::kOrderLineTable, order_line_key.item_key);
+  //     dtx->AddToReadOnlySet(ol_obj);
 
-      if (!dtx->TxExe()) {
-        // Not found, not abort
-        dtx->RemoveLastROItem();
-        break;
-      }
+  //     if (!dtx->TxExe()) {
+  //       // Not found, not abort
+  //       dtx->RemoveLastROItem();
+  //       break;
+  //     }
 
-      tpcc_order_line_val_t* ol_val = (tpcc_order_line_val_t*)ol_obj->value;
-      if (ol_val->debug_magic != tpcc_add_magic) {
-        // SDS_PERROR << "[FATAL] Read order line unmatch, tid-cid-txid: "
-        //            << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
-      }
+  //     tpcc_order_line_val_t* ol_val = (tpcc_order_line_val_t*)ol_obj->value;
+  //     if (ol_val->debug_magic != tpcc_add_magic) {
+  //       // SDS_PERROR << "[FATAL] Read order line unmatch, tid-cid-txid: "
+  //       //            << dtx->t_id << "-" << dtx->coro_id << "-" << tx_id;
+  //     }
 
-      int64_t s_key = tpcc_client->MakeStockKey(warehouse_id, ol_val->ol_i_id);
-      tpcc_stock_key_t stock_key;
-      stock_key.s_id = s_key;
-      auto stock_obj = std::make_shared<DataItem>(
-          (table_id_t)TPCCTableType::kStockTable, stock_key.item_key);
-      dtx->AddToReadOnlySet(stock_obj);
+  //     int64_t s_key = tpcc_client->MakeStockKey(warehouse_id, ol_val->ol_i_id);
+  //     tpcc_stock_key_t stock_key;
+  //     stock_key.s_id = s_key;
+  //     auto stock_obj = std::make_shared<DataItem>(
+  //         (table_id_t)TPCCTableType::kStockTable, stock_key.item_key);
+  //     dtx->AddToReadOnlySet(stock_obj);
 
-      if (!dtx->TxExe()) return false;
+  //     if (!dtx->TxExe()) return false;
 
-      tpcc_stock_val_t* stock_val = (tpcc_stock_val_t*)stock_obj->value;
-      if (stock_val->debug_magic != tpcc_add_magic) {
-        // SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " <<
-        // dtx->t_id
-        //            << "-" << dtx->coro_id << "-" << tx_id;
-      }
+  //     tpcc_stock_val_t* stock_val = (tpcc_stock_val_t*)stock_obj->value;
+  //     if (stock_val->debug_magic != tpcc_add_magic) {
+  //       // SDS_PERROR << "[FATAL] Read stock unmatch, tid-cid-txid: " <<
+  //       // dtx->t_id
+  //       //            << "-" << dtx->coro_id << "-" << tx_id;
+  //     }
 
-      if (stock_val->s_quantity < threshold) {
-        s_i_ids.push_back(ol_val->ol_i_id);
-      }
-    }
-  }
+  //     if (stock_val->s_quantity < threshold) {
+  //       s_i_ids.push_back(ol_val->ol_i_id);
+  //     }
+  //   }
+  // }
 
   // Filter out duplicate s_i_id: multiple order lines can have the same item
   // In O3, this code may be optimized since num_distinct is not outputed.
