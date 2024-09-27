@@ -60,9 +60,9 @@ class YCSB {
   void LoadTable(MemStoreAllocParam *mem_store_alloc_param,
                  MemStoreReserveParam *mem_store_reserve_param) {
     micro_table1 =
-        new HashStore(MICRO_TABLE_ID1, 200000, mem_store_alloc_param);
+        new HashStore(MICRO_TABLE_ID1, 100000, mem_store_alloc_param);
     micro_table2 =
-        new HashStore(MICRO_TABLE_ID2, 200000, mem_store_alloc_param);
+        new HashStore(MICRO_TABLE_ID2, 100000, mem_store_alloc_param);
     PopulateTable(mem_store_reserve_param);
     table_ptrs.push_back(micro_table1);
     table_ptrs.push_back(micro_table2);
