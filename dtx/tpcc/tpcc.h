@@ -518,10 +518,10 @@ class TPCC {
     // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kPayment;
 
     // j += FREQUENCY_ORDER_STATUS;
-    for (; i < j; i++) workgen_arr[i] = TPCCTxType::kOrderStatus;
+    // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kOrderStatus;
 
     // j += FREQUENCY_DELIVERY;
-    // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kDelivery;
+    for (; i < j; i++) workgen_arr[i] = TPCCTxType::kDelivery;
 
     // j += FREQUENCY_STOCK_LEVEL;
     // for (; i < j; i++) workgen_arr[i] = TPCCTxType::kStockLevel;
