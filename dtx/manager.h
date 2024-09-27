@@ -22,7 +22,7 @@ class DTXContext {
   DTXContext(JsonConfig &config, int max_threads) : config_(config) {
     for (int i = 0; i < kMaxThreads; ++i) {
       tl_data_[i].log_alloc = new LogOffsetAllocator(i, kMaxThreads);
-      const static size_t kBufferSize = 8 * 1024 * 1024;
+      const static size_t kBufferSize = 16 * 1024 * 1024;
       char *buf = (char *)node_.alloc_cache(kBufferSize);
       assert(buf);
       tl_data_[i].buf_alloc = new RDMABufferAllocator(buf, buf + kBufferSize);
