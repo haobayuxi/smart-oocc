@@ -614,16 +614,16 @@ bool TxDelivery(tx_id_t tx_id, DTX* dtx) {
 
     // Get the new order record with the o_id. Probe if the new order record
     // exists
-    if (!dtx->TxExe()) {
-      dtx->RemoveLastROItem();
-      continue;
-    }
+    // if (!dtx->TxExe()) {
+    //   dtx->RemoveLastROItem();
+    //   continue;
+    // }
 
     // The new order record exists. Remove the new order obj from read only set
     dtx->RemoveLastROItem();
 
     // Add the new order obj to read write set to be deleted
-    dtx->AddToReadWriteSet(norder_obj);
+    // dtx->AddToReadWriteSet(norder_obj);
 
     uint64_t o_key = tpcc_client->MakeOrderKey(warehouse_id, d_id, o_id);
     tpcc_order_key_t order_key;
